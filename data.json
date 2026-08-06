@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-06 17:04 JST",
+  "updated_at": "2026-08-06 17:07 JST",
   "start_date": "2026-08-05",
   "nav_jpy": 9979237,
   "bench_jpy": 10000000,
@@ -10,35 +10,35 @@
     {
       "ticker": "VOO",
       "name": "S&P500 ETF",
-      "shares": 31.3336,
+      "shares": 31.3315,
       "value_jpy": 3500000,
       "weight_pct": 35.07
     },
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
-      "shares": 22.0785,
+      "shares": 22.077,
       "value_jpy": 2500000,
       "weight_pct": 25.05
     },
     {
       "ticker": "GLD",
       "name": "金 ETF",
-      "shares": 24.387,
+      "shares": 24.3853,
       "value_jpy": 1500000,
       "weight_pct": 15.03
     },
     {
       "ticker": "IEF",
       "name": "米国中期債 ETF",
-      "shares": 33.9447,
+      "shares": 33.9424,
       "value_jpy": 500000,
       "weight_pct": 5.01
     },
     {
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
-      "shares": 19.2945,
+      "shares": 19.2931,
       "value_jpy": 500000,
       "weight_pct": 5.01
     },
@@ -63,13 +63,78 @@
     {
       "date": "2026-08-05",
       "action": "BUY",
-      "ticker": "IEF",
-      "shares": "33.944741",
-      "price": "93.30999755859375",
+      "ticker": "1306.T",
+      "shares": "2360.160423",
+      "price": "423.70001220703125",
+      "currency": "JPY",
+      "fx_rate": "157.87",
+      "amount_jpy": "1000000",
+      "fee_jpy": "0",
+      "rule": "initial_build",
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "XLV",
+      "shares": "19.293146",
+      "price": "164.16000366210938",
       "currency": "USD",
-      "fx_rate": "157.859",
+      "fx_rate": "157.87",
       "amount_jpy": "500000",
       "fee_jpy": "2475",
+      "rule": "initial_build",
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "IEF",
+      "shares": "33.942375",
+      "price": "93.30999755859375",
+      "currency": "USD",
+      "fx_rate": "157.87",
+      "amount_jpy": "500000",
+      "fee_jpy": "2475",
+      "rule": "initial_build",
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "GLD",
+      "shares": "24.385301",
+      "price": "389.6400146484375",
+      "currency": "USD",
+      "fx_rate": "157.87",
+      "amount_jpy": "1500000",
+      "fee_jpy": "3473",
+      "rule": "initial_build",
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "QQQ",
+      "shares": "22.076976",
+      "price": "717.2999877929688",
+      "currency": "USD",
+      "fx_rate": "157.87",
+      "amount_jpy": "2500000",
+      "fee_jpy": "3473",
+      "rule": "initial_build",
+      "note": ""
+    },
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "VOO",
+      "shares": "31.33146",
+      "price": "707.5999755859375",
+      "currency": "USD",
+      "fx_rate": "157.87",
+      "amount_jpy": "3500000",
+      "fee_jpy": "3473",
       "rule": "initial_build",
       "note": ""
     }
