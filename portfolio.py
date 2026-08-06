@@ -231,6 +231,8 @@ def execute_trades(
     trade_count = 0
 
     for trade in proposed_trades:
+        # 拒否時にこの取引の変更だけを巻き戻すためのスナップショット
+        trade_snapshot = json.loads(json.dumps(new_state))
         try:
             if trade_count >= config.MAX_DAILY_TRADES:
                 raise TradeRejected("1日の取引件数上限(10件)を超過")
@@ -294,7 +296,7 @@ def execute_trades(
                     new_weight = compute_ticker_weight(ticker, new_state, market, usdjpy_mid, tmp_nav)
                     target_key = "defense" if new_state.get("mode") == "defense" else "normal"
                     target_weight = charter_targets[ticker].get(target_key, 0.0)
-                    if new_weight > target_weight + config.TARGET_WEIGHT_TOLERANCE and is_target_directed:
+                    if new_weight > target_weight + config.TARGET_OVERSHOOT_TOLERANCE and is_target_directed:
                         raise TradeRejected("ターゲット配分を超過する買い注文")
 
                 if new_state["cash_jpy"] < 0 or new_state["cash_usd"] < 0:
@@ -346,6 +348,7 @@ def execute_trades(
             })
 
         except TradeRejected as e:
+            new_state = trade_snapshot  # この取引の変更を巻き戻す
             rejected.append({**trade, "reason": e.reason})
 
     return new_state, accepted, rejected

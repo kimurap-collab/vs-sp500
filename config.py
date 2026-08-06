@@ -53,7 +53,8 @@ MIN_CASH_RATIO = 0.02
 MAX_DAILY_TRADES = 10
 NON_TARGET_TRADE_DAILY_CAP_OF_NAV = 0.10  # 押し目買い等、1日あたり評価額の10%まで
 DIP_BUY_MAX_OF_CASH = 0.5  # 押し目買いは現金の半分まで
-TARGET_WEIGHT_TOLERANCE = 0.0001  # ターゲット超過判定の許容誤差
+TARGET_WEIGHT_TOLERANCE = 0.0001  # 現金比率・集中規制の許容誤差
+TARGET_OVERSHOOT_TOLERANCE = 0.01  # ターゲット超過判定の許容誤差（1ポイント。手数料による分母減少で誤検知しないため）
 
 # --- 発動条件の閾値（charter.md準拠） ---
 REBALANCE_DEVIATION_THRESHOLD = 0.05  # ±5ポイント
