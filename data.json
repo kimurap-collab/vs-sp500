@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-08-06 17:07 JST",
+  "updated_at": "2026-08-06 17:29 JST",
   "start_date": "2026-08-05",
-  "nav_jpy": 9979237,
-  "bench_jpy": 10000000,
-  "diff_jpy": -20763,
+  "nav_jpy": 9977891,
+  "bench_jpy": 9998417,
+  "diff_jpy": -20526,
   "diff_pct": -0.21,
   "mode": "normal",
   "holdings": [
@@ -11,43 +11,79 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.3315,
-      "value_jpy": 3500000,
-      "weight_pct": 35.07
+      "value_jpy": 3499446,
+      "weight_pct": 35.07,
+      "price": 707.6,
+      "avg_cost": 707.6,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/VOO",
+      "reason": "S&P500コア。上昇トレンド順行の主力",
+      "target": "$780（+10%）"
     },
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 22.077,
-      "value_jpy": 2500000,
-      "weight_pct": 25.05
+      "value_jpy": 2499604,
+      "weight_pct": 25.05,
+      "price": 717.3,
+      "avg_cost": 717.3,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/QQQ",
+      "reason": "ハイテク・モメンタムのオーバーウェイト枠。ここでS&Pを上回りにいく",
+      "target": "$810（+13%）"
     },
     {
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 24.3853,
-      "value_jpy": 1500000,
-      "weight_pct": 15.03
+      "value_jpy": 1499763,
+      "weight_pct": 15.03,
+      "price": 389.64,
+      "avg_cost": 389.64,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/GLD",
+      "reason": "株と逆相関の分散＋金自体の上昇基調",
+      "target": "$430（+10%）"
     },
     {
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.9424,
-      "value_jpy": 500000,
-      "weight_pct": 5.01
+      "value_jpy": 499921,
+      "weight_pct": 5.01,
+      "price": 93.31,
+      "avg_cost": 93.31,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/IEF",
+      "reason": "守りの債券枠。急落時のクッション",
+      "target": "$96（+3%＋利回り）"
     },
     {
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 19.2931,
-      "value_jpy": 500000,
-      "weight_pct": 5.01
+      "value_jpy": 499921,
+      "weight_pct": 5.01,
+      "price": 164.16,
+      "avg_cost": 164.16,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/XLV",
+      "reason": "ディフェンシブセクターの押さえ",
+      "target": "$180（+10%）"
     },
     {
       "ticker": "1306.T",
       "name": "TOPIX連動 ETF",
       "shares": 2360.1604,
       "value_jpy": 1000000,
-      "weight_pct": 10.02
+      "weight_pct": 10.02,
+      "price": 423.7,
+      "avg_cost": 423.7,
+      "currency": "JPY",
+      "link": "https://finance.yahoo.co.jp/quote/1306.T",
+      "reason": "円建て資産の分散（為替リスク低減）",
+      "target": "¥465（+10%）"
     }
   ],
   "cash_jpy": 479237,
