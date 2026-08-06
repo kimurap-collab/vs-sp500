@@ -1,0 +1,2 @@
+date,action,ticker,shares,price,currency,fx_rate,amount_jpy,fee_jpy,rule,note
+2026-08-05,BUY,IEF,33.944741,93.30999755859375,USD,157.859,500000,2475,initial_build,

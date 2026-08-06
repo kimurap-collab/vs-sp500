@@ -1,11 +1,18 @@
 {
-  "start_date": null,
+  "start_date": "2026-08-05",
   "mode": "normal",
-  "cash_jpy": 10000000,
+  "cash_jpy": 479237.0184595329,
   "cash_usd": 0.0,
-  "holdings": {},
-  "bench_units": 0.0,
-  "last_processed_voo_date": null,
+  "holdings": {
+    "VOO": 31.33364405268059,
+    "QQQ": 22.07851481150904,
+    "GLD": 24.38700001446962,
+    "IEF": 33.944740797656905,
+    "XLV": 19.29449080347178,
+    "1306.T": 2360.1604229158556
+  },
+  "bench_units": 89.52469729337312,
+  "last_processed_voo_date": "2026-08-05",
   "below_200dma_streak": 0,
-  "above_200dma_streak": 0
+  "above_200dma_streak": 1
 }

@@ -1,0 +1,85 @@
+{
+  "updated_at": "2026-08-06 17:04 JST",
+  "start_date": "2026-08-05",
+  "nav_jpy": 9979237,
+  "bench_jpy": 10000000,
+  "diff_jpy": -20763,
+  "diff_pct": -0.21,
+  "mode": "normal",
+  "holdings": [
+    {
+      "ticker": "VOO",
+      "name": "S&P500 ETF",
+      "shares": 31.3336,
+      "value_jpy": 3500000,
+      "weight_pct": 35.07
+    },
+    {
+      "ticker": "QQQ",
+      "name": "ナスダック100 ETF",
+      "shares": 22.0785,
+      "value_jpy": 2500000,
+      "weight_pct": 25.05
+    },
+    {
+      "ticker": "GLD",
+      "name": "金 ETF",
+      "shares": 24.387,
+      "value_jpy": 1500000,
+      "weight_pct": 15.03
+    },
+    {
+      "ticker": "IEF",
+      "name": "米国中期債 ETF",
+      "shares": 33.9447,
+      "value_jpy": 500000,
+      "weight_pct": 5.01
+    },
+    {
+      "ticker": "XLV",
+      "name": "米国ヘルスケアセクター ETF",
+      "shares": 19.2945,
+      "value_jpy": 500000,
+      "weight_pct": 5.01
+    },
+    {
+      "ticker": "1306.T",
+      "name": "TOPIX連動 ETF",
+      "shares": 2360.1604,
+      "value_jpy": 1000000,
+      "weight_pct": 10.02
+    }
+  ],
+  "cash_jpy": 479237,
+  "cash_usd": 0.0,
+  "history": [
+    {
+      "date": "2026-08-05",
+      "nav": 9979237,
+      "bench": 10000000
+    }
+  ],
+  "trades": [
+    {
+      "date": "2026-08-05",
+      "action": "BUY",
+      "ticker": "IEF",
+      "shares": "33.944741",
+      "price": "93.30999755859375",
+      "currency": "USD",
+      "fx_rate": "157.859",
+      "amount_jpy": "500000",
+      "fee_jpy": "2475",
+      "rule": "initial_build",
+      "note": ""
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2026-08",
+      "nav": 9979237,
+      "bench": 10000000,
+      "result": "lose"
+    }
+  ]
+}
