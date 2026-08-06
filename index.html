@@ -74,6 +74,11 @@
 
   canvas { max-width: 100%; }
   .empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 12px 0; }
+  .table-scroll { overflow-x: auto; }
+  .sub { color: var(--muted); font-size: 0.75rem; display: block; }
+  a.ticker-link { color: var(--text); text-decoration: none; font-weight: 600; }
+  a.ticker-link:hover { text-decoration: underline; }
+  .note { color: var(--muted); font-size: 0.72rem; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -116,11 +121,17 @@
 
   <section>
     <h2>保有一覧</h2>
+    <div class="table-scroll">
     <table id="holdingsTable">
-      <thead><tr><th>銘柄</th><th class="num">株数</th><th class="num">評価額</th><th class="num">ウェイト</th></tr></thead>
+      <thead><tr>
+        <th>銘柄</th><th class="num">株数</th><th class="num">取得単価</th>
+        <th class="num">現在値(前日終値)</th><th class="num">評価額</th><th class="num">ウェイト</th>
+      </tr></thead>
       <tbody></tbody>
     </table>
+    </div>
     <div class="empty" id="holdingsEmpty" style="display:none;">保有なし（全額現金）</div>
+    <div class="note">※目標は12ヶ月の目安。売買は投資憲章のルール（配分・トレンド）で判断</div>
   </section>
 
   <section>
@@ -134,6 +145,13 @@
 </div>
 
 <script>
+function fmtPrice(value, currency) {
+  if (value === null || value === undefined) return "-";
+  const digits = currency === "USD" ? 2 : 1;
+  const symbol = currency === "USD" ? "$" : "¥";
+  return symbol + Number(value).toFixed(digits);
+}
+
 async function load() {
   const res = await fetch("data.json?t=" + Date.now());
   const data = await res.json();
@@ -212,8 +230,18 @@ async function load() {
   } else {
     holdings.forEach(h => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${h.ticker}<br><span style="color:var(--muted);font-size:0.75rem;">${h.name}</span></td>` +
-        `<td class="num">${h.shares}</td><td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
+      const priceStr = fmtPrice(h.price, h.currency);
+      const avgCostStr = fmtPrice(h.avg_cost, h.currency);
+      const reason = h.reason || "";
+      const target = h.target || "";
+      tr.innerHTML =
+        `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
+        `<span class="sub">${h.name}</span>` +
+        `<span class="sub">理由: ${reason}　目標: ${target}</span></td>` +
+        `<td class="num">${h.shares}</td>` +
+        `<td class="num">${avgCostStr}</td>` +
+        `<td class="num">${priceStr}</td>` +
+        `<td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
         `<td class="num">${h.weight_pct}%</td>`;
       holdingsBody.appendChild(tr);
     });

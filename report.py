@@ -13,6 +13,27 @@ from market import TickerSnapshot
 
 logger = logging.getLogger("vs-sp500.report")
 
+THESES_PATH = config.BASE_DIR / "theses.json"
+
+
+def _load_theses() -> dict[str, Any]:
+    """theses.json（銘柄テーゼ・Fable管理）を読み込む。無ければ空辞書。"""
+    if not THESES_PATH.exists():
+        return {}
+    try:
+        with open(THESES_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return {k: v for k, v in data.items() if not k.startswith("_")}
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("theses.json読み込み失敗: %s", e)
+        return {}
+
+
+def _ticker_link(ticker: str, currency: str) -> str:
+    if currency == "JPY":
+        return f"https://finance.yahoo.co.jp/quote/{ticker}"
+    return f"https://finance.yahoo.com/quote/{ticker}"
+
 
 def build_data_json(
     state: dict[str, Any],
@@ -26,6 +47,11 @@ def build_data_json(
     diff_jpy = nav_jpy - bench_jpy
     diff_pct = (diff_jpy / bench_jpy * 100.0) if bench_jpy else 0.0
 
+    from portfolio import compute_avg_costs, read_history_rows, read_trade_rows
+
+    avg_costs = compute_avg_costs()
+    theses = _load_theses()
+
     holdings = []
     for ticker, shares in state.get("holdings", {}).items():
         snap = market.get(ticker)
@@ -34,15 +60,20 @@ def build_data_json(
         currency = config.WHITELIST[ticker]["currency"]
         value_jpy = shares * snap.close * (usdjpy_mid if currency == "USD" else 1.0)
         weight_pct = (value_jpy / nav_jpy * 100.0) if nav_jpy else 0.0
+        thesis = theses.get(ticker, {})
         holdings.append({
             "ticker": ticker,
             "name": config.WHITELIST[ticker]["name"],
             "shares": round(shares, 4),
             "value_jpy": round(value_jpy),
             "weight_pct": round(weight_pct, 2),
+            "price": round(snap.close, 4),
+            "avg_cost": round(avg_costs.get(ticker, snap.close), 4),
+            "currency": currency,
+            "link": _ticker_link(ticker, currency),
+            "reason": thesis.get("reason", ""),
+            "target": thesis.get("target", ""),
         })
-
-    from portfolio import read_history_rows, read_trade_rows
 
     history_rows = read_history_rows()
     history = [{"date": r["date"], "nav": round(float(r["nav_jpy"])), "bench": round(float(r["bench_jpy"]))}

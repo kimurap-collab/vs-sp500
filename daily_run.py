@@ -43,7 +43,7 @@ def git_commit_and_push(now_jst: dt.datetime, logger: logging.Logger) -> None:
         logger.error("git commit/push失敗: %s", e)
 
 
-def run(dry_run: bool = False) -> str:
+def run(dry_run: bool = False, report_only: bool = False) -> str:
     logger = setup_logging()
     now_jst = dt.datetime.now(JST)
     report_lines: list[str] = []
@@ -54,20 +54,35 @@ def run(dry_run: bool = False) -> str:
 
     try:
         state = portfolio.load_portfolio()
-        charter_text = portfolio.load_charter_text()
-        charter_targets = portfolio.parse_charter_targets(charter_text)
         log_and_report(f"[1] 台帳読み込み完了。mode={state['mode']} start_date={state['start_date']}")
 
         tickers_to_fetch = sorted(set(list(config.WHITELIST.keys()) + list(state["holdings"].keys())))
         snapshots = market.get_snapshots(tickers_to_fetch)
         usdjpy_snap = market.get_usdjpy_mid()
         usdjpy_mid = usdjpy_snap.close
-        voo_technicals = market.get_voo_technicals()
         voo_snap = snapshots[config.BENCHMARK_TICKER]
+        log_and_report(f"[2] 市場データ取得完了。VOO終値={voo_snap.close}({voo_snap.date}) USDJPY={usdjpy_mid}")
+
+        if report_only:
+            # --report-only: 台帳読み込み→市場データ取得→NAV計算→data.json再生成→git push のみ。
+            # Sonnet判断・約定・history.csv追記・Telegram送信・portfolio.json保存は行わない。
+            nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
+            bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
+            log_and_report(f"[3] NAV計算: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円")
+            data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, [], now_jst)
+            report.save_data_json(data)
+            log_and_report("[4] data.json更新完了（--report-onlyのためhistory.csv追記・portfolio.json保存はスキップ）")
+            git_commit_and_push(now_jst, logger)
+            log_and_report("[5] git commit & push完了（--report-onlyのためTelegram送信はスキップ）")
+            log_and_report("[6] 正常終了（--report-only）")
+            return "\n".join(report_lines)
+
+        charter_text = portfolio.load_charter_text()
+        charter_targets = portfolio.parse_charter_targets(charter_text)
+        voo_technicals = market.get_voo_technicals()
         log_and_report(
-            f"[2] 市場データ取得完了。VOO終値={voo_snap.close}({voo_snap.date}) "
-            f"USDJPY={usdjpy_mid} MA200={voo_technicals.ma200:.2f} RSI14={voo_technicals.rsi14:.1f} "
-            f"52w高値={voo_technicals.high_52w:.2f}"
+            f"[2b] VOOテクニカル取得完了。MA200={voo_technicals.ma200:.2f} "
+            f"RSI14={voo_technicals.rsi14:.1f} 52w高値={voo_technicals.high_52w:.2f}"
         )
 
         # 3. 初回判定
@@ -201,8 +216,12 @@ def run(dry_run: bool = False) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="vs-sp500 daily run")
     parser.add_argument("--dry-run", action="store_true", help="約定・push・Telegram送信を行わず全フローを検証する")
+    parser.add_argument(
+        "--report-only", action="store_true",
+        help="NAV計算とdata.json再生成・pushのみ行う（Sonnet判断・約定・Telegram送信は行わない）",
+    )
     args = parser.parse_args()
-    output = run(dry_run=args.dry_run)
+    output = run(dry_run=args.dry_run, report_only=args.report_only)
     print(output)
 
 

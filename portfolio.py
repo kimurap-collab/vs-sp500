@@ -88,6 +88,30 @@ def read_trade_rows() -> list[dict[str, Any]]:
         return list(csv.DictReader(f))
 
 
+def compute_avg_costs() -> dict[str, float]:
+    """trades.csvから総平均法で各銘柄の平均取得単価（建て通貨）を計算する。
+
+    BUYは加重平均で更新（単価は約定price、手数料は含めない）。
+    SELLは株数を減らすだけで平均単価は変えない。
+    """
+    avg_cost: dict[str, float] = {}
+    total_shares: dict[str, float] = {}
+    for row in read_trade_rows():
+        ticker = row["ticker"]
+        shares = float(row["shares"])
+        price = float(row["price"])
+        prev_shares = total_shares.get(ticker, 0.0)
+        if row["action"] == "BUY":
+            new_shares = prev_shares + shares
+            if new_shares > 0:
+                prev_avg = avg_cost.get(ticker, 0.0)
+                avg_cost[ticker] = (prev_avg * prev_shares + price * shares) / new_shares
+            total_shares[ticker] = new_shares
+        elif row["action"] == "SELL":
+            total_shares[ticker] = prev_shares - shares
+    return avg_cost
+
+
 # ---------------------------------------------------------------------------
 # charter.md ターゲット配分パース
 # ---------------------------------------------------------------------------
