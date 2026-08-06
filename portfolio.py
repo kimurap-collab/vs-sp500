@@ -248,6 +248,8 @@ def execute_trades(
     戻り値: (新しいstate, 約定した取引ログ, 拒否された取引ログ)
     """
     new_state = json.loads(json.dumps(state))
+    # SELLを先に約定して現金を作ってからBUYを処理する（リバランス時の現金不足による誤拒否を防ぐ）
+    proposed_trades = sorted(proposed_trades, key=lambda t: 0 if t.get("action") == "SELL" else 1)
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     nav_jpy = compute_nav_jpy(new_state, market, usdjpy_mid)
