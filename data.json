@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-08-07 08:00 JST",
+  "updated_at": "2026-08-08 08:00 JST",
   "start_date": "2026-08-05",
-  "nav_jpy": 9994950,
-  "bench_jpy": 10020478,
-  "diff_jpy": -25529,
-  "diff_pct": -0.25,
+  "nav_jpy": 10048979,
+  "bench_jpy": 10035999,
+  "diff_jpy": 12980,
+  "diff_pct": 0.13,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.3315,
-      "value_jpy": 3507167,
-      "weight_pct": 35.09,
-      "price": 706.4,
+      "value_jpy": 3512600,
+      "weight_pct": 34.95,
+      "price": 710.71,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -24,9 +24,9 @@
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 22.077,
-      "value_jpy": 2500104,
-      "weight_pct": 25.01,
-      "price": 714.65,
+      "value_jpy": 2517976,
+      "weight_pct": 25.06,
+      "price": 723.03,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -37,9 +37,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 24.3853,
-      "value_jpy": 1505741,
-      "weight_pct": 15.07,
-      "price": 389.67,
+      "value_jpy": 1532778,
+      "weight_pct": 15.25,
+      "price": 398.47,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -50,9 +50,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.9424,
-      "value_jpy": 499939,
-      "weight_pct": 5.0,
-      "price": 92.95,
+      "value_jpy": 498855,
+      "weight_pct": 4.96,
+      "price": 93.17,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -63,9 +63,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 19.2931,
-      "value_jpy": 502762,
-      "weight_pct": 5.03,
-      "price": 164.45,
+      "value_jpy": 504230,
+      "weight_pct": 5.02,
+      "price": 165.68,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -76,9 +76,9 @@
       "ticker": "1306.T",
       "name": "TOPIX連動 ETF",
       "shares": 2360.1604,
-      "value_jpy": 1000000,
-      "weight_pct": 10.01,
-      "price": 423.7,
+      "value_jpy": 1003304,
+      "weight_pct": 9.98,
+      "price": 425.1,
       "avg_cost": 423.7,
       "currency": "JPY",
       "link": "https://finance.yahoo.co.jp/quote/1306.T",
@@ -98,6 +98,11 @@
       "date": "2026-08-06",
       "nav": 9994950,
       "bench": 10020478
+    },
+    {
+      "date": "2026-08-07",
+      "nav": 10048979,
+      "bench": 10035999
     }
   ],
   "trades": [
@@ -183,9 +188,9 @@
   "monthly": [
     {
       "month": "2026-08",
-      "nav": 9994950,
-      "bench": 10020478,
-      "result": "lose"
+      "nav": 10048979,
+      "bench": 10035999,
+      "result": "win"
     }
   ]
 }
