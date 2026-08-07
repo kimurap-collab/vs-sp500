@@ -131,6 +131,7 @@ def build_telegram_message(
     accepted_trades: list[dict[str, Any]],
     now_jst: dt.datetime,
     prev_month_result_line: str | None = None,
+    alert_lines: list[str] | None = None,
 ) -> str:
     date_str = f"{now_jst.month}/{now_jst.day}"
     diff_jpy = data["diff_jpy"]
@@ -146,7 +147,10 @@ def build_telegram_message(
     else:
         trade_block = "売買: なし（ホールド）"
 
-    lines = [f"📊 vs S&P500 ({date_str})"]
+    lines: list[str] = []
+    if alert_lines:
+        lines.extend(alert_lines)
+    lines.append(f"📊 vs S&P500 ({date_str})")
     if prev_month_result_line:
         lines.append(prev_month_result_line)
     lines.append(f"評価額: ¥{data['nav_jpy']:,}")

@@ -8,6 +8,8 @@ import logging
 import subprocess
 import sys
 
+import yfinance as yf
+
 import config
 import market
 import portfolio
@@ -15,6 +17,14 @@ import report
 from advisor import get_trade_decision
 
 JST = dt.timezone(dt.timedelta(hours=9))
+
+# --- 異常停止・アラートの閾値（SPEC_LOOP.md準拠） ---
+HALT_STALE_BUSINESS_DAYS = 3
+HALT_PRICE_MOVE_THRESHOLD = 0.12
+HALT_NAV_CONSISTENCY_THRESHOLD = 0.20
+ALERT_VOO_DROP_1D = -0.035
+ALERT_VOO_DROP_5D = -0.07
+ALERT_DIFF_PCT_DETERIORATION_5D = 2.0
 
 
 def setup_logging() -> logging.Logger:
@@ -41,6 +51,96 @@ def git_commit_and_push(now_jst: dt.datetime, logger: logging.Logger) -> None:
         subprocess.run(["git", "push"], cwd=config.BASE_DIR, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         logger.error("git commit/push失敗: %s", e)
+
+
+def _business_days_between(start: dt.date, end: dt.date) -> int:
+    """startからendまでの営業日数（土日を除く単純カウント。祝日は考慮しない）。"""
+    if end <= start:
+        return 0
+    count = 0
+    d = start
+    while d < end:
+        d += dt.timedelta(days=1)
+        if d.weekday() < 5:
+            count += 1
+    return count
+
+
+def _recent_closes(ticker: str, bars: int) -> list[float]:
+    """直近bars本の終値（古い→新しい順）。データ不足時は取れた分だけ返す。
+
+    market.pyは直近終値1件のみを公開しているため、複数本の終値が要る
+    異常停止・アラート判定用にここで直接yfinanceを呼ぶ（market.py自体は変更しない）。
+    """
+    try:
+        hist = yf.Ticker(ticker).history(period="2mo", auto_adjust=False)
+    except Exception:
+        return []
+    if hist.empty:
+        return []
+    return [float(c) for c in hist["Close"].tail(bars)]
+
+
+def check_halt(state: dict, snapshots: dict, voo_snap, usdjpy_mid: float, today: dt.date) -> str | None:
+    """異常停止条件に該当するか判定する。該当すれば理由文字列、なければNone。"""
+    market_date = dt.date.fromisoformat(voo_snap.date)
+    stale_days = _business_days_between(market_date, today)
+    if stale_days >= HALT_STALE_BUSINESS_DAYS:
+        return f"データ鮮度異常（市場データが{stale_days}営業日前のまま）"
+
+    voo_closes = _recent_closes(config.BENCHMARK_TICKER, 2)
+    if len(voo_closes) == 2 and voo_closes[-2] != 0:
+        voo_chg = (voo_closes[-1] - voo_closes[-2]) / voo_closes[-2]
+        if abs(voo_chg) > HALT_PRICE_MOVE_THRESHOLD:
+            return f"VOO前日比異常（{voo_chg:+.1%}）"
+
+    fx_closes = _recent_closes(config.FX_TICKER, 2)
+    if len(fx_closes) == 2 and fx_closes[-2] != 0:
+        fx_chg = (fx_closes[-1] - fx_closes[-2]) / fx_closes[-2]
+        if abs(fx_chg) > HALT_PRICE_MOVE_THRESHOLD:
+            return f"USDJPY前日比異常（{fx_chg:+.1%}）"
+
+    history_rows = portfolio.read_history_rows()
+    if history_rows:
+        prev_nav = float(history_rows[-1]["nav_jpy"])
+        if prev_nav != 0:
+            current_nav = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
+            nav_chg = (current_nav - prev_nav) / prev_nav
+            if abs(nav_chg) > HALT_NAV_CONSISTENCY_THRESHOLD:
+                return f"NAV整合性異常（前回比{nav_chg:+.1%}）"
+
+    return None
+
+
+def check_alerts(
+    prev_mode: str,
+    new_mode: str,
+    history_rows_before: list[dict],
+    diff_pct_today: float,
+) -> list[str]:
+    """アラート条件（売買は通常通り・報告に警告行を追加するだけ）を判定する。"""
+    alerts: list[str] = []
+
+    voo_closes = _recent_closes(config.BENCHMARK_TICKER, 6)
+    if len(voo_closes) >= 2 and voo_closes[-2] != 0:
+        chg1 = (voo_closes[-1] - voo_closes[-2]) / voo_closes[-2]
+        if chg1 <= ALERT_VOO_DROP_1D:
+            alerts.append(f"⚠️ 急落検知（VOO {chg1:+.1%}）")
+    if len(voo_closes) >= 6 and voo_closes[0] != 0:
+        chg5 = (voo_closes[-1] - voo_closes[0]) / voo_closes[0]
+        if chg5 <= ALERT_VOO_DROP_5D:
+            alerts.append(f"⚠️ 続落検知（VOO 5営業日 {chg5:+.1%}）")
+
+    if prev_mode != new_mode:
+        alerts.append(f"⚠️ モード切替（{prev_mode}→{new_mode}）")
+
+    if len(history_rows_before) >= 5:
+        old_diff_pct = float(history_rows_before[-5]["diff_pct"])
+        deterioration = old_diff_pct - diff_pct_today
+        if deterioration >= ALERT_DIFF_PCT_DETERIORATION_5D:
+            alerts.append(f"⚠️ 乖離拡大（5営業日で{deterioration:.1f}pt悪化）")
+
+    return alerts
 
 
 def run(dry_run: bool = False, report_only: bool = False) -> str:
@@ -77,6 +177,46 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report("[6] 正常終了（--report-only）")
             return "\n".join(report_lines)
 
+        # 異常停止判定（市場データ取得直後、初回構築・配当処理・売買判断の前に行う）
+        halt_reason = check_halt(state, snapshots, voo_snap, usdjpy_mid, now_jst.date())
+        if halt_reason:
+            log_and_report(f"[2c] 異常停止判定: 該当（{halt_reason}）→ 売買せずホールド固定")
+            nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
+            bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
+            diff_jpy = nav_jpy - bench_jpy
+            cash_ratio = portfolio.compute_cash_ratio(state, usdjpy_mid, nav_jpy) if nav_jpy else 0.0
+            log_and_report(
+                f"[7] 評価額計算（異常停止時）: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円 差額={diff_jpy:,.0f}円"
+            )
+            state["last_processed_voo_date"] = voo_snap.date
+            if not dry_run:
+                portfolio.append_history_row({
+                    "date": voo_snap.date,
+                    "nav_jpy": round(nav_jpy),
+                    "bench_jpy": round(bench_jpy),
+                    "diff_jpy": round(diff_jpy),
+                    "diff_pct": round(diff_jpy / bench_jpy * 100, 4) if bench_jpy else 0.0,
+                    "cash_ratio": round(cash_ratio, 4),
+                })
+                portfolio.save_portfolio(state)
+            data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, [], now_jst)
+            if not dry_run:
+                report.save_data_json(data)
+                git_commit_and_push(now_jst, logger)
+                log_and_report("[8] data.json更新・台帳保存・git push完了（異常停止時）")
+            else:
+                log_and_report("[8] dry-runのためdata.json保存・git push・台帳保存はスキップ")
+
+            halt_line = f"🛑 異常停止: {halt_reason}。売買を止めて観察のみ実施"
+            message = report.build_telegram_message(data, [], now_jst, alert_lines=[halt_line])
+            if dry_run:
+                log_and_report("[9] dry-runのためTelegram送信はスキップ。送信予定文面:\n" + message)
+            else:
+                ok = report.send_telegram_message(message)
+                log_and_report(f"[9] Telegram送信{'成功' if ok else '失敗'}（異常停止アラート）")
+            log_and_report("[10] 正常終了（異常停止）")
+            return "\n".join(report_lines)
+
         charter_text = portfolio.load_charter_text()
         charter_targets = portfolio.parse_charter_targets(charter_text)
         voo_technicals = market.get_voo_technicals()
@@ -84,6 +224,9 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             f"[2b] VOOテクニカル取得完了。MA200={voo_technicals.ma200:.2f} "
             f"RSI14={voo_technicals.rsi14:.1f} 52w高値={voo_technicals.high_52w:.2f}"
         )
+
+        prev_mode = state["mode"]
+        history_rows_before = portfolio.read_history_rows()
 
         # 3. 初回判定
         if state["start_date"] is None and charter_targets is not None:
@@ -148,6 +291,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
         bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
         diff_jpy = nav_jpy - bench_jpy
+        diff_pct_today = round(diff_jpy / bench_jpy * 100, 4) if bench_jpy else 0.0
         cash_ratio = portfolio.compute_cash_ratio(state, usdjpy_mid, nav_jpy) if nav_jpy else 0.0
         log_and_report(
             f"[7] 評価額計算: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円 差額={diff_jpy:,.0f}円"
@@ -159,10 +303,15 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 "nav_jpy": round(nav_jpy),
                 "bench_jpy": round(bench_jpy),
                 "diff_jpy": round(diff_jpy),
-                "diff_pct": round(diff_jpy / bench_jpy * 100, 4) if bench_jpy else 0.0,
+                "diff_pct": diff_pct_today,
                 "cash_ratio": round(cash_ratio, 4),
             })
             portfolio.save_portfolio(state)
+
+        # アラート判定（売買は通常通り。報告の先頭に警告行を追加するのみ）
+        alert_lines = check_alerts(prev_mode, state["mode"], history_rows_before, diff_pct_today)
+        if alert_lines:
+            log_and_report(f"[7b] アラート検知: {alert_lines}")
 
         # 8. data.json再生成
         data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, accepted_trades, now_jst)
@@ -189,7 +338,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                     )
                     break
 
-        message = report.build_telegram_message(data, accepted_trades, now_jst, prev_month_line)
+        message = report.build_telegram_message(data, accepted_trades, now_jst, prev_month_line, alert_lines)
         if dry_run:
             log_and_report("[9] dry-runのためTelegram送信はスキップ。送信予定文面:\n" + message)
         else:
