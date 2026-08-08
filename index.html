@@ -23,7 +23,7 @@
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
   }
-  .wrap { max-width: 720px; margin: 0 auto; }
+  .wrap { max-width: 1600px; margin: 0 auto; }
   header { text-align: center; margin-bottom: 20px; }
   header h1 { font-size: 1.3rem; margin: 0 0 4px; }
   header .updated { color: var(--muted); font-size: 0.8rem; }
@@ -125,7 +125,7 @@
     <table id="holdingsTable">
       <thead><tr>
         <th>銘柄</th><th class="num">株数</th><th class="num">取得単価</th>
-        <th class="num">現在値(前日終値)</th><th class="num">評価額</th><th class="num">ウェイト</th>
+        <th class="num">現在値(前日終値)</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -234,6 +234,12 @@ async function load() {
       const avgCostStr = fmtPrice(h.avg_cost, h.currency);
       const reason = h.reason || "";
       const target = h.target || "";
+      let pnlStr = "-", pnlCls = "";
+      if (h.avg_cost > 0 && h.price != null) {
+        const pnl = (h.price / h.avg_cost - 1) * 100;
+        pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+        pnlCls = pnl >= 0 ? "win" : "lose";
+      }
       tr.innerHTML =
         `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
         `<span class="sub">${h.name}</span>` +
@@ -241,6 +247,7 @@ async function load() {
         `<td class="num">${h.shares}</td>` +
         `<td class="num">${avgCostStr}</td>` +
         `<td class="num">${priceStr}</td>` +
+        `<td class="num ${pnlCls}">${pnlStr}</td>` +
         `<td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
         `<td class="num">${h.weight_pct}%</td>`;
       holdingsBody.appendChild(tr);
