@@ -25,15 +25,21 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 # --- 投資ユニバース（ホワイトリスト。charter.mdと一致させること） ---
 WHITELIST: dict[str, dict[str, str]] = {
-    "VOO": {"currency": "USD", "name": "S&P500 ETF"},
-    "QQQ": {"currency": "USD", "name": "ナスダック100 ETF"},
-    "GLD": {"currency": "USD", "name": "金 ETF"},
-    "TLT": {"currency": "USD", "name": "米国長期債 ETF"},
-    "IEF": {"currency": "USD", "name": "米国中期債 ETF"},
-    "XLV": {"currency": "USD", "name": "米国ヘルスケアセクター ETF"},
-    "XLE": {"currency": "USD", "name": "米国エネルギーセクター ETF"},
-    "1306.T": {"currency": "JPY", "name": "TOPIX連動 ETF"},
+    "VOO": {"currency": "USD", "name": "S&P500 ETF", "type": "etf"},
+    "QQQ": {"currency": "USD", "name": "ナスダック100 ETF", "type": "etf"},
+    "GLD": {"currency": "USD", "name": "金 ETF", "type": "etf"},
+    "TLT": {"currency": "USD", "name": "米国長期債 ETF", "type": "etf"},
+    "IEF": {"currency": "USD", "name": "米国中期債 ETF", "type": "etf"},
+    "XLV": {"currency": "USD", "name": "米国ヘルスケアセクター ETF", "type": "etf"},
+    "XLE": {"currency": "USD", "name": "米国エネルギーセクター ETF", "type": "etf"},
+    "1306.T": {"currency": "JPY", "name": "TOPIX連動 ETF", "type": "etf"},
+    # 個別株を足す時は "type": "stock" を指定する（憲章の追加ルールが自動適用される）
 }
+
+
+def is_stock(ticker: str) -> bool:
+    """個別株か（ETFでないか）。憲章の個別株ルール適用判定に使う。"""
+    return WHITELIST.get(ticker, {}).get("type") == "stock"
 BENCHMARK_TICKER = "VOO"
 FX_TICKER = "USDJPY=X"
 
@@ -49,6 +55,10 @@ FX_SPREAD_JPY_PER_USD = 0.10  # 片道。買いは仲値+0.10円、売りは仲�
 # --- ガードレール（charter.md準拠） ---
 MAX_TICKER_WEIGHT = 0.30
 MAX_VOO_WEIGHT = 0.65
+# 個別株の追加ガードレール（憲章v1.2）
+MAX_STOCK_WEIGHT = 0.05          # 個別株1銘柄の上限
+MAX_STOCK_TOTAL_WEIGHT = 0.20    # 個別株合計の上限
+STOCK_STOP_LOSS = -0.20          # 平均取得単価比でこれを下回ったら全売却
 MIN_CASH_RATIO = 0.02
 MAX_DAILY_TRADES = 10
 NON_TARGET_TRADE_DAILY_CAP_OF_NAV = 0.10  # 押し目買い等、1日あたり評価額の10%まで
