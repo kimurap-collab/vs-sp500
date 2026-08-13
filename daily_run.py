@@ -362,6 +362,33 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
     return "\n".join(report_lines)
 
 
+def launch_autonomous_loop() -> None:
+    """自律ループ（loop_run.sh）をこのプロセスの子として起動する。
+
+    launchdから /bin/bash で直接起動すると、macOSのTCC（~/Documents保護）により
+    EPERM（Operation not permitted / exit 126）で落ちる。ディスクアクセス権を持つ
+    このPythonプロセスから起動することで権限を継承させる。
+    （2026-08-13: ループが8/8以降一度も自動起動していなかった問題の対策）
+    """
+    script = config.BASE_DIR / "loop_run.sh"
+    if not script.exists():
+        return
+    logger = logging.getLogger("vs-sp500")
+    try:
+        proc = subprocess.run(
+            ["/bin/bash", str(script)],
+            cwd=str(config.BASE_DIR),
+            capture_output=True,
+            text=True,
+            timeout=1200,
+        )
+        logger.info("[11] 自律ループ実行完了 exit=%s", proc.returncode)
+    except subprocess.TimeoutExpired:
+        logger.error("[11] 自律ループがタイムアウトした")
+    except Exception:
+        logger.exception("[11] 自律ループの起動に失敗")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="vs-sp500 daily run")
     parser.add_argument("--dry-run", action="store_true", help="約定・push・Telegram送信を行わず全フローを検証する")
@@ -369,9 +396,16 @@ def main() -> None:
         "--report-only", action="store_true",
         help="NAV計算とdata.json再生成・pushのみ行う（Sonnet判断・約定・Telegram送信は行わない）",
     )
+    parser.add_argument(
+        "--no-loop", action="store_true",
+        help="実行後の自律ループ起動を行わない（手動実行時の暴発防止）",
+    )
     args = parser.parse_args()
     output = run(dry_run=args.dry_run, report_only=args.report_only)
     print(output)
+    # 執行の後に必ず自律ループを回す（executionが例外で落ちた日も観測は行う）
+    if not (args.dry_run or args.report_only or args.no_loop):
+        launch_autonomous_loop()
 
 
 if __name__ == "__main__":

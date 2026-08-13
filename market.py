@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import time
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -28,11 +29,26 @@ class VooTechnicals:
 
 
 def _history(ticker: str, period: str = "1y") -> pd.DataFrame:
-    t = yf.Ticker(ticker)
-    hist = t.history(period=period, auto_adjust=False)
-    if hist.empty:
-        raise RuntimeError(f"{ticker}: yfinanceから価格データを取得できなかった")
-    return hist
+    """価格履歴を取得する。yfinance側の一時的な応答不良に備えてリトライする。
+
+    2026-08-11・08-12にYahoo APIが空レスポンスを返し（chart=None → TypeError）、
+    その日の実行が丸ごと落ちて台帳が欠測した。同じ理由で1日を失わないための備え。
+    """
+    last_error: Exception | None = None
+    for attempt in range(config.MARKET_FETCH_RETRIES):
+        try:
+            hist = yf.Ticker(ticker).history(period=period, auto_adjust=False)
+            if not hist.empty:
+                return hist
+            last_error = RuntimeError("価格データが空")
+        except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+            last_error = e
+        if attempt < config.MARKET_FETCH_RETRIES - 1:
+            time.sleep(config.MARKET_FETCH_BACKOFF_SEC * (attempt + 1))
+    raise RuntimeError(
+        f"{ticker}: yfinanceから価格データを取得できなかった"
+        f"（{config.MARKET_FETCH_RETRIES}回試行）: {last_error}"
+    )
 
 
 def _dividend_on_last_date(ticker: str, hist: pd.DataFrame) -> float:

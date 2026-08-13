@@ -62,6 +62,10 @@ TREND_DEFENSE_STREAK_DAYS = 3
 DIP_BUY_DROP_FROM_HIGH = 0.12  # 52週高値から12%以上下落
 DIP_BUY_RSI_THRESHOLD = 30
 
+# --- 市場データ取得のリトライ（yfinanceの一時的な応答不良対策） ---
+MARKET_FETCH_RETRIES = 3
+MARKET_FETCH_BACKOFF_SEC = 3.0
+
 # --- Sonnet（番兵） ---
 ANTHROPIC_MODEL = "claude-sonnet-5"
 ANTHROPIC_MAX_TOKENS = 2000
