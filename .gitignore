@@ -1,4 +1,7 @@
 .env
-logs/
+logs/*
+!logs/loop/
+logs/loop/*
+!logs/loop/*.md
 __pycache__/
 *.pyc
