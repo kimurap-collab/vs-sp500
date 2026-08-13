@@ -260,6 +260,37 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
 
         accepted_trades: list[dict] = []
         rejected_trades: list[dict] = []
+        stop_loss_report_lines: list[str] = []
+
+        # 5a. 損切り判定（Sonnetの判断より前に強制執行。ルール由来の強制執行であり番兵の裁量ではない）
+        already_processed_today = state["last_processed_voo_date"] == voo_snap.date
+        if already_processed_today:
+            log_and_report("[5a] 損切り判定スキップ（休場・本日処理済み）")
+        else:
+            stop_loss_orders = portfolio.check_stop_losses(state, snapshots, usdjpy_mid)
+            if not stop_loss_orders:
+                log_and_report("[5a] 損切り判定: 該当なし")
+            elif dry_run:
+                log_and_report(f"[5a] 損切り判定: {len(stop_loss_orders)}件該当（dry-runのため約定はスキップ）")
+            else:
+                trade_date = voo_snap.date
+                state, stop_loss_accepted, stop_loss_rejected = portfolio.execute_trades(
+                    stop_loss_orders, state, snapshots, usdjpy_mid, charter_targets, trade_date,
+                )
+                for t in stop_loss_accepted:
+                    portfolio.append_trade_row(t)
+                accepted_trades.extend(stop_loss_accepted)
+                rejected_trades.extend(stop_loss_rejected)
+                loss_pct_by_ticker = {o["ticker"]: o["loss_pct"] for o in stop_loss_orders}
+                stop_loss_report_lines = [
+                    f"🔻 損切り: {t['ticker']} ({loss_pct_by_ticker[t['ticker']]:+.1%})"
+                    for t in stop_loss_accepted
+                ]
+                log_and_report(
+                    f"[5a] 損切り約定完了: 約定{len(stop_loss_accepted)}件 拒否{len(stop_loss_rejected)}件"
+                )
+                for r in stop_loss_rejected:
+                    logger.warning("拒否された損切り注文: %s", r)
 
         if skip_reason:
             log_and_report(f"[5] 売買判断スキップ: ホールド（{skip_reason}）")
@@ -276,13 +307,15 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 log_and_report("[6] dry-runのため約定処理はスキップ")
             else:
                 trade_date = voo_snap.date
-                state, accepted_trades, rejected_trades = portfolio.execute_trades(
+                state, sonnet_accepted, sonnet_rejected = portfolio.execute_trades(
                     proposed_trades, state, snapshots, usdjpy_mid, charter_targets, trade_date,
                 )
-                for t in accepted_trades:
+                for t in sonnet_accepted:
                     portfolio.append_trade_row(t)
-                log_and_report(f"[6] 約定処理完了: 約定{len(accepted_trades)}件 拒否{len(rejected_trades)}件")
-                for r in rejected_trades:
+                accepted_trades.extend(sonnet_accepted)
+                rejected_trades.extend(sonnet_rejected)
+                log_and_report(f"[6] 約定処理完了: 約定{len(sonnet_accepted)}件 拒否{len(sonnet_rejected)}件")
+                for r in sonnet_rejected:
                     logger.warning("拒否された注文: %s", r)
 
         state["last_processed_voo_date"] = voo_snap.date
@@ -309,7 +342,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             portfolio.save_portfolio(state)
 
         # アラート判定（売買は通常通り。報告の先頭に警告行を追加するのみ）
-        alert_lines = check_alerts(prev_mode, state["mode"], history_rows_before, diff_pct_today)
+        alert_lines = stop_loss_report_lines + check_alerts(prev_mode, state["mode"], history_rows_before, diff_pct_today)
         if alert_lines:
             log_and_report(f"[7b] アラート検知: {alert_lines}")
 

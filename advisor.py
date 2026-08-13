@@ -43,6 +43,9 @@ SYSTEM_PROMPT = (
     "あなたは投資憲章の番兵です。憲章の発動条件に該当する場合のみ、"
     "該当ルールに基づく取引を提案してください。該当しなければtradesは空配列にしてください。"
     "憲章にない取引の提案は禁止です。迷ったらホールドしてください。"
+    "個別株は憲章の追加ルールが適用される。リバランスでの買い増しは提案するな"
+    "（下振れしても放置でよい）。上振れ分の利確売りは提案してよい。"
+    "損切りはコード側が自動執行するのでお前が提案する必要はない。"
 )
 
 
@@ -62,7 +65,11 @@ def _build_user_prompt(
         currency = config.WHITELIST.get(ticker, {}).get("currency", "USD")
         value_jpy = shares * snap.close * (usdjpy_mid if currency == "USD" else 1.0)
         nav_hint += value_jpy
-        holdings_weighted.append({"ticker": ticker, "shares": shares, "close": snap.close, "value_jpy": round(value_jpy)})
+        ticker_type = "stock" if config.is_stock(ticker) else "etf"
+        holdings_weighted.append({
+            "ticker": ticker, "type": ticker_type, "shares": shares,
+            "close": snap.close, "value_jpy": round(value_jpy),
+        })
 
     market_lines = []
     for ticker, snap in market_snapshot.items():
