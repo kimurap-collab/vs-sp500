@@ -22,6 +22,9 @@ JST = dt.timezone(dt.timedelta(hours=9))
 HALT_STALE_BUSINESS_DAYS = 3
 HALT_PRICE_MOVE_THRESHOLD = 0.12
 HALT_NAV_CONSISTENCY_THRESHOLD = 0.20
+# 保有銘柄の「実在しない変動幅」。サーキットブレーカー（最大-20%で取引停止）より上に置き、
+# 本物の暴落日には掛からず、配信データの破損だけを捕まえる水準にする。
+HALT_IMPLAUSIBLE_MOVE_THRESHOLD = 0.30
 ALERT_VOO_DROP_1D = -0.035
 ALERT_VOO_DROP_5D = -0.07
 ALERT_DIFF_PCT_DETERIORATION_5D = 2.0
@@ -99,6 +102,19 @@ def check_halt(state: dict, snapshots: dict, voo_snap, usdjpy_mid: float, today:
         fx_chg = (fx_closes[-1] - fx_closes[-2]) / fx_closes[-2]
         if abs(fx_chg) > HALT_PRICE_MOVE_THRESHOLD:
             return f"USDJPY前日比異常（{fx_chg:+.1%}）"
+
+    # 各銘柄の配信データ破損検知。VOOとUSDJPYしか見ていなかった穴を塞ぐ。
+    # 2026-03-30・03-31、yfinanceが1306.Tの終値を実勢の約1/10（37円台 vs 前後380円台）で
+    # 配信していた（分割記録なし＝純粋なデータ破損）。10%枠の銘柄が1/10になってもNAV変化は
+    # 約-9%で整合性しきい値20%に掛からず、リバランス（±5pt乖離）だけが発動して幻の価格で
+    # 評価額の約9%を買い付ける。翌日に価格が戻ると保有株数が10倍のまま評価され、
+    # 実在しない利益が台帳に固定される——単日で最も重い破損経路であり、勝敗記録そのものを汚す。
+    for ticker in sorted(snapshots):
+        closes = _recent_closes(ticker, 2)
+        if len(closes) == 2 and closes[-2] != 0:
+            chg = (closes[-1] - closes[-2]) / closes[-2]
+            if abs(chg) > HALT_IMPLAUSIBLE_MOVE_THRESHOLD:
+                return f"{ticker}の価格データ異常（前日比{chg:+.1%}・実在しない変動幅）"
 
     history_rows = portfolio.read_history_rows()
     if history_rows:
