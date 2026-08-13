@@ -15,6 +15,10 @@ TIMEOUT_SECONDS=900
 
 CLAUDE_BIN="$(command -v claude || echo /Users/seijikimura/.local/bin/claude)"
 
+# 無人の自律実行であることの目印。いけゲート（ike_gate_guard.py）はこれが立っている時だけ
+# vs-sp500配下の書き込みを「いけ」なしで通す。対話セッションでは立たない。
+export IKE_GATE_AUTONOMOUS=1
+
 echo "[loop_run.sh] 開始 $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 
 "$CLAUDE_BIN" -p "$(cat LOOP_PROMPT.md)" \
