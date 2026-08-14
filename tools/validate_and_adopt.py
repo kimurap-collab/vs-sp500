@@ -32,8 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
 import portfolio  # noqa: E402
 
-STOCK_TICKERS = ("VOO", "QQQ", "XLV", "1306.T")
-ROW_ORDER = ["VOO", "QQQ", "GLD", "TLT", "IEF", "XLV", "XLE", "1306.T", "現金"]
+STOCK_TICKERS = ("VOO", "QQQ", "XLV", "EWJ")
+ROW_ORDER = ["VOO", "QQQ", "GLD", "TLT", "IEF", "XLV", "XLE", "EWJ", "現金"]
 
 SUM_TOLERANCE = 0.005  # ±0.5ポイント
 NORMAL_STOCK_MAX = 0.90
@@ -157,6 +157,10 @@ def validate(candidate_path: Path, today: dt.date) -> dict[str, dict[str, float]
 
 
 def _format_table(targets: dict[str, dict[str, float]]) -> str:
+    # ROW_ORDER漏れは行の「黙った脱落」＝合計100%未満の憲章を書いてまう事故になるので先に落とす
+    missing = [a for a in targets if a not in ROW_ORDER]
+    if missing:
+        raise ValidationError(f"ROW_ORDERに未登録の資産があるため表を書けない: {missing}")
     lines = ["| 資産 | 通常モード | 防衛モード |", "|---|---|---|"]
     for asset in ROW_ORDER:
         if asset not in targets:
