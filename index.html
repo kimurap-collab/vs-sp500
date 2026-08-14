@@ -97,13 +97,14 @@
   <div class="nav-row">
     <div class="nav-box">
       <div class="label">自分の評価額</div>
-      <div class="value" id="nav-jpy">-</div>
+      <div class="value" id="nav-usd">-</div>
     </div>
     <div class="nav-box">
       <div class="label">S&P500ベンチマーク</div>
-      <div class="value" id="bench-jpy">-</div>
+      <div class="value" id="bench-usd">-</div>
     </div>
   </div>
+  <div class="note">※評価通貨はドル。約定・手数料はmoomoo仮想口座の実績（TrdEnv.SIMULATE）に連動</div>
 
   <section>
     <h2>資産推移</h2>
@@ -158,18 +159,18 @@ async function load() {
 
   document.getElementById("updated").textContent = "最終更新: " + data.updated_at;
 
-  const diffJpy = data.diff_jpy;
-  const win = diffJpy >= 0;
+  const diffUsd = data.diff_usd;
+  const win = diffUsd >= 0;
   const sign = win ? "+" : "";
   const amountEl = document.getElementById("diff-amount");
-  amountEl.textContent = sign + diffJpy.toLocaleString() + "円";
+  amountEl.textContent = sign + "$" + diffUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   amountEl.className = "amount " + (win ? "win" : "lose");
   const pctEl = document.getElementById("diff-pct");
   pctEl.textContent = sign + data.diff_pct.toFixed(2) + "%";
   pctEl.className = "pct " + (win ? "win" : "lose");
 
-  document.getElementById("nav-jpy").textContent = "¥" + data.nav_jpy.toLocaleString();
-  document.getElementById("bench-jpy").textContent = "¥" + data.bench_jpy.toLocaleString();
+  document.getElementById("nav-usd").textContent = "$" + data.nav_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById("bench-usd").textContent = "$" + data.bench_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
   // 資産推移グラフ
   const hist = data.history || [];
@@ -216,8 +217,8 @@ async function load() {
       const tr = document.createElement("tr");
       const resultJp = m.result === "win" ? "勝ち" : "負け";
       const cls = m.result === "win" ? "win" : "lose";
-      tr.innerHTML = `<td>${m.month}</td><td class="num">¥${m.nav.toLocaleString()}</td>` +
-        `<td class="num">¥${m.bench.toLocaleString()}</td><td class="${cls}">${resultJp}</td>`;
+      tr.innerHTML = `<td>${m.month}</td><td class="num">$${m.nav.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
+        `<td class="num">$${m.bench.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td><td class="${cls}">${resultJp}</td>`;
       monthlyBody.appendChild(tr);
     });
   }
@@ -248,7 +249,7 @@ async function load() {
         `<td class="num">${avgCostStr}</td>` +
         `<td class="num">${priceStr}</td>` +
         `<td class="num ${pnlCls}">${pnlStr}</td>` +
-        `<td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
+        `<td class="num">$${h.value_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
         `<td class="num">${h.weight_pct}%</td>`;
       holdingsBody.appendChild(tr);
     });
@@ -262,9 +263,9 @@ async function load() {
   } else {
     trades.forEach(t => {
       const tr = document.createElement("tr");
-      const amt = Number(t.amount_jpy || 0).toLocaleString();
+      const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
       tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
-        `<td class="num">¥${amt}</td><td>${t.rule}</td>`;
+        `<td class="num">$${amt}</td><td>${t.rule}</td>`;
       tradesBody.appendChild(tr);
     });
   }

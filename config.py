@@ -32,7 +32,7 @@ WHITELIST: dict[str, dict[str, str]] = {
     "IEF": {"currency": "USD", "name": "米国中期債 ETF", "type": "etf"},
     "XLV": {"currency": "USD", "name": "米国ヘルスケアセクター ETF", "type": "etf"},
     "XLE": {"currency": "USD", "name": "米国エネルギーセクター ETF", "type": "etf"},
-    "1306.T": {"currency": "JPY", "name": "TOPIX連動 ETF", "type": "etf"},
+    "EWJ": {"currency": "USD", "name": "MSCI日本株 ETF", "type": "etf"},
     # 個別株を足す時は "type": "stock" を指定する（憲章の追加ルールが自動適用される）
 }
 
@@ -41,16 +41,16 @@ def is_stock(ticker: str) -> bool:
     """個別株か（ETFでないか）。憲章の個別株ルール適用判定に使う。"""
     return WHITELIST.get(ticker, {}).get("type") == "stock"
 BENCHMARK_TICKER = "VOO"
-FX_TICKER = "USDJPY=X"
+FX_TICKER = "USDJPY=X"  # 管理画面の参考表示用。評価計算には使わない（v1.4でドル建てに移行）
+BASE_CURRENCY = "USD"
 
 # --- 初期資金 ---
-INITIAL_CAPITAL_JPY = 10_000_000
+INITIAL_CAPITAL_USD = 63343.06  # 10,000,000円 ÷ 開始日レート157.87
 
-# --- コストモデル（charter.md準拠） ---
-US_ETF_FEE_RATE = 0.00495
-US_ETF_FEE_CAP_USD = 22.0
-JP_ETF_FEE_RATE = 0.0
-FX_SPREAD_JPY_PER_USD = 0.10  # 片道。買いは仲値+0.10円、売りは仲値-0.10円
+# --- moomoo（v1.4: 売買・実費はmoomoo仮想口座に移行） ---
+MOOMOO_HOST = "127.0.0.1"
+MOOMOO_PORT = 11111
+MOOMOO_ACC_ID = 5338087
 
 # --- ガードレール（charter.md準拠） ---
 MAX_TICKER_WEIGHT = 0.30

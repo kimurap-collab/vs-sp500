@@ -22,13 +22,13 @@ TRADE_SCHEMA: dict[str, Any] = {
                 "properties": {
                     "action": {"type": "string", "enum": ["BUY", "SELL"]},
                     "ticker": {"type": "string"},
-                    "amount_jpy": {"type": "integer"},
+                    "amount_usd": {"type": "number"},
                     "rule": {
                         "type": "string",
                         "enum": ["rebalance", "defense_switch", "defense_return", "dip_buy", "initial_build"],
                     },
                 },
-                "required": ["action", "ticker", "amount_jpy", "rule"],
+                "required": ["action", "ticker", "amount_usd", "rule"],
                 "additionalProperties": False,
             },
         },
@@ -46,6 +46,8 @@ SYSTEM_PROMPT = (
     "個別株は憲章の追加ルールが適用される。リバランスでの買い増しは提案するな"
     "（下振れしても放置でよい）。上振れ分の利確売りは提案してよい。"
     "損切りはコード側が自動執行するのでお前が提案する必要はない。"
+    "株数は整数単位でしか約定できない（端株は買えない）。amount_usdは目安の金額でよく、"
+    "実際の約定株数は現在値で切り捨てた整数株になる。"
 )
 
 
@@ -54,21 +56,19 @@ def _build_user_prompt(
     portfolio_state: dict[str, Any],
     market_snapshot: dict[str, TickerSnapshot],
     voo_technicals: Any,
-    usdjpy_mid: float,
 ) -> str:
     holdings_weighted = []
-    nav_hint = portfolio_state.get("cash_jpy", 0) + portfolio_state.get("cash_usd", 0) * usdjpy_mid
+    nav_hint = portfolio_state.get("cash_usd", 0)
     for ticker, shares in portfolio_state.get("holdings", {}).items():
         snap = market_snapshot.get(ticker)
         if snap is None:
             continue
-        currency = config.WHITELIST.get(ticker, {}).get("currency", "USD")
-        value_jpy = shares * snap.close * (usdjpy_mid if currency == "USD" else 1.0)
-        nav_hint += value_jpy
+        value_usd = shares * snap.close
+        nav_hint += value_usd
         ticker_type = "stock" if config.is_stock(ticker) else "etf"
         holdings_weighted.append({
             "ticker": ticker, "type": ticker_type, "shares": shares,
-            "close": snap.close, "value_jpy": round(value_jpy),
+            "close": snap.close, "value_usd": round(value_usd, 2),
         })
 
     market_lines = []
@@ -80,15 +80,13 @@ def _build_user_prompt(
     payload = {
         "portfolio": {
             "mode": portfolio_state.get("mode"),
-            "cash_jpy": portfolio_state.get("cash_jpy"),
             "cash_usd": portfolio_state.get("cash_usd"),
             "holdings": holdings_weighted,
-            "estimated_nav_jpy": round(nav_hint),
+            "estimated_nav_usd": round(nav_hint, 2),
             "above_200dma_streak": portfolio_state.get("above_200dma_streak"),
             "below_200dma_streak": portfolio_state.get("below_200dma_streak"),
         },
         "market": {
-            "usdjpy_mid": usdjpy_mid,
             "tickers": market_lines,
             "voo_ma200": voo_technicals.ma200,
             "voo_rsi14": voo_technicals.rsi14,
@@ -109,10 +107,9 @@ def get_trade_decision(
     portfolio_state: dict[str, Any],
     market_snapshot: dict[str, TickerSnapshot],
     voo_technicals: Any,
-    usdjpy_mid: float,
 ) -> dict[str, Any]:
     """Sonnetに売買判断を問い合わせる。失敗時は1回リトライし、それでも失敗ならホールド扱い。"""
-    user_prompt = _build_user_prompt(charter_text, portfolio_state, market_snapshot, voo_technicals, usdjpy_mid)
+    user_prompt = _build_user_prompt(charter_text, portfolio_state, market_snapshot, voo_technicals)
     client = Anthropic(api_key=config.CLAUDE_API_KEY)
 
     last_error: Exception | None = None

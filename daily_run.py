@@ -10,6 +10,7 @@ import sys
 
 import yfinance as yf
 
+import broker
 import config
 import market
 import portfolio
@@ -84,7 +85,7 @@ def _recent_closes(ticker: str, bars: int) -> list[float]:
     return [float(c) for c in hist["Close"].tail(bars)]
 
 
-def check_halt(state: dict, snapshots: dict, voo_snap, usdjpy_mid: float, today: dt.date) -> str | None:
+def check_halt(state: dict, snapshots: dict, voo_snap, today: dt.date) -> str | None:
     """異常停止条件に該当するか判定する。該当すれば理由文字列、なければNone。"""
     market_date = dt.date.fromisoformat(voo_snap.date)
     stale_days = _business_days_between(market_date, today)
@@ -118,9 +119,9 @@ def check_halt(state: dict, snapshots: dict, voo_snap, usdjpy_mid: float, today:
 
     history_rows = portfolio.read_history_rows()
     if history_rows:
-        prev_nav = float(history_rows[-1]["nav_jpy"])
+        prev_nav = float(history_rows[-1]["nav_usd"])
         if prev_nav != 0:
-            current_nav = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
+            current_nav = portfolio.compute_nav_usd(state, snapshots)
             nav_chg = (current_nav - prev_nav) / prev_nav
             if abs(nav_chg) > HALT_NAV_CONSISTENCY_THRESHOLD:
                 return f"NAV整合性異常（前回比{nav_chg:+.1%}）"
@@ -182,10 +183,10 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         if report_only:
             # --report-only: 台帳読み込み→市場データ取得→NAV計算→data.json再生成→git push のみ。
             # Sonnet判断・約定・history.csv追記・Telegram送信・portfolio.json保存は行わない。
-            nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
-            bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
-            log_and_report(f"[3] NAV計算: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円")
-            data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, [], now_jst)
+            nav_usd = portfolio.compute_nav_usd(state, snapshots)
+            bench_usd = portfolio.compute_bench_nav_usd(state, voo_snap.close)
+            log_and_report(f"[3] NAV計算: NAV=${nav_usd:,.2f} ベンチマーク=${bench_usd:,.2f}")
+            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst)
             report.save_data_json(data)
             log_and_report("[4] data.json更新完了（--report-onlyのためhistory.csv追記・portfolio.json保存はスキップ）")
             git_commit_and_push(now_jst, logger)
@@ -194,28 +195,28 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             return "\n".join(report_lines)
 
         # 異常停止判定（市場データ取得直後、初回構築・配当処理・売買判断の前に行う）
-        halt_reason = check_halt(state, snapshots, voo_snap, usdjpy_mid, now_jst.date())
+        halt_reason = check_halt(state, snapshots, voo_snap, now_jst.date())
         if halt_reason:
             log_and_report(f"[2c] 異常停止判定: 該当（{halt_reason}）→ 売買せずホールド固定")
-            nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
-            bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
-            diff_jpy = nav_jpy - bench_jpy
-            cash_ratio = portfolio.compute_cash_ratio(state, usdjpy_mid, nav_jpy) if nav_jpy else 0.0
+            nav_usd = portfolio.compute_nav_usd(state, snapshots)
+            bench_usd = portfolio.compute_bench_nav_usd(state, voo_snap.close)
+            diff_usd = nav_usd - bench_usd
+            cash_ratio = portfolio.compute_cash_ratio(state, nav_usd) if nav_usd else 0.0
             log_and_report(
-                f"[7] 評価額計算（異常停止時）: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円 差額={diff_jpy:,.0f}円"
+                f"[7] 評価額計算（異常停止時）: NAV=${nav_usd:,.2f} ベンチマーク=${bench_usd:,.2f} 差額=${diff_usd:,.2f}"
             )
             state["last_processed_voo_date"] = voo_snap.date
             if not dry_run:
                 portfolio.append_history_row({
                     "date": voo_snap.date,
-                    "nav_jpy": round(nav_jpy),
-                    "bench_jpy": round(bench_jpy),
-                    "diff_jpy": round(diff_jpy),
-                    "diff_pct": round(diff_jpy / bench_jpy * 100, 4) if bench_jpy else 0.0,
+                    "nav_usd": round(nav_usd, 2),
+                    "bench_usd": round(bench_usd, 2),
+                    "diff_usd": round(diff_usd, 2),
+                    "diff_pct": round(diff_usd / bench_usd * 100, 4) if bench_usd else 0.0,
                     "cash_ratio": round(cash_ratio, 4),
                 })
                 portfolio.save_portfolio(state)
-            data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, [], now_jst)
+            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst)
             if not dry_run:
                 report.save_data_json(data)
                 git_commit_and_push(now_jst, logger)
@@ -247,10 +248,29 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         # 3. 初回判定
         if state["start_date"] is None and charter_targets is not None:
             state["start_date"] = voo_snap.date
-            state["bench_units"] = config.INITIAL_CAPITAL_JPY / (voo_snap.close * usdjpy_mid)
+            state["bench_units"] = config.INITIAL_CAPITAL_USD / voo_snap.close
             log_and_report(f"[3] 初回構築: start_date={state['start_date']} bench_units={state['bench_units']:.6f}")
         else:
             log_and_report("[3] 初回構築スキップ（既に開始済み、またはターゲット未記入）")
+
+        # 3b. moomoo可用性確認・保有照合（charter.md「OpenD停止時の縮退」「保有の照合」準拠）
+        moomoo_available = broker.is_available()
+        reconcile_ok = False
+        moomoo_skip_reason: str | None = None
+        moomoo_alert_lines: list[str] = []
+        if not moomoo_available:
+            moomoo_skip_reason = "moomoo未接続"
+            moomoo_alert_lines.append("⚠️ moomoo未接続（売買停止・評価のみ）")
+            log_and_report("[3b] moomoo未接続。売買停止・評価のみ実施")
+        else:
+            reconcile_ok, reconcile_msg = portfolio.reconcile_positions(state)
+            if reconcile_ok:
+                log_and_report("[3b] moomoo接続確認・保有照合OK")
+            else:
+                moomoo_skip_reason = f"保有不一致（{reconcile_msg}）"
+                moomoo_alert_lines.append(f"🔻 保有不一致（売買停止）: {reconcile_msg}")
+                log_and_report(f"[3b] moomoo接続確認OK・保有照合NG: {reconcile_msg}")
+        can_trade = moomoo_available and reconcile_ok
 
         # 4. 配当処理
         state = portfolio.apply_dividends(state, snapshots)
@@ -273,6 +293,8 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             skip_reason = "start_dateがnull"
         elif state["last_processed_voo_date"] == voo_snap.date:
             skip_reason = "休場（VOO終値日付が前回処理日から進んでいない）"
+        elif moomoo_skip_reason:
+            skip_reason = moomoo_skip_reason
 
         accepted_trades: list[dict] = []
         rejected_trades: list[dict] = []
@@ -282,8 +304,10 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         already_processed_today = state["last_processed_voo_date"] == voo_snap.date
         if already_processed_today:
             log_and_report("[5a] 損切り判定スキップ（休場・本日処理済み）")
+        elif not can_trade:
+            log_and_report(f"[5a] 損切り判定スキップ（売買停止中: {moomoo_skip_reason}）")
         else:
-            stop_loss_orders = portfolio.check_stop_losses(state, snapshots, usdjpy_mid)
+            stop_loss_orders = portfolio.check_stop_losses(state, snapshots)
             if not stop_loss_orders:
                 log_and_report("[5a] 損切り判定: 該当なし")
             elif dry_run:
@@ -291,7 +315,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             else:
                 trade_date = voo_snap.date
                 state, stop_loss_accepted, stop_loss_rejected = portfolio.execute_trades(
-                    stop_loss_orders, state, snapshots, usdjpy_mid, charter_targets, trade_date,
+                    stop_loss_orders, state, snapshots, charter_targets, trade_date,
                 )
                 for t in stop_loss_accepted:
                     portfolio.append_trade_row(t)
@@ -311,7 +335,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         if skip_reason:
             log_and_report(f"[5] 売買判断スキップ: ホールド（{skip_reason}）")
         else:
-            decision = get_trade_decision(charter_text, state, snapshots, voo_technicals, usdjpy_mid)
+            decision = get_trade_decision(charter_text, state, snapshots, voo_technicals)
             decision_reason = decision.get("reason", "")
             proposed_trades = decision.get("trades", [])
             state["mode"] = decision.get("mode", state["mode"])
@@ -324,7 +348,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             else:
                 trade_date = voo_snap.date
                 state, sonnet_accepted, sonnet_rejected = portfolio.execute_trades(
-                    proposed_trades, state, snapshots, usdjpy_mid, charter_targets, trade_date,
+                    proposed_trades, state, snapshots, charter_targets, trade_date,
                 )
                 for t in sonnet_accepted:
                     portfolio.append_trade_row(t)
@@ -337,33 +361,36 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         state["last_processed_voo_date"] = voo_snap.date
 
         # 7. 評価・記録
-        nav_jpy = portfolio.compute_nav_jpy(state, snapshots, usdjpy_mid)
-        bench_jpy = portfolio.compute_bench_nav_jpy(state, voo_snap.close, usdjpy_mid)
-        diff_jpy = nav_jpy - bench_jpy
-        diff_pct_today = round(diff_jpy / bench_jpy * 100, 4) if bench_jpy else 0.0
-        cash_ratio = portfolio.compute_cash_ratio(state, usdjpy_mid, nav_jpy) if nav_jpy else 0.0
+        nav_usd = portfolio.compute_nav_usd(state, snapshots)
+        bench_usd = portfolio.compute_bench_nav_usd(state, voo_snap.close)
+        diff_usd = nav_usd - bench_usd
+        diff_pct_today = round(diff_usd / bench_usd * 100, 4) if bench_usd else 0.0
+        cash_ratio = portfolio.compute_cash_ratio(state, nav_usd) if nav_usd else 0.0
         log_and_report(
-            f"[7] 評価額計算: NAV={nav_jpy:,.0f}円 ベンチマーク={bench_jpy:,.0f}円 差額={diff_jpy:,.0f}円"
+            f"[7] 評価額計算: NAV=${nav_usd:,.2f} ベンチマーク=${bench_usd:,.2f} 差額=${diff_usd:,.2f}"
         )
 
         if not dry_run:
             portfolio.append_history_row({
                 "date": voo_snap.date,
-                "nav_jpy": round(nav_jpy),
-                "bench_jpy": round(bench_jpy),
-                "diff_jpy": round(diff_jpy),
+                "nav_usd": round(nav_usd, 2),
+                "bench_usd": round(bench_usd, 2),
+                "diff_usd": round(diff_usd, 2),
                 "diff_pct": diff_pct_today,
                 "cash_ratio": round(cash_ratio, 4),
             })
             portfolio.save_portfolio(state)
 
         # アラート判定（売買は通常通り。報告の先頭に警告行を追加するのみ）
-        alert_lines = stop_loss_report_lines + check_alerts(prev_mode, state["mode"], history_rows_before, diff_pct_today)
+        alert_lines = (
+            moomoo_alert_lines + stop_loss_report_lines
+            + check_alerts(prev_mode, state["mode"], history_rows_before, diff_pct_today)
+        )
         if alert_lines:
             log_and_report(f"[7b] アラート検知: {alert_lines}")
 
         # 8. data.json再生成
-        data = report.build_data_json(state, snapshots, usdjpy_mid, nav_jpy, bench_jpy, accepted_trades, now_jst)
+        data = report.build_data_json(state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst)
         if not dry_run:
             report.save_data_json(data)
             log_and_report("[8] data.json更新・台帳保存完了")
@@ -383,7 +410,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                     diff = m["nav"] - m["bench"]
                     prev_month_line = (
                         f"{prev_month_dt.month}月戦績: {result_jp} "
-                        f"{'+' if diff >= 0 else ''}{diff:,}円"
+                        f"{'+' if diff >= 0 else ''}${diff:,.2f}"
                     )
                     break
 

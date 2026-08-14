@@ -3,18 +3,21 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
 
+import broker
 import config
 from market import TickerSnapshot
+
+logger = logging.getLogger("vs-sp500.portfolio")
 
 DEFAULT_PORTFOLIO: dict[str, Any] = {
     "start_date": None,
     "mode": "normal",
-    "cash_jpy": config.INITIAL_CAPITAL_JPY,
-    "cash_usd": 0.0,
+    "cash_usd": config.INITIAL_CAPITAL_USD,
     "holdings": {},
     "bench_units": 0.0,
     "last_processed_voo_date": None,
@@ -24,9 +27,9 @@ DEFAULT_PORTFOLIO: dict[str, Any] = {
 
 TRADES_CSV_HEADER = [
     "date", "action", "ticker", "shares", "price", "currency",
-    "fx_rate", "amount_jpy", "fee_jpy", "rule", "note",
+    "amount_usd", "fee_usd", "rule", "note",
 ]
-HISTORY_CSV_HEADER = ["date", "nav_jpy", "bench_jpy", "diff_jpy", "diff_pct", "cash_ratio"]
+HISTORY_CSV_HEADER = ["date", "nav_usd", "bench_usd", "diff_usd", "diff_pct", "cash_ratio"]
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +92,7 @@ def read_trade_rows() -> list[dict[str, Any]]:
 
 
 def compute_avg_costs() -> dict[str, float]:
-    """trades.csvから総平均法で各銘柄の平均取得単価（建て通貨）を計算する。
+    """trades.csvから総平均法で各銘柄の平均取得単価（USD）を計算する。
 
     BUYは加重平均で更新（単価は約定price、手数料は含めない）。
     SELLは株数を減らすだけで平均単価は変えない。
@@ -165,45 +168,39 @@ def _pct_to_float(raw: str) -> float | None:
 
 
 # ---------------------------------------------------------------------------
-# 評価額計算
+# 評価額計算（v1.4: ドル建て。為替換算は一切行わない）
 # ---------------------------------------------------------------------------
 
-def compute_nav_jpy(state: dict[str, Any], market: dict[str, TickerSnapshot], usdjpy_mid: float) -> float:
-    nav = state["cash_jpy"] + state["cash_usd"] * usdjpy_mid
+def compute_nav_usd(state: dict[str, Any], market: dict[str, TickerSnapshot]) -> float:
+    nav = state["cash_usd"]
     for ticker, shares in state["holdings"].items():
         snap = market.get(ticker)
         if snap is None:
             continue
-        currency = config.WHITELIST[ticker]["currency"]
-        if currency == "USD":
-            nav += shares * snap.close * usdjpy_mid
-        else:
-            nav += shares * snap.close
+        nav += shares * snap.close
     return nav
 
 
-def compute_bench_nav_jpy(state: dict[str, Any], voo_close: float, usdjpy_mid: float) -> float:
-    return state["bench_units"] * voo_close * usdjpy_mid
+def compute_bench_nav_usd(state: dict[str, Any], voo_close: float) -> float:
+    """bench_unitsはVOOの株数なので通貨に依存しない。値は一切変更しないこと。"""
+    return state["bench_units"] * voo_close
 
 
 def compute_ticker_weight(ticker: str, state: dict[str, Any], market: dict[str, TickerSnapshot],
-                           usdjpy_mid: float, nav_jpy: float) -> float:
-    if nav_jpy <= 0:
+                           nav_usd: float) -> float:
+    if nav_usd <= 0:
         return 0.0
     shares = state["holdings"].get(ticker, 0.0)
     snap = market.get(ticker)
     if snap is None or shares == 0.0:
         return 0.0
-    currency = config.WHITELIST[ticker]["currency"]
-    value_jpy = shares * snap.close * (usdjpy_mid if currency == "USD" else 1.0)
-    return value_jpy / nav_jpy
+    return shares * snap.close / nav_usd
 
 
-def compute_cash_ratio(state: dict[str, Any], usdjpy_mid: float, nav_jpy: float) -> float:
-    if nav_jpy <= 0:
+def compute_cash_ratio(state: dict[str, Any], nav_usd: float) -> float:
+    if nav_usd <= 0:
         return 0.0
-    cash_jpy_equiv = state["cash_jpy"] + state["cash_usd"] * usdjpy_mid
-    return cash_jpy_equiv / nav_jpy
+    return state["cash_usd"] / nav_usd
 
 
 # ---------------------------------------------------------------------------
@@ -221,39 +218,91 @@ def _max_weight_for_ticker(ticker: str) -> float:
 
 
 def compute_stock_total_weight(state: dict[str, Any], market: dict[str, TickerSnapshot],
-                                usdjpy_mid: float, nav_jpy: float) -> float:
+                                nav_usd: float) -> float:
     """個別株（ETF以外）の合計ウェイト。"""
     return sum(
-        compute_ticker_weight(ticker, state, market, usdjpy_mid, nav_jpy)
+        compute_ticker_weight(ticker, state, market, nav_usd)
         for ticker in state["holdings"]
         if config.is_stock(ticker)
     )
 
 
-def _fee_and_shares_for_buy(ticker: str, amount_jpy: float, snap: TickerSnapshot, usdjpy_mid: float
-                             ) -> tuple[float, float, float]:
-    """BUY注文の (shares, fee_jpy, actual_amount_jpy) を返す（現金移動は呼び出し側で行う）。"""
-    currency = config.WHITELIST[ticker]["currency"]
-    if currency == "JPY":
-        shares = amount_jpy / snap.close
-        return shares, 0.0, amount_jpy
-    # USD建て
-    trade_value_usd = amount_jpy / usdjpy_mid
-    shares = trade_value_usd / snap.close
-    fee_usd = min(trade_value_usd * config.US_ETF_FEE_RATE, config.US_ETF_FEE_CAP_USD)
-    fee_jpy = fee_usd * usdjpy_mid
-    return shares, fee_jpy, trade_value_usd * usdjpy_mid
+def reconcile_positions(state: dict[str, Any]) -> tuple[bool, str]:
+    """台帳の保有とmoomooの実保有を突き合わせる。全銘柄一致でTrue。"""
+    broker_positions = broker.get_positions()
+    if broker_positions is None:
+        return False, "moomooの保有取得に失敗した"
+
+    ledger_holdings = {t: s for t, s in state.get("holdings", {}).items() if abs(s) > 1e-6}
+    broker_holdings = {t: q for t, q in broker_positions.items() if abs(q) > 1e-6}
+
+    ticker_mismatch = set(ledger_holdings) ^ set(broker_holdings)
+    if ticker_mismatch:
+        return False, f"保有銘柄が不一致（台帳のみ/moomooのみ）: {sorted(ticker_mismatch)}"
+
+    qty_mismatches = [
+        f"{ticker}(台帳{ledger_holdings[ticker]:g} vs moomoo{broker_holdings[ticker]:g})"
+        for ticker in ledger_holdings
+        if abs(ledger_holdings[ticker] - broker_holdings[ticker]) > 1e-6
+    ]
+    if qty_mismatches:
+        return False, "株数不一致: " + ", ".join(qty_mismatches)
+
+    return True, "一致"
+
+
+def _pre_trade_guardrail_check(
+    ticker: str,
+    action: str,
+    tentative_state: dict[str, Any],
+    market: dict[str, TickerSnapshot],
+    charter_targets: dict[str, dict[str, float]] | None,
+    is_target_directed: bool,
+) -> None:
+    """見積り後のtentative_stateに対してターゲット超過・集中規制・現金比率をチェックする。
+
+    違反時はTradeRejectedを送出する（この時点ではまだ実発注していない）。
+    """
+    if action == "BUY" and charter_targets and ticker in charter_targets:
+        tmp_nav = compute_nav_usd(tentative_state, market)
+        new_weight = compute_ticker_weight(ticker, tentative_state, market, tmp_nav)
+        target_key = "defense" if tentative_state.get("mode") == "defense" else "normal"
+        target_weight = charter_targets[ticker].get(target_key, 0.0)
+        if new_weight > target_weight + config.TARGET_OVERSHOOT_TOLERANCE and is_target_directed:
+            raise TradeRejected("ターゲット配分を超過する買い注文")
+
+    if tentative_state["cash_usd"] < 0:
+        raise TradeRejected("現金がマイナスになる注文")
+
+    post_nav = compute_nav_usd(tentative_state, market)
+    post_weight = compute_ticker_weight(ticker, tentative_state, market, post_nav)
+    if config.is_stock(ticker):
+        if post_weight > config.MAX_STOCK_WEIGHT + config.TARGET_WEIGHT_TOLERANCE:
+            raise TradeRejected(f"個別株1銘柄上限超過（{ticker}: {post_weight:.1%}）")
+        stock_total_weight = compute_stock_total_weight(tentative_state, market, post_nav)
+        if stock_total_weight > config.MAX_STOCK_TOTAL_WEIGHT + config.TARGET_WEIGHT_TOLERANCE:
+            raise TradeRejected(f"個別株合計上限超過（{stock_total_weight:.1%}）")
+    else:
+        if post_weight > _max_weight_for_ticker(ticker) + config.TARGET_WEIGHT_TOLERANCE:
+            raise TradeRejected(f"銘柄集中規制超過（{ticker}: {post_weight:.1%}）")
+
+    cash_ratio = compute_cash_ratio(tentative_state, post_nav)
+    if cash_ratio < config.MIN_CASH_RATIO - config.TARGET_WEIGHT_TOLERANCE:
+        raise TradeRejected("現金比率が下限(2%)を下回る")
 
 
 def execute_trades(
     proposed_trades: list[dict[str, Any]],
     state: dict[str, Any],
     market: dict[str, TickerSnapshot],
-    usdjpy_mid: float,
     charter_targets: dict[str, dict[str, float]] | None,
     trade_date: str,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    """提案された取引をガードレール検証のうえ約定する。
+    """提案された取引をガードレール検証のうえmoomooに実発注する。
+
+    ガードレールは「見積り（現在値×想定株数）」で発注前に検証する（発注後は取り消せないため）。
+    検証を通過したら実際にbroker.place_market_orderへ委譲し、実約定株数・実約定価格・
+    moomooの現金増減（＝発注前後のbroker.get_cash()の差分）をそのまま台帳に反映する。
 
     戻り値: (新しいstate, 約定した取引ログ, 拒否された取引ログ)
     """
@@ -262,8 +311,8 @@ def execute_trades(
     proposed_trades = sorted(proposed_trades, key=lambda t: 0 if t.get("action") == "SELL" else 1)
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
-    nav_jpy = compute_nav_jpy(new_state, market, usdjpy_mid)
-    non_target_used_jpy = 0.0
+    nav_usd = compute_nav_usd(new_state, market)
+    non_target_used_usd = 0.0
     trade_count = 0
 
     for trade in proposed_trades:
@@ -275,15 +324,15 @@ def execute_trades(
 
             action = trade.get("action")
             ticker = trade.get("ticker")
-            amount_jpy = trade.get("amount_jpy")
+            amount_usd = trade.get("amount_usd")
             rule = trade.get("rule")
 
             if ticker not in config.WHITELIST:
                 raise TradeRejected(f"ホワイトリスト外の銘柄: {ticker}")
             if action not in ("BUY", "SELL"):
                 raise TradeRejected(f"不正なaction: {action}")
-            if not isinstance(amount_jpy, (int, float)) or amount_jpy <= 0:
-                raise TradeRejected("amount_jpyが不正")
+            if not isinstance(amount_usd, (int, float)) or amount_usd <= 0:
+                raise TradeRejected("amount_usdが不正")
 
             snap = market.get(ticker)
             if snap is None:
@@ -295,105 +344,104 @@ def execute_trades(
             # 非ターゲット取引（押し目買い等）は1日あたりNAVの10%・現金の半分まで
             # （損切りはコード側の強制執行であり対象外。charter.md「個別株の追加ルール」準拠）
             if not is_target_directed and not is_forced_stop_loss:
-                if amount_jpy > nav_jpy * config.NON_TARGET_TRADE_DAILY_CAP_OF_NAV - non_target_used_jpy:
+                if amount_usd > nav_usd * config.NON_TARGET_TRADE_DAILY_CAP_OF_NAV - non_target_used_usd:
                     raise TradeRejected("非ターゲット取引の1日上限(評価額10%)を超過")
-                cash_jpy_equiv = new_state["cash_jpy"] + new_state["cash_usd"] * usdjpy_mid
-                if amount_jpy > cash_jpy_equiv * config.DIP_BUY_MAX_OF_CASH:
+                if amount_usd > new_state["cash_usd"] * config.DIP_BUY_MAX_OF_CASH:
                     raise TradeRejected("押し目買いは現金の半分までしか許可されない")
-
-            currency = config.WHITELIST[ticker]["currency"]
 
             # 個別株の追加ガードレール（charter.md「個別株を持つ場合の追加ルール」準拠）
             if config.is_stock(ticker) and action == "BUY" and rule == "rebalance":
                 raise TradeRejected("個別株はリバランスで買い増さない")
 
+            currency = config.WHITELIST[ticker]["currency"]
+            # 株数は整数のみ。金額から株数を求める際は切り捨て（浮動小数誤差対策で微小イプシロンを加算）
+            qty = int(amount_usd / snap.close + 1e-6)
+
             if action == "BUY":
-                shares, fee_jpy, actual_amount_jpy = _fee_and_shares_for_buy(ticker, amount_jpy, snap, usdjpy_mid)
+                if qty <= 0:
+                    raise TradeRejected("金額が小さすぎて1株も買えない")
+                estimated_cost = qty * snap.close
+                if estimated_cost > new_state["cash_usd"] + 1e-6:
+                    raise TradeRejected("現金不足（見積りでcash_usdを超過）")
 
-                if currency == "USD":
-                    trade_value_usd = actual_amount_jpy / usdjpy_mid
-                    fee_usd = fee_jpy / usdjpy_mid
-                    total_usd_needed = trade_value_usd + fee_usd
-                    if new_state["cash_usd"] >= total_usd_needed:
-                        new_state["cash_usd"] -= total_usd_needed
-                    else:
-                        shortfall_usd = total_usd_needed - new_state["cash_usd"]
-                        jpy_cost = shortfall_usd * (usdjpy_mid + config.FX_SPREAD_JPY_PER_USD)
-                        if new_state["cash_jpy"] < jpy_cost:
-                            raise TradeRejected("現金不足（JPY・USD合計で不足）")
-                        new_state["cash_jpy"] -= jpy_cost
-                        new_state["cash_usd"] = 0.0
-                    price_for_log = snap.close
+                tentative_holdings = dict(new_state["holdings"])
+                tentative_holdings[ticker] = tentative_holdings.get(ticker, 0.0) + qty
+                tentative_state = {
+                    **new_state, "holdings": tentative_holdings,
+                    "cash_usd": new_state["cash_usd"] - estimated_cost,
+                }
+                _pre_trade_guardrail_check(ticker, action, tentative_state, market, charter_targets, is_target_directed)
+
+                cash_before = broker.get_cash()
+                fill = broker.place_market_order(ticker, qty, "BUY")
+                if fill is None:
+                    raise TradeRejected(
+                        "moomoo発注が失敗または未約定確認"
+                        "（実際に約定していた場合は翌朝reconcile_positionsが不一致として検知する）"
+                    )
+                filled_qty = fill["filled_qty"]
+                avg_price = fill["avg_price"]
+                cash_after = broker.get_cash()
+                if cash_before is not None and cash_after is not None:
+                    cash_delta = cash_after - cash_before
                 else:
-                    if new_state["cash_jpy"] < amount_jpy:
-                        raise TradeRejected("現金不足（JPY）")
-                    new_state["cash_jpy"] -= amount_jpy
-                    price_for_log = snap.close
+                    logger.warning("BUY %s: moomoo現金取得に失敗したため約定額から見積もった（fee不明）", ticker)
+                    cash_delta = -(filled_qty * avg_price)
 
-                new_state["holdings"][ticker] = new_state["holdings"].get(ticker, 0.0) + shares
-
-                # ターゲット超過チェック（ターゲットが定義されている場合のみ）
-                if charter_targets and ticker in charter_targets:
-                    tmp_nav = compute_nav_jpy(new_state, market, usdjpy_mid)
-                    new_weight = compute_ticker_weight(ticker, new_state, market, usdjpy_mid, tmp_nav)
-                    target_key = "defense" if new_state.get("mode") == "defense" else "normal"
-                    target_weight = charter_targets[ticker].get(target_key, 0.0)
-                    if new_weight > target_weight + config.TARGET_OVERSHOOT_TOLERANCE and is_target_directed:
-                        raise TradeRejected("ターゲット配分を超過する買い注文")
-
-                if new_state["cash_jpy"] < 0 or new_state["cash_usd"] < 0:
-                    raise TradeRejected("現金がマイナスになる注文")
+                new_state["cash_usd"] += cash_delta
+                new_state["holdings"][ticker] = new_state["holdings"].get(ticker, 0.0) + filled_qty
+                fee_usd = round(-cash_delta - filled_qty * avg_price, 4)
+                shares, price_for_log = filled_qty, avg_price
 
             else:  # SELL
                 held = new_state["holdings"].get(ticker, 0.0)
-                if currency == "USD":
-                    shares = amount_jpy / (snap.close * usdjpy_mid)
-                else:
-                    shares = amount_jpy / snap.close
-                if shares > held + 1e-9:
-                    raise TradeRejected("保有株数を超えるSELL注文")
+                qty = min(qty, int(held + 1e-6))
+                if qty <= 0:
+                    raise TradeRejected("保有株数を超えるSELL注文、または売却できる株数が無い")
 
-                proceeds_native = shares * snap.close
-                if currency == "USD":
-                    fee_native = min(proceeds_native * config.US_ETF_FEE_RATE, config.US_ETF_FEE_CAP_USD)
-                    net_native = proceeds_native - fee_native
-                    new_state["cash_usd"] += net_native
-                    fee_jpy = fee_native * usdjpy_mid
-                else:
-                    fee_native = 0.0
-                    new_state["cash_jpy"] += proceeds_native
-                    fee_jpy = 0.0
-                price_for_log = snap.close
+                tentative_holdings = dict(new_state["holdings"])
+                tentative_holdings[ticker] = held - qty
+                if tentative_holdings[ticker] < 1e-9:
+                    del tentative_holdings[ticker]
+                estimated_proceeds = qty * snap.close
+                tentative_state = {
+                    **new_state, "holdings": tentative_holdings,
+                    "cash_usd": new_state["cash_usd"] + estimated_proceeds,
+                }
+                _pre_trade_guardrail_check(ticker, action, tentative_state, market, charter_targets, is_target_directed)
 
-                new_state["holdings"][ticker] = held - shares
+                cash_before = broker.get_cash()
+                fill = broker.place_market_order(ticker, qty, "SELL")
+                if fill is None:
+                    raise TradeRejected(
+                        "moomoo発注が失敗または未約定確認"
+                        "（実際に約定していた場合は翌朝reconcile_positionsが不一致として検知する）"
+                    )
+                filled_qty = fill["filled_qty"]
+                avg_price = fill["avg_price"]
+                cash_after = broker.get_cash()
+                if cash_before is not None and cash_after is not None:
+                    cash_delta = cash_after - cash_before
+                else:
+                    logger.warning("SELL %s: moomoo現金取得に失敗したため約定額から見積もった（fee不明）", ticker)
+                    cash_delta = filled_qty * avg_price
+
+                new_state["cash_usd"] += cash_delta
+                new_state["holdings"][ticker] = held - filled_qty
                 if new_state["holdings"][ticker] < 1e-9:
                     del new_state["holdings"][ticker]
-
-            # 個別銘柄集中規制・現金比率規制（共通チェック）
-            post_nav = compute_nav_jpy(new_state, market, usdjpy_mid)
-            post_weight = compute_ticker_weight(ticker, new_state, market, usdjpy_mid, post_nav)
-            if config.is_stock(ticker):
-                if post_weight > config.MAX_STOCK_WEIGHT + config.TARGET_WEIGHT_TOLERANCE:
-                    raise TradeRejected(f"個別株1銘柄上限超過（{ticker}: {post_weight:.1%}）")
-                stock_total_weight = compute_stock_total_weight(new_state, market, usdjpy_mid, post_nav)
-                if stock_total_weight > config.MAX_STOCK_TOTAL_WEIGHT + config.TARGET_WEIGHT_TOLERANCE:
-                    raise TradeRejected(f"個別株合計上限超過（{stock_total_weight:.1%}）")
-            else:
-                if post_weight > _max_weight_for_ticker(ticker) + config.TARGET_WEIGHT_TOLERANCE:
-                    raise TradeRejected(f"銘柄集中規制超過（{ticker}: {post_weight:.1%}）")
-            cash_ratio = compute_cash_ratio(new_state, usdjpy_mid, post_nav)
-            if cash_ratio < config.MIN_CASH_RATIO - config.TARGET_WEIGHT_TOLERANCE:
-                raise TradeRejected("現金比率が下限(2%)を下回る")
+                fee_usd = round(filled_qty * avg_price - cash_delta, 4)
+                shares, price_for_log = filled_qty, avg_price
 
             if not is_target_directed and not is_forced_stop_loss:
-                non_target_used_jpy += amount_jpy
+                non_target_used_usd += amount_usd
             trade_count += 1
 
             accepted.append({
                 "date": trade_date, "action": action, "ticker": ticker,
-                "shares": round(shares, 6), "price": price_for_log, "currency": currency,
-                "fx_rate": round(usdjpy_mid, 3), "amount_jpy": round(amount_jpy),
-                "fee_jpy": round(fee_jpy), "rule": rule, "note": "",
+                "shares": shares, "price": round(price_for_log, 4), "currency": currency,
+                "amount_usd": round(shares * price_for_log, 2), "fee_usd": fee_usd,
+                "rule": rule, "note": "",
             })
 
         except TradeRejected as e:
@@ -403,8 +451,7 @@ def execute_trades(
     return new_state, accepted, rejected
 
 
-def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot], usdjpy_mid: float
-                       ) -> list[dict[str, Any]]:
+def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) -> list[dict[str, Any]]:
     """個別株のうち平均取得単価比が STOCK_STOP_LOSS を下回るものの全売却注文を返す。"""
     avg_costs = compute_avg_costs()
     orders: list[dict[str, Any]] = []
@@ -417,28 +464,22 @@ def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot], 
             continue
         change = (snap.close - avg_cost) / avg_cost
         if change <= config.STOCK_STOP_LOSS:
-            currency = config.WHITELIST[ticker]["currency"]
-            amount_jpy = shares * snap.close * (usdjpy_mid if currency == "USD" else 1.0)
+            amount_usd = shares * snap.close
             orders.append({
-                "action": "SELL", "ticker": ticker, "amount_jpy": amount_jpy,
+                "action": "SELL", "ticker": ticker, "amount_usd": amount_usd,
                 "rule": "stop_loss", "loss_pct": change,
             })
     return orders
 
 
 def apply_dividends(state: dict[str, Any], market: dict[str, TickerSnapshot]) -> dict[str, Any]:
-    """保有銘柄の当日配当を現金に加算する。"""
+    """保有銘柄の当日配当を現金(USD)に加算する。"""
     new_state = json.loads(json.dumps(state))
     for ticker, shares in state["holdings"].items():
         snap = market.get(ticker)
         if snap is None or snap.dividend <= 0:
             continue
-        currency = config.WHITELIST[ticker]["currency"]
-        amount = shares * snap.dividend
-        if currency == "USD":
-            new_state["cash_usd"] += amount
-        else:
-            new_state["cash_jpy"] += amount
+        new_state["cash_usd"] += shares * snap.dividend
     return new_state
 
 
