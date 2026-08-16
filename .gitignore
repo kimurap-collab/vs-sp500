@@ -5,3 +5,6 @@ logs/loop/*
 !logs/loop/*.md
 __pycache__/
 *.pyc
+
+# 夜間実行が朝の送信まで報告を貯める一時バッファ。中身は毎朝空になるので追跡しない
+pending_report.txt
