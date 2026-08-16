@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import logging
+import os
 from typing import Any
 
 import requests
@@ -159,6 +160,22 @@ def build_telegram_message(
 
 
 def send_telegram_message(text: str) -> bool:
+    """Telegramへ送信する。
+
+    環境変数 VS_SP500_DEFER_TELEGRAM=1 の時は送信せず pending_report.txt に貯める。
+    夜間(23:00・米国市場の場中)に実行し、報告だけ朝(07:00)に届けるための仕組み。
+    貯めた分は send_report.py がまとめて流す。
+    """
+    if os.environ.get("VS_SP500_DEFER_TELEGRAM") == "1":
+        try:
+            with open(config.PENDING_REPORT_PATH, "a", encoding="utf-8") as f:
+                f.write(text.rstrip() + "\n\n")
+            logger.info("Telegram送信を保留し pending_report.txt に追記した")
+            return True
+        except OSError as e:
+            logger.error("保留ファイルへの書き込みに失敗: %s", e)
+            return False
+
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
         logger.error("Telegram設定が不足しているため送信できない")
         return False

@@ -14,6 +14,7 @@ PORTFOLIO_PATH = LEDGER_DIR / "portfolio.json"
 TRADES_CSV_PATH = LEDGER_DIR / "trades.csv"
 HISTORY_CSV_PATH = LEDGER_DIR / "history.csv"
 DATA_JSON_PATH = BASE_DIR / "data.json"
+PENDING_REPORT_PATH = BASE_DIR / "pending_report.txt"  # 夜間実行の報告を朝まで貯める
 LOG_DIR = BASE_DIR / "logs"
 
 # --- .env読み込み ---

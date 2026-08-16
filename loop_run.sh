@@ -19,6 +19,9 @@ CLAUDE_BIN="$(command -v claude || echo /Users/seijikimura/.local/bin/claude)"
 # vs-sp500配下の書き込みを「いけ」なしで通す。対話セッションでは立たない。
 export IKE_GATE_AUTONOMOUS=1
 
+# 自律ループの週報・月次総括も夜には送らず、朝07:00の send_report.py にまとめて流す
+export VS_SP500_DEFER_TELEGRAM=1
+
 echo "[loop_run.sh] 開始 $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 
 "$CLAUDE_BIN" -p "$(cat LOOP_PROMPT.md)" \
