@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-08-17 18:23 JST",
+  "updated_at": "2026-08-18 00:00 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64163.39,
-  "bench_usd": 63881.27,
-  "diff_usd": 282.12,
-  "diff_pct": 0.44,
+  "nav_usd": 64270.56,
+  "bench_usd": 63792.2,
+  "diff_usd": 478.37,
+  "diff_pct": 0.75,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 15352.47,
-      "weight_pct": 23.93,
-      "price": 731.07,
+      "value_usd": 15404.97,
+      "weight_pct": 23.97,
+      "price": 733.57,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -24,9 +24,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3012.66,
-      "weight_pct": 4.7,
-      "price": 167.37,
+      "value_usd": 3013.56,
+      "weight_pct": 4.69,
+      "price": 167.42,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -37,9 +37,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 23.0,
-      "value_usd": 9234.04,
-      "weight_pct": 14.39,
-      "price": 401.48,
+      "value_usd": 9319.49,
+      "weight_pct": 14.5,
+      "price": 405.195,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -50,9 +50,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.0,
-      "value_usd": 3070.32,
-      "weight_pct": 4.79,
-      "price": 93.04,
+      "value_usd": 3069.49,
+      "weight_pct": 4.78,
+      "price": 93.015,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -63,9 +63,9 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.0,
-      "value_usd": 22121.91,
-      "weight_pct": 34.48,
-      "price": 713.61,
+      "value_usd": 22091.06,
+      "weight_pct": 34.37,
+      "price": 712.615,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -104,6 +104,11 @@
       "date": "2026-08-14",
       "nav": 64163.39,
       "bench": 63881.27
+    },
+    {
+      "date": "2026-08-17",
+      "nav": 64270.56,
+      "bench": 63792.2
     }
   ],
   "trades": [
@@ -195,17 +200,17 @@
   "monthly": [
     {
       "month": "2026-08",
-      "nav": 64163.39,
-      "bench": 63881.27,
+      "nav": 64270.56,
+      "bench": 63792.2,
       "result": "win"
     }
   ],
   "rsi": {
     "start_date": "2026-08-14",
     "nav_usd": 500000.0,
-    "bench_usd": 500000.0,
-    "diff_usd": 0.0,
-    "diff_pct": 0.0,
+    "bench_usd": 499302.84,
+    "diff_usd": 697.16,
+    "diff_pct": 0.14,
     "cash_usd": 500000.0,
     "open_lots": 0,
     "holdings": [],
@@ -214,6 +219,11 @@
         "date": "2026-08-14",
         "nav": 500000.0,
         "bench": 500000.0
+      },
+      {
+        "date": "2026-08-17",
+        "nav": 500000.0,
+        "bench": 499302.84
       }
     ],
     "trades": [],
@@ -221,7 +231,7 @@
       {
         "month": "2026-08",
         "nav": 500000.0,
-        "bench": 500000.0,
+        "bench": 499302.84,
         "result": "win"
       }
     ]
