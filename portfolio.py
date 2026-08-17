@@ -227,13 +227,28 @@ def compute_stock_total_weight(state: dict[str, Any], market: dict[str, TickerSn
     )
 
 
-def reconcile_positions(state: dict[str, Any]) -> tuple[bool, str]:
-    """台帳の保有とmoomooの実保有を突き合わせる。全銘柄一致でTrue。"""
+def combined_holdings(state: dict[str, Any], rsi_state: dict[str, Any] | None) -> dict[str, float]:
+    """本体の保有 + RSI枠の保有（銘柄ごとに合算）。
+
+    RSI枠は同じmoomoo口座に建玉を持つため、保有照合は本体単独ではなく
+    この合算値で行う必要がある（SPEC_RSI30.md「最大の危険箇所は保有照合」）。
+    rsi_stateがNone、またはロットが無ければ本体単独と一致する（後方互換）。
+    """
+    combined: dict[str, float] = dict(state.get("holdings", {}))
+    for lot in (rsi_state or {}).get("lots", []):
+        if lot.get("closed"):
+            continue
+        combined[lot["ticker"]] = combined.get(lot["ticker"], 0.0) + lot.get("shares", 0.0)
+    return combined
+
+
+def reconcile_positions(state: dict[str, Any], rsi_state: dict[str, Any] | None = None) -> tuple[bool, str]:
+    """台帳の保有（本体+RSI枠の合算）とmoomooの実保有を突き合わせる。全銘柄一致でTrue。"""
     broker_positions = broker.get_positions()
     if broker_positions is None:
         return False, "moomooの保有取得に失敗した"
 
-    ledger_holdings = {t: s for t, s in state.get("holdings", {}).items() if abs(s) > 1e-6}
+    ledger_holdings = {t: s for t, s in combined_holdings(state, rsi_state).items() if abs(s) > 1e-6}
     broker_holdings = {t: q for t, q in broker_positions.items() if abs(q) > 1e-6}
 
     ticker_mismatch = set(ledger_holdings) ^ set(broker_holdings)

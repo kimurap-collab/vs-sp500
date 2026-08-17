@@ -88,3 +88,28 @@ GITHUB_PAGES_URL = "https://kimurap-collab.github.io/vs-sp500/"
 
 # --- data.json用の取引履歴保持件数 ---
 DATA_JSON_TRADES_LIMIT = 50
+
+# --- RSI-30枠（2026-08-17 SPEC_RSI30.md。本体とは独立した2本目の戦略枠） ---
+RSI_LEDGER_DIR = LEDGER_DIR / "rsi"
+RSI_PORTFOLIO_PATH = RSI_LEDGER_DIR / "portfolio.json"
+RSI_TRADES_CSV_PATH = RSI_LEDGER_DIR / "trades.csv"
+RSI_HISTORY_CSV_PATH = RSI_LEDGER_DIR / "history.csv"
+RSI_UNIVERSE_PATH = BASE_DIR / "universe.json"
+
+RSI_INITIAL_CAPITAL_USD = 500_000.0  # moomoo仮想口座$1,000,000の半分
+RSI_ENTRY_RSI_THRESHOLD = 30.0  # RSI(14) <= 30 でエントリー
+RSI_ENTRY_AMOUNT_USD = 50_000.0
+# 買い増し（初期エントリー価格基準）: +2.5%→$25,000 / +5.0%→$12,500 / +7.5%→$12,500
+RSI_PYRAMID_TRIGGERS = (0.025, 0.05, 0.075)
+RSI_PYRAMID_AMOUNTS_USD = (25_000.0, 12_500.0, 12_500.0)
+# 1ロット上限は上記4段の合計と一致する（$50,000+$25,000+$12,500+$12,500=$100,000）。
+# 別ロット（再エントリー）には適用されない上限であり、コードで別途強制はしない。
+RSI_MAX_LOT_INVESTMENT_USD = 100_000.0
+RSI_STOP_LOSS_PCT = -0.08  # 初期エントリー価格から-8%で全株売却
+RSI_PROFIT1_PCT = 0.20    # 平均取得単価+20%で総株数の50%を売却
+RSI_PROFIT1_SELL_FRACTION = 0.5
+RSI_PROFIT2_PCT = 0.25    # 平均取得単価+25%でさらに25%を売却（残り25%は無期限保有）
+RSI_PROFIT2_SELL_FRACTION = 0.25
+RSI_EXCEPTION_WINDOW_TRADING_DAYS = 15  # 初期エントリーからこの営業日数以内に+20%到達したら例外発動
+RSI_EXCEPTION_HOLD_CALENDAR_DAYS = 56   # 例外発動時、初期エントリーからこの暦日数まで利確を停止（8週間）
+RSI_UNIVERSE_REFRESH_DAY_OF_MONTH = 1   # ユニバース更新は月初のみ（この日以降で当月未更新なら更新）

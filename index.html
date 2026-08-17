@@ -143,6 +143,68 @@
     </table>
     <div class="empty" id="tradesEmpty" style="display:none;">取引履歴なし</div>
   </section>
+
+  <header style="margin-top:32px;">
+    <h1>RSI-30枠 vs S&P500</h1>
+    <div class="updated" id="rsi-updated"></div>
+  </header>
+
+  <div id="rsi-panel">
+  <div class="diff-card">
+    <div class="label">対S&P500（RSI-30枠）</div>
+    <div class="amount" id="rsi-diff-amount">-</div>
+    <div class="pct" id="rsi-diff-pct">-</div>
+  </div>
+
+  <div class="nav-row">
+    <div class="nav-box">
+      <div class="label">RSI-30枠の評価額</div>
+      <div class="value" id="rsi-nav-usd">-</div>
+    </div>
+    <div class="nav-box">
+      <div class="label">S&P500ベンチマーク</div>
+      <div class="value" id="rsi-bench-usd">-</div>
+    </div>
+  </div>
+  <div class="note">※RSI(14)&lt;=30で個別エントリー、ロット単位で買い増し・利確・損切りする独立枠。開始資金$500,000</div>
+
+  <section>
+    <h2>資産推移</h2>
+    <canvas id="rsiHistoryChart" height="180"></canvas>
+  </section>
+
+  <section>
+    <h2>月次勝敗</h2>
+    <table id="rsiMonthlyTable">
+      <thead><tr><th>月</th><th class="num">評価額</th><th class="num">ベンチマーク</th><th>結果</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="rsiMonthlyEmpty" style="display:none;">まだデータがありません</div>
+  </section>
+
+  <section>
+    <h2>保有一覧（銘柄ごとに複数ロットを合算）</h2>
+    <div class="table-scroll">
+    <table id="rsiHoldingsTable">
+      <thead><tr>
+        <th>銘柄</th><th class="num">株数</th><th class="num">平均取得単価</th>
+        <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="rsiHoldingsEmpty" style="display:none;">保有なし（全額現金）</div>
+  </section>
+
+  <section>
+    <h2>取引記録</h2>
+    <table id="rsiTradesTable">
+      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="rsiTradesEmpty" style="display:none;">取引履歴なし</div>
+  </section>
+  </div>
 </div>
 
 <script>
@@ -268,6 +330,105 @@ async function load() {
         `<td class="num">$${amt}</td><td>${t.rule}</td>`;
       tradesBody.appendChild(tr);
     });
+  }
+
+  // --- RSI-30枠（三つ巴表示。data.rsiがまだ無い/未開始なら空表示のまま） ---
+  const rsi = data.rsi;
+  if (rsi && rsi.start_date) {
+    document.getElementById("rsi-updated").textContent =
+      "開始日: " + rsi.start_date + "（保有ロット数: " + (rsi.open_lots || 0) + "）";
+
+    const rsiDiffUsd = rsi.diff_usd;
+    const rsiWin = rsiDiffUsd >= 0;
+    const rsiSign = rsiWin ? "+" : "";
+    const rsiAmountEl = document.getElementById("rsi-diff-amount");
+    rsiAmountEl.textContent = rsiSign + "$" + rsiDiffUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    rsiAmountEl.className = "amount " + (rsiWin ? "win" : "lose");
+    const rsiPctEl = document.getElementById("rsi-diff-pct");
+    rsiPctEl.textContent = rsiSign + rsi.diff_pct.toFixed(2) + "%";
+    rsiPctEl.className = "pct " + (rsiWin ? "win" : "lose");
+
+    document.getElementById("rsi-nav-usd").textContent = "$" + rsi.nav_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("rsi-bench-usd").textContent = "$" + rsi.bench_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const rsiHist = rsi.history || [];
+    new Chart(document.getElementById("rsiHistoryChart"), {
+      type: "line",
+      data: {
+        labels: rsiHist.map(h => h.date),
+        datasets: [
+          { label: "RSI-30枠", data: rsiHist.map(h => h.nav), borderColor: "#3ddc84", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+          { label: "S&P500", data: rsiHist.map(h => h.bench), borderColor: "#8b93a3", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: "#e6e8ec" } } },
+        scales: {
+          x: { ticks: { color: "#8b93a3", maxTicksLimit: 6 }, grid: { color: "#262b36" } },
+          y: { ticks: { color: "#8b93a3" }, grid: { color: "#262b36" } },
+        },
+      },
+    });
+
+    const rsiMonthlyBody = document.querySelector("#rsiMonthlyTable tbody");
+    const rsiMonthly = (rsi.monthly || []).slice().reverse();
+    if (rsiMonthly.length === 0) {
+      document.getElementById("rsiMonthlyEmpty").style.display = "block";
+    } else {
+      rsiMonthly.forEach(m => {
+        const tr = document.createElement("tr");
+        const resultJp = m.result === "win" ? "勝ち" : "負け";
+        const cls = m.result === "win" ? "win" : "lose";
+        tr.innerHTML = `<td>${m.month}</td><td class="num">$${m.nav.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
+          `<td class="num">$${m.bench.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td><td class="${cls}">${resultJp}</td>`;
+        rsiMonthlyBody.appendChild(tr);
+      });
+    }
+
+    const rsiHoldingsBody = document.querySelector("#rsiHoldingsTable tbody");
+    const rsiHoldings = rsi.holdings || [];
+    if (rsiHoldings.length === 0) {
+      document.getElementById("rsiHoldingsEmpty").style.display = "block";
+    } else {
+      rsiHoldings.forEach(h => {
+        const priceStr = fmtPrice(h.price, "USD");
+        const avgCostStr = fmtPrice(h.avg_cost, "USD");
+        let pnlStr = "-", pnlCls = "";
+        if (h.avg_cost > 0 && h.price != null) {
+          const pnl = (h.price / h.avg_cost - 1) * 100;
+          pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+          pnlCls = pnl >= 0 ? "win" : "lose";
+        }
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a></td>` +
+          `<td class="num">${h.shares}</td>` +
+          `<td class="num">${avgCostStr}</td>` +
+          `<td class="num">${priceStr}</td>` +
+          `<td class="num ${pnlCls}">${pnlStr}</td>` +
+          `<td class="num">$${h.value_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
+          `<td class="num">${h.weight_pct}%</td>`;
+        rsiHoldingsBody.appendChild(tr);
+      });
+    }
+
+    const rsiTradesBody = document.querySelector("#rsiTradesTable tbody");
+    const rsiTrades = rsi.trades || [];
+    if (rsiTrades.length === 0) {
+      document.getElementById("rsiTradesEmpty").style.display = "block";
+    } else {
+      rsiTrades.forEach(t => {
+        const tr = document.createElement("tr");
+        const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
+          `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${t.rule}</td>`;
+        rsiTradesBody.appendChild(tr);
+      });
+    }
+  } else {
+    document.getElementById("rsi-updated").textContent = "まだ開始していません";
+    document.getElementById("rsi-panel").style.display = "none";
   }
 }
 

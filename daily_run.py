@@ -15,6 +15,8 @@ import config
 import market
 import portfolio
 import report
+import rsi_daily
+import rsi_ledger
 from advisor import get_trade_decision
 
 JST = dt.timezone(dt.timedelta(hours=9))
@@ -45,7 +47,10 @@ def setup_logging() -> logging.Logger:
 def git_commit_and_push(now_jst: dt.datetime, logger: logging.Logger) -> None:
     date_str = now_jst.strftime("%Y-%m-%d")
     try:
-        subprocess.run(["git", "add", "ledger/", "data.json"], cwd=config.BASE_DIR, check=True, capture_output=True)
+        add_paths = ["ledger/", "data.json"]
+        if config.RSI_UNIVERSE_PATH.exists():
+            add_paths.append("universe.json")
+        subprocess.run(["git", "add", *add_paths], cwd=config.BASE_DIR, check=True, capture_output=True)
         result = subprocess.run(
             ["git", "commit", "-m", f"update {date_str}"],
             cwd=config.BASE_DIR, capture_output=True, text=True,
@@ -171,7 +176,11 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
 
     try:
         state = portfolio.load_portfolio()
-        log_and_report(f"[1] 台帳読み込み完了。mode={state['mode']} start_date={state['start_date']}")
+        rsi_state = rsi_ledger.load_portfolio()
+        log_and_report(
+            f"[1] 台帳読み込み完了。mode={state['mode']} start_date={state['start_date']} "
+            f"RSI枠start_date={rsi_state['start_date']}"
+        )
 
         tickers_to_fetch = sorted(set(list(config.WHITELIST.keys()) + list(state["holdings"].keys())))
         snapshots = market.get_snapshots(tickers_to_fetch)
@@ -186,7 +195,9 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             nav_usd = portfolio.compute_nav_usd(state, snapshots)
             bench_usd = portfolio.compute_bench_nav_usd(state, voo_snap.close)
             log_and_report(f"[3] NAV計算: NAV=${nav_usd:,.2f} ベンチマーク=${bench_usd:,.2f}")
-            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst)
+            rsi_nav, rsi_bench, rsi_market = rsi_daily.compute_snapshot_only(rsi_state, voo_snap)
+            rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, [])
+            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block)
             report.save_data_json(data)
             log_and_report("[4] data.json更新完了（--report-onlyのためhistory.csv追記・portfolio.json保存はスキップ）")
             git_commit_and_push(now_jst, logger)
@@ -216,7 +227,21 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                     "cash_ratio": round(cash_ratio, 4),
                 })
                 portfolio.save_portfolio(state)
-            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst)
+            # RSI枠も異常停止時は売買せず評価のみ行う（本体と同じ縮退方針）
+            rsi_nav, rsi_bench, rsi_market = rsi_daily.compute_snapshot_only(rsi_state, voo_snap)
+            if not dry_run:
+                rsi_diff = rsi_nav - rsi_bench
+                rsi_ledger.append_history_row({
+                    "date": voo_snap.date,
+                    "nav_usd": round(rsi_nav, 2),
+                    "bench_usd": round(rsi_bench, 2),
+                    "diff_usd": round(rsi_diff, 2),
+                    "diff_pct": round(rsi_diff / rsi_bench * 100, 4) if rsi_bench else 0.0,
+                    "cash_ratio": round(rsi_ledger.compute_cash_ratio(rsi_state, rsi_nav), 4) if rsi_nav else 0.0,
+                    "open_lots": len(rsi_ledger.open_lots(rsi_state)),
+                })
+            rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, [])
+            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block)
             if not dry_run:
                 report.save_data_json(data)
                 git_commit_and_push(now_jst, logger)
@@ -263,9 +288,9 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             moomoo_alert_lines.append("⚠️ moomoo未接続（売買停止・評価のみ）")
             log_and_report("[3b] moomoo未接続。売買停止・評価のみ実施")
         else:
-            reconcile_ok, reconcile_msg = portfolio.reconcile_positions(state)
+            reconcile_ok, reconcile_msg = portfolio.reconcile_positions(state, rsi_state)
             if reconcile_ok:
-                log_and_report("[3b] moomoo接続確認・保有照合OK")
+                log_and_report("[3b] moomoo接続確認・保有照合OK（本体+RSI枠の合算）")
             else:
                 moomoo_skip_reason = f"保有不一致（{reconcile_msg}）"
                 moomoo_alert_lines.append(f"🔻 保有不一致（売買停止）: {reconcile_msg}")
@@ -381,6 +406,15 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             })
             portfolio.save_portfolio(state)
 
+        # 7c. RSI-30枠（本体の後に実行。本体の判断・台帳には一切触れない。SPEC_RSI30.md準拠）
+        rsi_already_processed = rsi_state["last_processed_date"] == voo_snap.date
+        rsi_state, rsi_accepted_trades, rsi_log_lines, rsi_nav, rsi_bench, rsi_market = rsi_daily.run(
+            rsi_state, voo_snap, can_trade, rsi_already_processed, dry_run, voo_snap.date,
+        )
+        for line in rsi_log_lines:
+            log_and_report(line)
+        rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, rsi_accepted_trades)
+
         # アラート判定（売買は通常通り。報告の先頭に警告行を追加するのみ）
         alert_lines = (
             moomoo_alert_lines + stop_loss_report_lines
@@ -390,7 +424,9 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report(f"[7b] アラート検知: {alert_lines}")
 
         # 8. data.json再生成
-        data = report.build_data_json(state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst)
+        data = report.build_data_json(
+            state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst, rsi_block=rsi_block,
+        )
         if not dry_run:
             report.save_data_json(data)
             log_and_report("[8] data.json更新・台帳保存完了")

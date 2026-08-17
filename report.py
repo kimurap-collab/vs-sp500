@@ -36,6 +36,73 @@ def _ticker_link(ticker: str, currency: str) -> str:
     return f"https://finance.yahoo.com/quote/{ticker}"
 
 
+def build_rsi_block(
+    rsi_state: dict[str, Any],
+    rsi_market: dict[str, TickerSnapshot],
+    rsi_nav_usd: float,
+    rsi_bench_usd: float,
+    rsi_accepted_trades: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """RSI-30枠のdata.json用ブロックを組み立てる（本体のbuild_data_jsonと対になる関数）。
+
+    ロットは同一銘柄で複数存在しうるため、管理画面向けにはロット単位ではなく
+    銘柄ごとに合算して表示する（保有株数・評価額の合計、平均取得単価は総投入額÷総株数）。
+    """
+    import rsi_ledger
+
+    diff_usd = rsi_nav_usd - rsi_bench_usd
+    diff_pct = (diff_usd / rsi_bench_usd * 100.0) if rsi_bench_usd else 0.0
+
+    by_ticker: dict[str, dict[str, float]] = {}
+    for lot in rsi_ledger.open_lots(rsi_state):
+        t = lot["ticker"]
+        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0})
+        agg["shares"] += lot["shares"]
+        agg["invested"] += lot["shares"] * lot["avg_cost"]
+
+    holdings = []
+    for ticker, agg in by_ticker.items():
+        snap = rsi_market.get(ticker)
+        if snap is None or agg["shares"] <= 0:
+            continue
+        value_usd = agg["shares"] * snap.close
+        weight_pct = (value_usd / rsi_nav_usd * 100.0) if rsi_nav_usd else 0.0
+        holdings.append({
+            "ticker": ticker,
+            "shares": round(agg["shares"], 4),
+            "value_usd": round(value_usd, 2),
+            "weight_pct": round(weight_pct, 2),
+            "price": round(snap.close, 4),
+            "avg_cost": round(agg["invested"] / agg["shares"], 4),
+            "link": _ticker_link(ticker, "USD"),
+        })
+    holdings.sort(key=lambda h: -h["value_usd"])
+
+    history_rows = rsi_ledger.read_history_rows()
+    history = [{"date": r["date"], "nav": round(float(r["nav_usd"]), 2), "bench": round(float(r["bench_usd"]), 2)}
+               for r in history_rows]
+
+    trade_rows = rsi_ledger.read_trade_rows()
+    trades_recent = trade_rows[-config.DATA_JSON_TRADES_LIMIT:]
+    trades_recent.reverse()
+
+    monthly = _build_monthly_table(history_rows)
+
+    return {
+        "start_date": rsi_state.get("start_date"),
+        "nav_usd": round(rsi_nav_usd, 2),
+        "bench_usd": round(rsi_bench_usd, 2),
+        "diff_usd": round(diff_usd, 2),
+        "diff_pct": round(diff_pct, 2),
+        "cash_usd": round(rsi_state.get("cash_usd", 0.0), 2),
+        "open_lots": len(rsi_ledger.open_lots(rsi_state)),
+        "holdings": holdings,
+        "history": history,
+        "trades": trades_recent,
+        "monthly": monthly,
+    }
+
+
 def build_data_json(
     state: dict[str, Any],
     market: dict[str, TickerSnapshot],
@@ -43,6 +110,7 @@ def build_data_json(
     bench_usd: float,
     accepted_trades: list[dict[str, Any]],
     now_jst: dt.datetime,
+    rsi_block: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     diff_usd = nav_usd - bench_usd
     diff_pct = (diff_usd / bench_usd * 100.0) if bench_usd else 0.0
@@ -98,6 +166,7 @@ def build_data_json(
         "history": history,
         "trades": trades_recent,
         "monthly": monthly,
+        "rsi": rsi_block,
     }
 
 
