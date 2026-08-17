@@ -163,10 +163,18 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
         ctx = _open_trade_ctx()
         try:
             trd_side = TrdSide.BUY if side == "BUY" else TrdSide.SELL
-            # fill_outside_rth=True が必須: daily_run.pyは毎朝7時JST（≒米国市場RTH終了の
-            # 約2時間後）に実行される。RTH限定のままだと注文はFILLED_ALLにならずSUBMITTEDの
-            # まま張り付き、約定待ちが必ずタイムアウトする（2026-08-14実測。EWJ移行注文が
-            # dealt_qty=0のままSUBMITTEDで固まったことで発覚）。
+            # fill_outside_rth は渡さない。moomooサーバは MARKET 注文にこのフラグが付いとると
+            # 場中であっても "Can only place RTH market orders" で提出を拒否する
+            # （2026-08-17 23:04 実測＝11:04 EDT・RTH内。同じ瞬間にフラグ有りは拒否、
+            #   フラグ無しは検証を通過して株数上限で拒否＝原因は時刻やなくフラグやと確定）。
+            #
+            # 経緯: このフラグは2026-08-14に「毎朝7時JST＝RTH終了後に実行されるので、RTH限定だと
+            # 注文がSUBMITTEDのまま張り付く」という理由で追加された。しかしMARKET注文では
+            # そもそも設定できず、追加以降の全注文が提出時点で拒否され続けとった（4日間、
+            # 実注文が発生せんかったので気付けんかった）。
+            # 現在は実行が23:00ローカル（=11:00 EDT）に移りRTH内なので、フラグ自体が不要や。
+            # 万一RTH外に実行が流れた場合はSUBMITTEDのまま約定待ちがタイムアウトし、
+            # 既存の「拒否1件」として記録される（＝黙って約定せず、安全側に倒れる）。
             ret, data = ctx.place_order(
                 price=0,
                 qty=qty,
@@ -175,7 +183,6 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
                 order_type=OrderType.MARKET,
                 trd_env=TrdEnv.SIMULATE,
                 acc_id=config.MOOMOO_ACC_ID,
-                fill_outside_rth=True,
             )
             if ret != 0:
                 raise RuntimeError(f"place_order失敗: {data}")
