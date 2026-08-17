@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-17 00:00 JST",
+  "updated_at": "2026-08-17 18:23 JST",
   "start_date": "2026-08-05",
   "nav_usd": 64163.39,
   "bench_usd": 63881.27,
@@ -199,5 +199,31 @@
       "bench": 63881.27,
       "result": "win"
     }
-  ]
+  ],
+  "rsi": {
+    "start_date": "2026-08-14",
+    "nav_usd": 500000.0,
+    "bench_usd": 500000.0,
+    "diff_usd": 0.0,
+    "diff_pct": 0.0,
+    "cash_usd": 500000.0,
+    "open_lots": 0,
+    "holdings": [],
+    "history": [
+      {
+        "date": "2026-08-14",
+        "nav": 500000.0,
+        "bench": 500000.0
+      }
+    ],
+    "trades": [],
+    "monthly": [
+      {
+        "month": "2026-08",
+        "nav": 500000.0,
+        "bench": 500000.0,
+        "result": "win"
+      }
+    ]
+  }
 }
