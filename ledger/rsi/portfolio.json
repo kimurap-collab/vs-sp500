@@ -1,7 +1,119 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 500000.0,
-  "lots": [],
+  "cash_usd": 350355.855,
+  "lots": [
+    {
+      "lot_id": "DVA-2026-08-18-1",
+      "ticker": "DVA",
+      "initial_entry_date": "2026-08-18",
+      "initial_entry_price": 177.64,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 169,
+      "total_invested_usd": 30021.159999999996,
+      "avg_cost": 177.64,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "APP-2026-08-18-1",
+      "ticker": "APP",
+      "initial_entry_date": "2026-08-18",
+      "initial_entry_price": 309.32,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 96,
+      "total_invested_usd": 29694.72,
+      "avg_cost": 309.32,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "LII-2026-08-18-1",
+      "ticker": "LII",
+      "initial_entry_date": "2026-08-18",
+      "initial_entry_price": 410.565,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 73,
+      "total_invested_usd": 29971.245,
+      "avg_cost": 410.565,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "ROL-2026-08-18-1",
+      "ticker": "ROL",
+      "initial_entry_date": "2026-08-18",
+      "initial_entry_price": 36.415,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 823,
+      "total_invested_usd": 29969.545,
+      "avg_cost": 36.415,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "TTD-2026-08-18-1",
+      "ticker": "TTD",
+      "initial_entry_date": "2026-08-18",
+      "initial_entry_price": 13.415,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 2235,
+      "total_invested_usd": 29982.524999999998,
+      "avg_cost": 13.415,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    }
+  ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-08-17"
+  "last_processed_date": "2026-08-18",
+  "pending_orders": []
 }

@@ -1,28 +1,18 @@
 {
   "start_date": "2026-08-05",
   "mode": "normal",
-  "cash_usd": 11371.985553,
+  "cash_usd": 5100.135553000001,
   "holdings": {
     "QQQ": 21.0,
     "XLV": 18.0,
     "GLD": 23.0,
     "IEF": 33.0,
-    "VOO": 31.0
+    "VOO": 31.0,
+    "EWJ": 65.0
   },
   "bench_units": 89.51845852876495,
-  "last_processed_voo_date": "2026-08-17",
+  "last_processed_voo_date": "2026-08-18",
   "below_200dma_streak": 0,
-  "above_200dma_streak": 12,
-  "pending_orders": [
-    {
-      "order_id": "3145613",
-      "ticker": "EWJ",
-      "side": "BUY",
-      "qty": 65,
-      "submitted_date": "2026-08-17",
-      "applied_qty": 0,
-      "applied_value_usd": 0.0,
-      "rule": "rebalance"
-    }
-  ]
+  "above_200dma_streak": 13,
+  "pending_orders": []
 }

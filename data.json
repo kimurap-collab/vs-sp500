@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-08-18 00:00 JST",
+  "updated_at": "2026-08-19 03:00 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64270.56,
-  "bench_usd": 63792.2,
-  "diff_usd": 478.37,
-  "diff_pct": 0.75,
+  "nav_usd": 63554.5,
+  "bench_usd": 63163.33,
+  "diff_usd": 391.17,
+  "diff_pct": 0.62,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 15404.97,
-      "weight_pct": 23.97,
-      "price": 733.57,
+      "value_usd": 15059.93,
+      "weight_pct": 23.7,
+      "price": 717.1397,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -24,9 +24,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3013.56,
-      "weight_pct": 4.69,
-      "price": 167.42,
+      "value_usd": 3055.14,
+      "weight_pct": 4.81,
+      "price": 169.73,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -37,9 +37,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 23.0,
-      "value_usd": 9319.49,
-      "weight_pct": 14.5,
-      "price": 405.195,
+      "value_usd": 9191.95,
+      "weight_pct": 14.46,
+      "price": 399.65,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -50,9 +50,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.0,
-      "value_usd": 3069.49,
-      "weight_pct": 4.78,
-      "price": 93.015,
+      "value_usd": 3068.17,
+      "weight_pct": 4.83,
+      "price": 92.975,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -63,17 +63,30 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.0,
-      "value_usd": 22091.06,
-      "weight_pct": 34.37,
-      "price": 712.615,
+      "value_usd": 21873.29,
+      "weight_pct": 34.42,
+      "price": 705.59,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
       "reason": "S&P500コア。上昇トレンド順行の主力",
       "target": "$780（+10%）"
+    },
+    {
+      "ticker": "EWJ",
+      "name": "MSCI日本株 ETF",
+      "shares": 65.0,
+      "value_usd": 6205.88,
+      "weight_pct": 9.76,
+      "price": 95.475,
+      "avg_cost": 96.49,
+      "currency": "USD",
+      "link": "https://finance.yahoo.com/quote/EWJ",
+      "reason": "",
+      "target": ""
     }
   ],
-  "cash_usd": 11371.99,
+  "cash_usd": 5100.14,
   "history": [
     {
       "date": "2026-08-05",
@@ -109,9 +122,26 @@
       "date": "2026-08-17",
       "nav": 64270.56,
       "bench": 63792.2
+    },
+    {
+      "date": "2026-08-18",
+      "nav": 63554.5,
+      "bench": 63163.33
     }
   ],
   "trades": [
+    {
+      "date": "2026-08-18",
+      "action": "BUY",
+      "ticker": "EWJ",
+      "shares": "65",
+      "price": "96.49",
+      "currency": "USD",
+      "amount_usd": "6271.85",
+      "fee_usd": "0.0",
+      "rule": "rebalance",
+      "note": "pending決済(order_id=3145613)・手数料不明のため未計上"
+    },
     {
       "date": "2026-08-14",
       "action": "SELL",
@@ -200,20 +230,66 @@
   "monthly": [
     {
       "month": "2026-08",
-      "nav": 64270.56,
-      "bench": 63792.2,
+      "nav": 63554.5,
+      "bench": 63163.33,
       "result": "win"
     }
   ],
   "rsi": {
     "start_date": "2026-08-14",
-    "nav_usd": 500000.0,
-    "bench_usd": 499302.84,
-    "diff_usd": 697.16,
-    "diff_pct": 0.14,
-    "cash_usd": 500000.0,
-    "open_lots": 0,
-    "holdings": [],
+    "nav_usd": 499990.83,
+    "bench_usd": 494380.69,
+    "diff_usd": 5610.14,
+    "diff_pct": 1.13,
+    "cash_usd": 350355.85,
+    "open_lots": 5,
+    "holdings": [
+      {
+        "ticker": "DVA",
+        "shares": 169.0,
+        "value_usd": 29999.19,
+        "weight_pct": 6.0,
+        "price": 177.51,
+        "avg_cost": 177.64,
+        "link": "https://finance.yahoo.com/quote/DVA"
+      },
+      {
+        "ticker": "TTD",
+        "shares": 2235.0,
+        "value_usd": 29993.92,
+        "weight_pct": 6.0,
+        "price": 13.4201,
+        "avg_cost": 13.415,
+        "link": "https://finance.yahoo.com/quote/TTD"
+      },
+      {
+        "ticker": "LII",
+        "shares": 73.0,
+        "value_usd": 29970.88,
+        "weight_pct": 5.99,
+        "price": 410.56,
+        "avg_cost": 410.565,
+        "link": "https://finance.yahoo.com/quote/LII"
+      },
+      {
+        "ticker": "ROL",
+        "shares": 823.0,
+        "value_usd": 29969.54,
+        "weight_pct": 5.99,
+        "price": 36.415,
+        "avg_cost": 36.415,
+        "link": "https://finance.yahoo.com/quote/ROL"
+      },
+      {
+        "ticker": "APP",
+        "shares": 96.0,
+        "value_usd": 29701.44,
+        "weight_pct": 5.94,
+        "price": 309.39,
+        "avg_cost": 309.32,
+        "link": "https://finance.yahoo.com/quote/APP"
+      }
+    ],
     "history": [
       {
         "date": "2026-08-14",
@@ -224,14 +300,75 @@
         "date": "2026-08-17",
         "nav": 500000.0,
         "bench": 499302.84
+      },
+      {
+        "date": "2026-08-18",
+        "nav": 499990.83,
+        "bench": 494380.69
       }
     ],
-    "trades": [],
+    "trades": [
+      {
+        "date": "2026-08-18",
+        "action": "BUY",
+        "ticker": "TTD",
+        "shares": "2235",
+        "price": "13.415",
+        "amount_usd": "29982.52",
+        "rule": "entry",
+        "lot_id": "TTD-2026-08-18-1",
+        "note": "RSI14=32.0"
+      },
+      {
+        "date": "2026-08-18",
+        "action": "BUY",
+        "ticker": "ROL",
+        "shares": "823",
+        "price": "36.415",
+        "amount_usd": "29969.54",
+        "rule": "entry",
+        "lot_id": "ROL-2026-08-18-1",
+        "note": "RSI14=30.2"
+      },
+      {
+        "date": "2026-08-18",
+        "action": "BUY",
+        "ticker": "LII",
+        "shares": "73",
+        "price": "410.565",
+        "amount_usd": "29971.24",
+        "rule": "entry",
+        "lot_id": "LII-2026-08-18-1",
+        "note": "RSI14=30.1"
+      },
+      {
+        "date": "2026-08-18",
+        "action": "BUY",
+        "ticker": "APP",
+        "shares": "96",
+        "price": "309.32",
+        "amount_usd": "29694.72",
+        "rule": "entry",
+        "lot_id": "APP-2026-08-18-1",
+        "note": "RSI14=29.5"
+      },
+      {
+        "date": "2026-08-18",
+        "action": "BUY",
+        "ticker": "DVA",
+        "shares": "169",
+        "price": "177.64",
+        "amount_usd": "30021.16",
+        "rule": "entry",
+        "lot_id": "DVA-2026-08-18-1",
+        "note": "RSI14=25.7"
+      }
+    ],
     "monthly": [
       {
         "month": "2026-08",
-        "nav": 500000.0,
-        "bench": 499302.84,
+        "nav": 499990.83,
+        "bench": 494380.69,
         "result": "win"
       }
     ]

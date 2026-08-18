@@ -6,3 +6,4 @@ date,action,ticker,shares,price,currency,amount_usd,fee_usd,rule,note
 2026-08-05,BUY,XLV,19.293146,164.16000366210938,USD,3167.16,15.68,initial_build,
 2026-08-05,BUY,1306.T,2360.160423,423.70001220703125,JPY,6334.33,0.0,initial_build,
 2026-08-14,SELL,1306.T,2360.160423,437.3,JPY,6479.57,0.0,usd_migration,ドル建て移行に伴う円建てポジションの帳簿上の清算（moomooはJP市場非対応のため実発注ではない）。売却分はEWJを買わずcash_usdに残す。EWJは次回daily_run.pyのリバランス（EWJ 0% vs 目標10%＝乖離10pt>5pt）で自然に買われる想定。また台帳の保有株数をmoomoo実保有（整数）に合わせて再構築し、旧台帳の端株分の差額もcash_usdに算入した
+2026-08-18,BUY,EWJ,65,96.49,USD,6271.85,0.0,rebalance,pending決済(order_id=3145613)・手数料不明のため未計上
