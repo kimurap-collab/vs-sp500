@@ -54,12 +54,6 @@ def _run_with_timeout(fn: Callable[[], Any], timeout: float = _MOOMOO_CALL_TIMEO
     return result.get("value")
 
 
-def _ticker_from_code(code: str) -> str:
-    """moomooのcode（例: 'US.AAPL'）からティッカーを取り出し、universe.pyと同じ正規化をする。"""
-    raw = code.split(".", 1)[1] if "." in code else code
-    return raw.strip().upper().replace(".", "-")
-
-
 def _moomoo_snapshot(tickers: list[str]) -> dict[str, dict[str, Any]] | None:
     """get_market_snapshotで終値・日付を取得する。失敗時None。"""
     if not tickers:
@@ -70,13 +64,13 @@ def _moomoo_snapshot(tickers: list[str]) -> dict[str, dict[str, Any]] | None:
 
         ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
         try:
-            codes = [f"US.{t}" for t in tickers]
+            codes = [broker.ticker_to_code(t) for t in tickers]
             ret, data = ctx.get_market_snapshot(codes)
             if ret != 0:
                 raise RuntimeError(f"get_market_snapshot失敗: {data}")
             result: dict[str, dict[str, Any]] = {}
             for row in data.to_dict(orient="records"):
-                ticker = _ticker_from_code(str(row["code"]))
+                ticker = broker.code_to_ticker(str(row["code"]))
                 update_time = str(row.get("update_time") or "")
                 date = update_time.split(" ")[0] if update_time else dt.date.today().isoformat()
                 result[ticker] = {"close": float(row["last_price"]), "date": date}
@@ -88,7 +82,7 @@ def _moomoo_snapshot(tickers: list[str]) -> dict[str, dict[str, Any]] | None:
 
 
 def fetch_market_data(tickers: list[str]) -> dict[str, dict[str, Any]]:
-    """指定銘柄の直近終値・日付をmoomooから一括取得する（配当は常に0.0。個別株の配当は無視する方針のため）。
+    """指定銘柄の直近終値・日付をmoomooから一括取得する。
 
     個別銘柄の取得失敗は無視して続行する（1銘柄の欠測で全体が止まらないようにするため）。
     """
@@ -98,10 +92,7 @@ def fetch_market_data(tickers: list[str]) -> dict[str, dict[str, Any]]:
     if snapshot is None:
         logger.error("RSI銘柄の価格取得(get_market_snapshot)に失敗した")
         return {}
-    return {
-        ticker: {"close": info["close"], "date": info["date"], "dividend": 0.0}
-        for ticker, info in snapshot.items()
-    }
+    return snapshot
 
 
 def screen_rsi_candidates() -> list[dict[str, Any]]:
@@ -170,7 +161,7 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
 
     screened: list[dict[str, Any]] = []
     for row in rows:
-        ticker = _ticker_from_code(str(row.stock_code))
+        ticker = broker.code_to_ticker(str(row.stock_code))
         if ticker not in uni_tickers:
             continue
         rsi_val = row.__dict__.get(("rsi", "14", "k_day"))
@@ -187,7 +178,10 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
         return []
 
     candidates = [
-        {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": prices[c["ticker"]]["close"]}
+        {
+            "ticker": c["ticker"], "rsi14": c["rsi14"],
+            "price": prices[c["ticker"]]["close"], "date": prices[c["ticker"]]["date"],
+        }
         for c in screened
         if c["ticker"] in prices
     ]
@@ -226,7 +220,7 @@ def compute_snapshot_only(
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(rsi_state)})
     market = fetch_market_data(held_tickers) if held_tickers else {}
     market_snapshots = {
-        t: TickerSnapshot(ticker=t, close=info["close"], date=info["date"], dividend=info.get("dividend", 0.0))
+        t: TickerSnapshot(ticker=t, close=info["close"], date=info["date"])
         for t, info in market.items()
     }
     nav_usd = rsi_ledger.compute_nav_usd(rsi_state, market_snapshots)
@@ -257,20 +251,21 @@ def run(
         state["bench_units_rsi"] = config.RSI_INITIAL_CAPITAL_USD / voo_snap.close
         log_lines.append(f"[RSI-0] 初回構築: start_date={state['start_date']} bench_units_rsi={state['bench_units_rsi']:.6f}")
 
+    # 候補の価格はscreen_rsi_candidates()が内部でget_market_snapshot済みなのでその戻り値を使う。
+    # fetch_market_dataは保有銘柄だけに絞って呼ぶ（候補分の価格取得を二重に行わないため）。
+    # 重複銘柄（保有中の再エントリー候補）は保有側の値を優先する。
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
     rsi_candidates = screen_rsi_candidates()
-    candidate_tickers = [c["ticker"] for c in rsi_candidates]
-    fetch_tickers = sorted(set(held_tickers) | set(candidate_tickers))
-    market = fetch_market_data(fetch_tickers)
+    candidate_market = {
+        c["ticker"]: {"close": c["price"], "date": c["date"]} for c in rsi_candidates
+    }
+    held_market = fetch_market_data(held_tickers) if held_tickers else {}
+    market = {**candidate_market, **held_market}
     log_lines.append(f"[RSI-1] 候補{len(rsi_candidates)}銘柄・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄")
 
     do_trade = can_trade and not already_processed_today and not dry_run
 
     if do_trade:
-        # --- 配当（個別株の配当は無視。ベンチマークのみVOO口数に再投資） ---
-        if voo_snap.dividend > 0 and state["bench_units_rsi"] > 0:
-            state["bench_units_rsi"] += state["bench_units_rsi"] * voo_snap.dividend / voo_snap.close
-
         # --- 1. 損切り・利確（SELL群を先に処理して現金を作る） ---
         for lot in sorted(state["lots"], key=lambda x: (x["ticker"], x["lot_id"])):
             if lot.get("closed"):
@@ -397,7 +392,7 @@ def run(
         log_lines.append(f"[RSI-2] 売買スキップ（{reason}）")
 
     market_snapshots = {
-        t: TickerSnapshot(ticker=t, close=info["close"], date=info["date"], dividend=info.get("dividend", 0.0))
+        t: TickerSnapshot(ticker=t, close=info["close"], date=info["date"])
         for t, info in market.items()
     }
     nav_usd = rsi_ledger.compute_nav_usd(state, market_snapshots)

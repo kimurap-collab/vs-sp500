@@ -261,7 +261,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
 
         charter_text = portfolio.load_charter_text()
         charter_targets = portfolio.parse_charter_targets(charter_text)
-        voo_technicals = market.get_voo_technicals()
+        voo_technicals = market.get_voo_technicals(voo_snap.close)
         log_and_report(
             f"[2b] VOOテクニカル取得完了。MA200={voo_technicals.ma200:.2f} "
             f"RSI14={voo_technicals.rsi14:.1f} 52w高値={voo_technicals.high_52w:.2f}"
@@ -296,11 +296,6 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 moomoo_alert_lines.append(f"🔻 保有不一致（売買停止）: {reconcile_msg}")
                 log_and_report(f"[3b] moomoo接続確認OK・保有照合NG: {reconcile_msg}")
         can_trade = moomoo_available and reconcile_ok
-
-        # 4. 配当処理
-        state = portfolio.apply_dividends(state, snapshots)
-        state = portfolio.apply_benchmark_dividend(state, voo_snap)
-        log_and_report("[4] 配当処理完了")
 
         # 200日線カウンタ更新
         if voo_technicals.above_200dma_today:

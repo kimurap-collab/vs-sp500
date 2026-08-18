@@ -487,21 +487,3 @@ def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) 
     return orders
 
 
-def apply_dividends(state: dict[str, Any], market: dict[str, TickerSnapshot]) -> dict[str, Any]:
-    """保有銘柄の当日配当を現金(USD)に加算する。"""
-    new_state = json.loads(json.dumps(state))
-    for ticker, shares in state["holdings"].items():
-        snap = market.get(ticker)
-        if snap is None or snap.dividend <= 0:
-            continue
-        new_state["cash_usd"] += shares * snap.dividend
-    return new_state
-
-
-def apply_benchmark_dividend(state: dict[str, Any], voo_snap: TickerSnapshot) -> dict[str, Any]:
-    """ベンチマークのVOO配当をVOO口数に再投資する。"""
-    if voo_snap.dividend <= 0 or state["bench_units"] <= 0:
-        return state
-    new_state = json.loads(json.dumps(state))
-    new_state["bench_units"] += state["bench_units"] * voo_snap.dividend / voo_snap.close
-    return new_state

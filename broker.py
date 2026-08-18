@@ -29,6 +29,17 @@ _ORDER_TERMINAL_FAILURE_STATUSES = (
 )
 
 
+def ticker_to_code(ticker: str) -> str:
+    """台帳ティッカー（例: 'BRK-B'）をmoomooのcode（例: 'US.BRK.B'）に変換する。"""
+    return f"US.{ticker.replace('-', '.')}"
+
+
+def code_to_ticker(code: str) -> str:
+    """moomooのcode（例: 'US.BRK.B'）を台帳ティッカー（例: 'BRK-B'）に変換する。"""
+    raw = code[3:] if code.startswith("US.") else code
+    return raw.replace(".", "-")
+
+
 def is_available() -> bool:
     """OpenD (127.0.0.1:11111) にTCPで到達できるか確認する。
 
@@ -95,8 +106,7 @@ def get_positions() -> dict[str, float] | None:
                 raise RuntimeError(f"position_list_query失敗: {data}")
             positions: dict[str, float] = {}
             for row in data.to_dict(orient="records"):
-                code = row["code"]  # 例: 'US.VOO'
-                ticker = code.split(".", 1)[1] if "." in code else code
+                ticker = code_to_ticker(str(row["code"]))  # 例: 'US.BRK.B' → 'BRK-B'
                 positions[ticker] = float(row["qty"])
             return positions
         finally:
@@ -131,14 +141,13 @@ def get_snapshot(tickers: list[str]) -> dict[str, float] | None:
 
         ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
         try:
-            codes = [f"US.{t}" for t in tickers]
+            codes = [ticker_to_code(t) for t in tickers]
             ret, data = ctx.get_market_snapshot(codes)
             if ret != 0:
                 raise RuntimeError(f"get_market_snapshot失敗: {data}")
             result: dict[str, float] = {}
             for row in data.to_dict(orient="records"):
-                code = row["code"]
-                ticker = code.split(".", 1)[1] if "." in code else code
+                ticker = code_to_ticker(str(row["code"]))
                 result[ticker] = float(row["last_price"])
             return result
         finally:
@@ -178,7 +187,7 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
             ret, data = ctx.place_order(
                 price=0,
                 qty=qty,
-                code=f"US.{ticker}",
+                code=ticker_to_code(ticker),
                 trd_side=trd_side,
                 order_type=OrderType.MARKET,
                 trd_env=TrdEnv.SIMULATE,
