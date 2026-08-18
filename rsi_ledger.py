@@ -7,10 +7,13 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 from typing import Any
 
 import config
 from market import TickerSnapshot
+
+logger = logging.getLogger("vs-sp500.rsi_ledger")
 
 DEFAULT_RSI_PORTFOLIO: dict[str, Any] = {
     "start_date": None,
@@ -114,3 +117,30 @@ def compute_cash_ratio(state: dict[str, Any], nav_usd: float) -> float:
     if nav_usd <= 0:
         return 0.0
     return state["cash_usd"] / nav_usd
+
+
+def compute_available_cash(state: dict[str, Any], market_prices: dict[str, float] | None = None) -> float:
+    """新規注文の可否判断・数量計算に使う現金（RSI枠専用。2026-08-18 修正1）。
+
+    台帳のcash_usdから、RSI枠自身の未決BUY注文の額面合計（未約定残数×発注時点の想定単価
+    est_price）を差し引く。本体のpending_ordersは見ない（互いの注文を見ない原則を崩さない）。
+    est_price未記録の旧pendingはmarket_pricesの現在値で代用する。代用先も無ければ予約額0とする。
+    """
+    reserved = 0.0
+    for order in state.get("pending_orders", []):
+        if order.get("side") != "BUY":
+            continue
+        remaining_qty = order["qty"] - order.get("applied_qty", 0)
+        if remaining_qty <= 0:
+            continue
+        est_price = order.get("est_price")
+        if est_price is None:
+            est_price = (market_prices or {}).get(order["ticker"])
+            if est_price is None:
+                logger.warning(
+                    "pending_orders(order_id=%s, %s)にest_priceが無く現在値も取得できないため、"
+                    "現金予約額0として扱う", order.get("order_id"), order.get("ticker"),
+                )
+                est_price = 0.0
+        reserved += remaining_qty * est_price
+    return state["cash_usd"] - reserved

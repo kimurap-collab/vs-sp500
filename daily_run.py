@@ -10,6 +10,7 @@ import sys
 
 import yfinance as yf
 
+import account_state
 import broker
 import config
 import market
@@ -290,10 +291,37 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report("[3b] moomoo接続確認OK")
         can_trade = moomoo_available
 
+        # 3b-2. 発注前の市場状態確認（2026-08-18 修正2）。moomooへの問い合わせは1回の実行につき
+        # 1回だけ行い、本体（execute_trades）・RSI枠（損切り・利確・買い増し・新規エントリー）の
+        # 全発注経路で使い回す（発注ごとに毎回叩くとAPI呼び出し回数が増えるため）。
+        # AFTERNOON（米国の通常取引時間）でなければ各発注経路が個別に見送る。問い合わせ自体が
+        # 失敗した場合（None）はフェイルオープンで発注を許可する（一時的な問い合わせ失敗で
+        # 売買が黙って止まる害の方が大きく、時間外に出てしまった注文は未決注文の自己解決
+        # ＝settle_pending_ordersが回収するため）。
+        market_us_state = broker.get_market_us_state() if moomoo_available else None
+        if not moomoo_available:
+            log_and_report("[3b-2] moomoo未接続のため市場状態確認スキップ")
+        elif market_us_state is None:
+            log_and_report("[3b-2] 市場状態確認: 取得失敗（フェイルオープンで発注は許可）")
+        elif market_us_state != broker.MARKET_US_OPEN_STATE:
+            log_and_report(
+                f"[3b-2] 市場状態確認: market_us={market_us_state}（AFTERNOONではないため本日の新規発注は見送り）"
+            )
+        else:
+            log_and_report(f"[3b-2] 市場状態確認: market_us={market_us_state}（発注許可）")
+
+        # 手数料逆算用の口座全体チェックポイント（両枠のpending決済より前・本日の新規発注より前に読む。
+        # こうすることで「前回記録からの現金差」が今回決済したpending注文だけに帰属する（修正3）。
+        account_cash_snapshot = broker.get_cash() if moomoo_available else None
+        if moomoo_available and account_cash_snapshot is None:
+            logger.warning("口座全体の現金残高取得に失敗したため、今回は手数料逆算をスキップする")
+
         # 3c. 未決注文の決済（本体）。moomoo接続時のみ。他の判断より前に行う
         accepted_trades: list[dict] = []
         if moomoo_available:
-            state, settled_trades, settle_warnings = portfolio.settle_pending_orders(state, voo_snap.date)
+            state, settled_trades, settle_warnings, settle_resolved = portfolio.settle_pending_orders(
+                state, voo_snap.date, dry_run=dry_run,
+            )
             for t in settled_trades:
                 if not dry_run:
                     portfolio.append_trade_row(t)
@@ -302,7 +330,40 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 logger.warning(w)
             log_and_report(f"[3c] 本体pending決済: 確定{len(settled_trades)}件 警告{len(settle_warnings)}件")
         else:
+            settled_trades, settle_resolved = [], []
             log_and_report("[3c] moomoo未接続のためpending決済スキップ")
+
+        # 3d. 未決注文の決済（RSI枠）。本体決済の直後に行う（手数料逆算を両枠合算で行うため、
+        # RSI枠の売買判断より前にここで決済を済ませておく。2026-08-18 修正3）
+        if moomoo_available:
+            rsi_state, rsi_settled_trades, rsi_settle_warnings, rsi_settle_resolved = rsi_daily.settle_pending_orders(
+                rsi_state, voo_snap.date, dry_run=dry_run,
+            )
+            for t in rsi_settled_trades:
+                if not dry_run:
+                    rsi_ledger.append_trade_row(t)
+            for w in rsi_settle_warnings:
+                logger.warning(w)
+            log_and_report(f"[3d] RSI枠pending決済: 確定{len(rsi_settled_trades)}件 警告{len(rsi_settle_warnings)}件")
+        else:
+            rsi_settled_trades, rsi_settle_resolved = [], []
+            log_and_report("[3d] moomoo未接続のためRSI枠pending決済スキップ")
+
+        # 3e. 手数料逆算（moomoo APIに手数料そのものを返す経路が無いため、口座全体の現金増減から
+        #      逆算する。両枠合算・額面比で按分してcash_usdから差し引く。2026-08-18 修正3）
+        pending_resolution_lines = settle_resolved + rsi_settle_resolved
+        if moomoo_available and account_cash_snapshot is not None:
+            prev_account_cash = account_state.load_account_cash()
+            fees_by_book, fee_logs = account_state.reconcile_fees(
+                prev_account_cash, account_cash_snapshot,
+                {"main": settled_trades, "rsi": rsi_settled_trades},
+            )
+            state["cash_usd"] -= fees_by_book.get("main", 0.0)
+            rsi_state["cash_usd"] -= fees_by_book.get("rsi", 0.0)
+            for line in fee_logs:
+                log_and_report(f"[3e] {line}")
+        else:
+            log_and_report("[3e] moomoo未接続のため手数料逆算はスキップ")
 
         # 200日線カウンタ更新
         if voo_technicals.above_200dma_today:
@@ -342,7 +403,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             else:
                 trade_date = voo_snap.date
                 state, stop_loss_accepted, stop_loss_rejected, stop_loss_queued = portfolio.execute_trades(
-                    stop_loss_orders, state, snapshots, charter_targets, trade_date,
+                    stop_loss_orders, state, snapshots, charter_targets, trade_date, market_us_state,
                 )
                 for t in stop_loss_accepted:
                     portfolio.append_trade_row(t)
@@ -379,7 +440,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             else:
                 trade_date = voo_snap.date
                 state, sonnet_accepted, sonnet_rejected, sonnet_queued = portfolio.execute_trades(
-                    proposed_trades, state, snapshots, charter_targets, trade_date,
+                    proposed_trades, state, snapshots, charter_targets, trade_date, market_us_state,
                 )
                 for t in sonnet_accepted:
                     portfolio.append_trade_row(t)
@@ -418,14 +479,26 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             })
             portfolio.save_portfolio(state)
 
-        # 7c. RSI-30枠（本体の後に実行。本体の判断・台帳には一切触れない。SPEC_RSI30.md準拠）
+        # 7c. RSI-30枠（本体の後に実行。本体の判断・台帳には一切触れない。SPEC_RSI30.md準拠。
+        #     pending決済は3dで済ませてあるためrsi_stateは既に決済済み）
         rsi_already_processed = rsi_state["last_processed_date"] == voo_snap.date
         rsi_state, rsi_accepted_trades, rsi_log_lines, rsi_nav, rsi_bench, rsi_market = rsi_daily.run(
-            rsi_state, voo_snap, can_trade, rsi_already_processed, dry_run, voo_snap.date,
+            rsi_state, voo_snap, can_trade, rsi_already_processed, dry_run, voo_snap.date, market_us_state,
         )
+        rsi_accepted_trades = rsi_settled_trades + rsi_accepted_trades
         for line in rsi_log_lines:
             log_and_report(line)
         rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, rsi_accepted_trades)
+
+        # 3f. 口座全体の現金残高を記録（次回の手数料逆算の基準値。本日の全取引が終わった後に記録する。
+        #     dry-runでは記録しない（触ってはいけない実運用のチェックポイントを汚さないため）
+        if not dry_run and moomoo_available:
+            final_account_cash = broker.get_cash()
+            if final_account_cash is not None:
+                account_state.save_account_cash(final_account_cash, voo_snap.date)
+                log_and_report(f"[3f] 口座全体の現金残高を記録: ${final_account_cash:,.2f}")
+            else:
+                log_and_report("[3f] 口座全体の現金残高取得に失敗したため記録をスキップ")
 
         # アラート判定（売買は通常通り。報告の先頭に警告行を追加するのみ）
         alert_lines = (
@@ -462,7 +535,10 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                     )
                     break
 
-        message = report.build_telegram_message(data, accepted_trades, now_jst, prev_month_line, alert_lines)
+        message = report.build_telegram_message(
+            data, accepted_trades, now_jst, prev_month_line, alert_lines,
+            resolved_pending_lines=pending_resolution_lines,
+        )
         if dry_run:
             log_and_report("[9] dry-runのためTelegram送信はスキップ。送信予定文面:\n" + message)
         else:

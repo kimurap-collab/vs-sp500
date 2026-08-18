@@ -205,8 +205,19 @@ def _new_lot_id(
     return f"{ticker}-{entry_date}-{seq + 1}"
 
 
-def _execute_order(ticker: str, qty: int, side: str) -> tuple[dict[str, Any] | None, float]:
-    """broker発注し、実約定と現金差分(cash_delta)を返す。失敗時は(None, 0.0)。"""
+def _execute_order(
+    ticker: str, qty: int, side: str, market_us: str | None,
+) -> tuple[dict[str, Any] | None, float]:
+    """broker発注し、実約定と現金差分(cash_delta)を返す。失敗時は(None, 0.0)。
+
+    market_us: run()が1回の実行につき1回だけ問い合わせて渡す市場状態（2026-08-18 修正2）。
+    AFTERNOON以外（かつNoneでない）なら発注せず見送る。問い合わせ失敗時（None）はフェイルオープン。
+    """
+    if market_us is not None and market_us != broker.MARKET_US_OPEN_STATE:
+        logger.info(
+            "RSI %s %s: 市場が開いていないため発注を見送った（market_us=%s）", side, ticker, market_us,
+        )
+        return None, 0.0
     cash_before = broker.get_cash()
     fill = broker.place_market_order(ticker, qty, side)
     if fill is None:
@@ -221,13 +232,21 @@ def _execute_order(ticker: str, qty: int, side: str) -> tuple[dict[str, Any] | N
     return fill, cash_delta
 
 
-def settle_pending_orders(rsi_state: dict[str, Any], today: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+def settle_pending_orders(
+    rsi_state: dict[str, Any], today: str, dry_run: bool = False,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[str], list[str]]:
     """RSI枠のpending_ordersを毎回の実行冒頭でmoomooに問い合わせ、確定した分をロット・現金へ反映する。
 
     本体のsettle_pending_orders（portfolio.py）と同じ決済方針だが、反映先がロットである点が異なる。
     entryロット（rule="entry"）はpending時点ではまだ存在しないため、ここで初めて生成する
     （SPEC「entryで建ったロットが後日約定した場合、ロットが正しく生成されること」）。
     本体のpending_ordersには一切触れない。
+
+    問い合わせ成功・注文が見つからない（NOT_FOUND）場合、および市場が開いているのにまだ
+    未約定（非終端ステータス）の場合の自己解決は本体と同じ方針（2026-08-18 修正2。
+    portfolio.settle_pending_ordersのdocstring参照）。
+
+    戻り値: (新しいstate, 反映した取引ログ, 警告メッセージのリスト, 自己解決の記録メッセージのリスト)
     """
     state = dict(rsi_state)
     state["lots"] = [dict(lot) for lot in rsi_state.get("lots", [])]
@@ -235,12 +254,21 @@ def settle_pending_orders(rsi_state: dict[str, Any], today: str) -> tuple[dict[s
     remaining: list[dict[str, Any]] = []
     applied_trades: list[dict[str, Any]] = []
     warnings: list[str] = []
+    resolved_notes: list[str] = []
+    market_open = broker.is_market_open_us() if pending else None
 
     for order in pending:
         info = broker.get_order_status(order["order_id"])
         if info is None:
             remaining.append(order)
             continue
+
+        if info["status"] == "NOT_FOUND":
+            resolved_notes.append(
+                f"{order['ticker']}のRSI枠注文(order_id={order['order_id']})が見つからずpendingから除外した"
+                f"（rule={order.get('rule')}）"
+            )
+            continue  # ロット・現金は無変更のままpending_ordersから外す
 
         applied_qty = order.get("applied_qty", 0)
         applied_value = order.get("applied_value_usd", 0.0)
@@ -323,10 +351,33 @@ def settle_pending_orders(rsi_state: dict[str, Any], today: str) -> tuple[dict[s
                 )
             continue  # 終端。pending_ordersから外す
 
+        # 修正2a: 市場が開いているのにまだ未約定 → 自動でキャンセルして解決する（本体と同じ方針）
+        if market_open is True:
+            if dry_run:
+                warnings.append(
+                    f"[dry-run] 滞留注文のキャンセル対象（実行はスキップ）: order_id={order['order_id']} "
+                    f"{order['ticker']}"
+                )
+                remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+                continue
+            if broker.cancel_order(order["order_id"]):
+                resolved_notes.append(
+                    f"{order['ticker']}のRSI枠注文(order_id={order['order_id']})が場中に滞留したため"
+                    f"キャンセルした（適用済み{applied_qty}/{order['qty']}株・rule={order.get('rule')}。"
+                    "以降は通常判断に委ねる）"
+                )
+            else:
+                warnings.append(
+                    f"滞留注文のキャンセル要求に失敗した: order_id={order['order_id']} {order['ticker']}"
+                    "（次回も未決のまま再試行される）"
+                )
+                remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+            continue
+
         remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
 
     state["pending_orders"] = remaining
-    return state, applied_trades, warnings
+    return state, applied_trades, warnings, resolved_notes
 
 
 def compute_snapshot_only(
@@ -354,26 +405,21 @@ def run(
     already_processed_today: bool,
     dry_run: bool,
     trade_date: str,
+    market_us: str | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[str], float, float, dict[str, TickerSnapshot]]:
     """RSI-30枠の1日分の処理を行う。
+
+    未決注文の決済（settle_pending_orders）は、本体決済と合わせて手数料を口座全体の現金増減から
+    逆算するためdaily_run.py側で先に呼ばれる（2026-08-18 修正3。渡されるrsi_stateは決済済み）。
+
+    market_us: daily_run.py側が1回の実行につき1回だけ問い合わせたbroker.get_market_us_state()の
+    戻り値。損切り・利確・買い増し・新規エントリーの全発注経路（_execute_order）にそのまま渡す
+    （2026-08-18 修正2）。
 
     戻り値: (更新後のrsi_state, 約定した取引ログ, ログ用メッセージ行, NAV, ベンチマーク評価額, 保有銘柄の市場スナップショット)
     """
     log_lines: list[str] = []
     accepted_trades: list[dict[str, Any]] = []
-
-    # 0. 未決注文の決済（moomoo接続時のみ。保有照合は行わない。他の判定より前に行う）
-    if can_trade:
-        rsi_state, settled_trades, settle_warnings = settle_pending_orders(rsi_state, trade_date)
-        for t in settled_trades:
-            if not dry_run:
-                rsi_ledger.append_trade_row(t)
-        accepted_trades.extend(settled_trades)
-        for w in settle_warnings:
-            logger.warning(w)
-        log_lines.append(f"[RSI-0a] pending決済: 確定{len(settled_trades)}件 警告{len(settle_warnings)}件")
-    else:
-        log_lines.append("[RSI-0a] moomoo未接続のためpending決済スキップ")
 
     state = dict(rsi_state)
     state["lots"] = [dict(lot) for lot in rsi_state.get("lots", [])]
@@ -394,6 +440,7 @@ def run(
     }
     held_market = fetch_market_data(held_tickers) if held_tickers else {}
     market = {**candidate_market, **held_market}
+    market_prices = {t: v["close"] for t, v in market.items()}
     log_lines.append(f"[RSI-1] 候補{len(rsi_candidates)}銘柄・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄")
 
     do_trade = can_trade and not already_processed_today and not dry_run
@@ -412,7 +459,7 @@ def run(
 
             stop = rsi_strategy.decide_stop_loss(state["lots"][idx], price)
             if stop is not None:
-                fill, cash_delta = _execute_order(stop["ticker"], stop["qty"], "SELL")
+                fill, cash_delta = _execute_order(stop["ticker"], stop["qty"], "SELL", market_us)
                 if fill is None:
                     logger.warning("RSI損切り発注失敗: %s lot=%s", stop["ticker"], stop["lot_id"])
                     continue
@@ -462,7 +509,7 @@ def run(
                     state["lots"][idx] = rsi_strategy.apply_exception_trigger(state["lots"][idx])
                     break
 
-                fill, cash_delta = _execute_order(intent["ticker"], intent["qty"], "SELL")
+                fill, cash_delta = _execute_order(intent["ticker"], intent["qty"], "SELL", market_us)
                 if fill is None:
                     logger.warning("RSI利確発注失敗: %s lot=%s kind=%s", intent["ticker"], intent["lot_id"], intent["kind"])
                     break
@@ -528,10 +575,11 @@ def run(
                 if qty <= 0:
                     continue
                 estimated_cost = qty * price
-                if estimated_cost > state["cash_usd"] + 1e-6:
+                available_cash = rsi_ledger.compute_available_cash(state, market_prices)
+                if estimated_cost > available_cash + 1e-6:
                     logger.info("RSI買い増しスキップ（現金不足）: %s %s", intent["ticker"], intent["kind"])
                     continue
-                fill, cash_delta = _execute_order(intent["ticker"], qty, "BUY")
+                fill, cash_delta = _execute_order(intent["ticker"], qty, "BUY", market_us)
                 if fill is None:
                     logger.warning("RSI買い増し発注失敗: %s lot=%s kind=%s", intent["ticker"], intent["lot_id"], intent["kind"])
                     continue
@@ -567,6 +615,7 @@ def run(
                         "qty": qty, "submitted_date": trade_date,
                         "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
                         "rule": intent["kind"], "lot_id": intent["lot_id"], "stage_index": intent["stage_index"],
+                        "est_price": price,
                     })
                 elif outcome == "PARTIAL_TERMINAL":
                     logger.warning(
@@ -580,9 +629,11 @@ def run(
             for c in rsi_candidates
             if c["ticker"] in market
         ]
-        selected = rsi_strategy.select_entries_within_cash(candidates, state["cash_usd"])
+        selected = rsi_strategy.select_entries_within_cash(
+            candidates, rsi_ledger.compute_available_cash(state, market_prices),
+        )
         for cand in selected:
-            fill, cash_delta = _execute_order(cand["ticker"], cand["qty"], "BUY")
+            fill, cash_delta = _execute_order(cand["ticker"], cand["qty"], "BUY", market_us)
             if fill is None:
                 logger.warning("RSI新規エントリー発注失敗: %s", cand["ticker"])
                 continue
@@ -616,7 +667,7 @@ def run(
                     "order_id": fill["order_id"], "ticker": cand["ticker"], "side": "BUY",
                     "qty": cand["qty"], "submitted_date": trade_date,
                     "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
-                    "rule": "entry", "lot_id": lot_id,
+                    "rule": "entry", "lot_id": lot_id, "est_price": cand["price"],
                 })
             elif outcome == "PARTIAL_TERMINAL":
                 logger.warning(

@@ -200,6 +200,7 @@ def build_telegram_message(
     now_jst: dt.datetime,
     prev_month_result_line: str | None = None,
     alert_lines: list[str] | None = None,
+    resolved_pending_lines: list[str] | None = None,
 ) -> str:
     date_str = f"{now_jst.month}/{now_jst.day}"
     diff_usd = data["diff_usd"]
@@ -224,6 +225,9 @@ def build_telegram_message(
     lines.append(f"評価額: ${data['nav_usd']:,.2f}")
     lines.append(f"対S&P: {sign}${diff_usd:,.2f} ({sign}{diff_pct:.2f}%) {emoji}")
     lines.append(trade_block)
+    if resolved_pending_lines:
+        # 滞留・行方不明の注文を自己解決した記録（行動を求める警告ではなくFYI。2026-08-18 修正2）
+        lines.append("処理ログ:\n" + "\n".join(f"・{m}" for m in resolved_pending_lines))
     lines.append(f"📈 {config.GITHUB_PAGES_URL}")
     return "\n".join(lines)
 

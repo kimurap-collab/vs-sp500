@@ -204,6 +204,34 @@ def compute_cash_ratio(state: dict[str, Any], nav_usd: float) -> float:
     return state["cash_usd"] / nav_usd
 
 
+def compute_available_cash(state: dict[str, Any], market_prices: dict[str, float] | None = None) -> float:
+    """新規注文の可否判断・数量計算に使う現金（2026-08-18 修正1）。
+
+    台帳のcash_usdから、本体の未決BUY注文の額面合計（未約定残数×発注時点の想定単価est_price）を
+    差し引く。RSI枠のpending_ordersは見ない（互いの注文を見ない原則を崩さない）。
+    est_price未記録の旧pending（この修正より前に発注されたもの）はmarket_pricesの現在値で代用する。
+    代用先も無ければ予約額0として警告ログのみ残す。
+    """
+    reserved = 0.0
+    for order in state.get("pending_orders", []):
+        if order.get("side") != "BUY":
+            continue
+        remaining_qty = order["qty"] - order.get("applied_qty", 0)
+        if remaining_qty <= 0:
+            continue
+        est_price = order.get("est_price")
+        if est_price is None:
+            est_price = (market_prices or {}).get(order["ticker"])
+            if est_price is None:
+                logger.warning(
+                    "pending_orders(order_id=%s, %s)にest_priceが無く現在値も取得できないため、"
+                    "現金予約額0として扱う", order.get("order_id"), order.get("ticker"),
+                )
+                est_price = 0.0
+        reserved += remaining_qty * est_price
+    return state["cash_usd"] - reserved
+
+
 # ---------------------------------------------------------------------------
 # 約定処理・ガードレール
 # ---------------------------------------------------------------------------
@@ -274,6 +302,7 @@ def execute_trades(
     market: dict[str, TickerSnapshot],
     charter_targets: dict[str, dict[str, float]] | None,
     trade_date: str,
+    market_us: str | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     """提案された取引をガードレール検証のうえmoomooに実発注する。
 
@@ -284,6 +313,10 @@ def execute_trades(
     次回実行の冒頭（settle_pending_orders）で決済する。保有照合は行わない
     （各枠が自分の出したpending_ordersだけの面倒を見る。2026-08-18仕様変更）。
 
+    market_us: broker.get_market_us_state()の戻り値を呼び出し元（daily_run.py）が
+    1回の実行につき1回だけ問い合わせて渡す（2026-08-18 修正2）。AFTERNOON以外（かつNoneでない）
+    なら全取引を発注せず見送る。問い合わせ自体に失敗した場合（None）はフェイルオープンで発注する。
+
     戻り値: (新しいstate, 約定した取引ログ, 拒否された取引ログ, 未決注文としてキューに積んだログ)
     """
     new_state = json.loads(json.dumps(state))
@@ -293,6 +326,7 @@ def execute_trades(
     rejected: list[dict[str, Any]] = []
     queued: list[dict[str, Any]] = []
     nav_usd = compute_nav_usd(new_state, market)
+    market_prices = {t: s.close for t, s in market.items()}
     non_target_used_usd = 0.0
     trade_count = 0
 
@@ -315,6 +349,13 @@ def execute_trades(
             if not isinstance(amount_usd, (int, float)) or amount_usd <= 0:
                 raise TradeRejected("amount_usdが不正")
 
+            # 発注前の市場状態ゲート（2026-08-18 修正2）。AFTERNOON以外（かつ問い合わせ成功時）は見送る。
+            if market_us is not None and market_us != broker.MARKET_US_OPEN_STATE:
+                logger.info(
+                    "%s %s: 市場が開いていないため発注を見送った（market_us=%s）", action, ticker, market_us,
+                )
+                raise TradeRejected(f"市場が開いていないため見送り（market_us={market_us}）")
+
             snap = market.get(ticker)
             if snap is None:
                 raise TradeRejected(f"{ticker}の市場データが無い")
@@ -322,12 +363,15 @@ def execute_trades(
             is_target_directed = rule in ("rebalance", "defense_switch", "defense_return", "initial_build")
             is_forced_stop_loss = rule == "stop_loss"
 
+            # 新規注文の可否判断・数量計算に使う現金（未決BUYの額面を予約済みとして除く。修正1）
+            available_cash = compute_available_cash(new_state, market_prices)
+
             # 非ターゲット取引（押し目買い等）は1日あたりNAVの10%・現金の半分まで
             # （損切りはコード側の強制執行であり対象外。charter.md「個別株の追加ルール」準拠）
             if not is_target_directed and not is_forced_stop_loss:
                 if amount_usd > nav_usd * config.NON_TARGET_TRADE_DAILY_CAP_OF_NAV - non_target_used_usd:
                     raise TradeRejected("非ターゲット取引の1日上限(評価額10%)を超過")
-                if amount_usd > new_state["cash_usd"] * config.DIP_BUY_MAX_OF_CASH:
+                if amount_usd > available_cash * config.DIP_BUY_MAX_OF_CASH:
                     raise TradeRejected("押し目買いは現金の半分までしか許可されない")
 
             # 個別株の追加ガードレール（charter.md「個別株を持つ場合の追加ルール」準拠）
@@ -342,8 +386,8 @@ def execute_trades(
                 if qty <= 0:
                     raise TradeRejected("金額が小さすぎて1株も買えない")
                 estimated_cost = qty * snap.close
-                if estimated_cost > new_state["cash_usd"] + 1e-6:
-                    raise TradeRejected("現金不足（見積りでcash_usdを超過）")
+                if estimated_cost > available_cash + 1e-6:
+                    raise TradeRejected("現金不足（見積りで発注可能額＝現金-未決BUY予約分を超過）")
 
                 tentative_holdings = dict(new_state["holdings"])
                 tentative_holdings[ticker] = tentative_holdings.get(ticker, 0.0) + qty
@@ -373,7 +417,7 @@ def execute_trades(
                     new_state.setdefault("pending_orders", []).append({
                         "order_id": fill["order_id"], "ticker": ticker, "side": "BUY", "qty": qty,
                         "submitted_date": trade_date, "applied_qty": 0, "applied_value_usd": 0.0,
-                        "rule": rule,
+                        "rule": rule, "est_price": snap.close,
                     })
                     queued.append({
                         "date": trade_date, "action": "BUY", "ticker": ticker, "qty": qty,
@@ -398,7 +442,7 @@ def execute_trades(
                     new_state.setdefault("pending_orders", []).append({
                         "order_id": fill["order_id"], "ticker": ticker, "side": "BUY", "qty": qty,
                         "submitted_date": trade_date, "applied_qty": filled_qty,
-                        "applied_value_usd": filled_qty * avg_price, "rule": rule,
+                        "applied_value_usd": filled_qty * avg_price, "rule": rule, "est_price": snap.close,
                     })
                     note = f"一部約定・残{qty - filled_qty}株はpending_orders追跡"
                 elif outcome == "PARTIAL_TERMINAL":
@@ -520,30 +564,47 @@ def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) 
 # 未決注文の決済（保有照合の代わり。各枠は自分のpending_ordersだけを見る。2026-08-18仕様変更）
 # ---------------------------------------------------------------------------
 
-def settle_pending_orders(state: dict[str, Any], today: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+def settle_pending_orders(
+    state: dict[str, Any], today: str, dry_run: bool = False,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[str], list[str]]:
     """本体のpending_ordersを毎回の実行冒頭でmoomooに問い合わせ、確定した分を台帳へ反映する。
 
     - 全量/一部が新たに約定していたら、その約定株数・約定価格で保有・現金・trades.csvへ反映する
       （決済は当日に限らず後日になるため、broker.get_cash()の前後差ではなく約定株数×約定単価で
-      現金へ反映する。moomoo APIから手数料を取得する経路が無いため、fee_usdは0とし
-      「手数料未計上」の旨をnoteとログに残す＝仕様の「現金の扱い」節の調査結果）。
+      現金へ反映する。手数料は口座全体の現金増減から別途逆算する＝account_state.py・修正3）。
     - 全量約定 or 終端ステータス（キャンセル等）ならpending_ordersから外す。終端の場合は警告を残す。
     - 問い合わせ自体が失敗（broker.get_order_statusがNone）した項目は変更せず残す。
-    - まだ進行中（SUBMITTED等）の項目もそのまま残す。
+    - 問い合わせは成功したが見つからない（status='NOT_FOUND'）場合は、台帳を変更せず
+      pending_ordersから外す（2026-08-18 修正2b）。
+    - まだ進行中（SUBMITTED等）で市場が開いている場合はキャンセルを要求し、
+      成功したらpending_ordersから外して次回の通常判断に委ねる（2026-08-18 修正2a。
+      「出し直す」ための特別な再発注コードはここには書かない）。
+      market open判定に失敗した場合・dry_run時はキャンセルせずそのまま残す。
+    - まだ進行中で市場が閉まっている場合は何もしない。
 
-    戻り値: (新しいstate, 反映した取引ログ, 警告メッセージのリスト)
+    戻り値: (新しいstate, 反映した取引ログ, 警告メッセージのリスト, 自己解決の記録メッセージのリスト
+             ＝朝の報告本文に載せる。行動を求める警告ではない)
     """
     new_state = json.loads(json.dumps(state))
     pending = list(new_state.get("pending_orders", []))
     remaining: list[dict[str, Any]] = []
     applied_trades: list[dict[str, Any]] = []
     warnings: list[str] = []
+    resolved_notes: list[str] = []
+    market_open = broker.is_market_open_us() if pending else None
 
     for order in pending:
         info = broker.get_order_status(order["order_id"])
         if info is None:
             remaining.append(order)
             continue
+
+        if info["status"] == "NOT_FOUND":
+            resolved_notes.append(
+                f"{order['ticker']}の注文(order_id={order['order_id']})が見つからずpendingから除外した"
+                f"（rule={order.get('rule')}）"
+            )
+            continue  # 台帳は無変更のままpending_ordersから外す
 
         applied_qty = order.get("applied_qty", 0)
         applied_value = order.get("applied_value_usd", 0.0)
@@ -597,9 +658,33 @@ def settle_pending_orders(state: dict[str, Any], today: str) -> tuple[dict[str, 
                 )
             continue  # 終端。pending_ordersから外す
 
+        # 修正2a: 市場が開いているのにまだ未約定（非終端ステータスのまま）→ 自動でキャンセルして解決する
+        # （大将「警告をもらっても何をすればいいか分からない。自己解決しろ」との指示。2026-08-18）
+        # 「出し直す」処理はここでは行わない。次回の通常判断ロジックがゼロから条件を再評価する。
+        if market_open is True:
+            if dry_run:
+                warnings.append(
+                    f"[dry-run] 滞留注文のキャンセル対象（実行はスキップ）: order_id={order['order_id']} "
+                    f"{order['ticker']}"
+                )
+                remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+                continue
+            if broker.cancel_order(order["order_id"]):
+                resolved_notes.append(
+                    f"{order['ticker']}の注文(order_id={order['order_id']})が場中に滞留したためキャンセルした"
+                    f"（適用済み{applied_qty}/{order['qty']}株。以降は通常判断に委ねる）"
+                )
+            else:
+                warnings.append(
+                    f"滞留注文のキャンセル要求に失敗した: order_id={order['order_id']} {order['ticker']}"
+                    "（次回も未決のまま再試行される）"
+                )
+                remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+            continue
+
         remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
 
     new_state["pending_orders"] = remaining
-    return new_state, applied_trades, warnings
+    return new_state, applied_trades, warnings, resolved_notes
 
 

@@ -249,11 +249,15 @@ def get_order_status(order_id: str) -> dict[str, Any] | None:
     まずorder_list_query（アクティブ注文）を試し、見つからなければ
     history_order_list_query（確定済み注文。過去90日分）を試す。
     戻り値: {'order_id': str, 'status': str, 'filled_qty': int, 'avg_price': float,
-             'updated_date': str | None}。問い合わせ自体が失敗した場合はNone
-    （呼び出し元はNoneの場合、pending_orderをそのまま残すこと＝黙って消さない）。
+             'updated_date': str | None}。
+    アクティブ注文にも過去90日の履歴にも見つからない場合は status='NOT_FOUND' の辞書を返す
+    （問い合わせ自体は成功しているため、これは呼び出し自体の失敗とは区別する。
+    呼び出し元はpending_orderを解決済みとして扱ってよい＝2026-08-18 修正2）。
+    問い合わせ自体が失敗した場合（タイムアウト・例外）はNoneを返す
+    （呼び出し元はpending_orderをそのまま残すこと＝黙って消さない）。
     """
 
-    def _call() -> dict[str, Any] | None:
+    def _call() -> dict[str, Any]:
         from moomoo import TrdEnv
 
         ctx = _open_trade_ctx()
@@ -269,7 +273,10 @@ def get_order_status(order_id: str) -> dict[str, Any] | None:
                     raise RuntimeError(f"history_order_list_query失敗: {data2}")
                 data2 = data2[data2["order_id"].astype(str) == str(order_id)]
                 if data2.empty:
-                    return None
+                    return {
+                        "order_id": str(order_id), "status": "NOT_FOUND",
+                        "filled_qty": 0, "avg_price": 0.0, "updated_date": None,
+                    }
                 row = data2.iloc[0]
             else:
                 row = data.iloc[0]
@@ -285,3 +292,88 @@ def get_order_status(order_id: str) -> dict[str, Any] | None:
             ctx.close()
 
     return _run_with_timeout(_call, timeout=CALL_TIMEOUT_SEC)
+
+
+def cancel_order(order_id: str) -> bool:
+    """指定order_idの注文をキャンセルする（滞留注文の自己解決に使う。2026-08-18 修正2）。
+
+    modify_order(ModifyOrderOp.CANCEL, order_id, qty, price, ...) が正しい呼び方
+    （2026-08-18 実機確認: 存在しないorder_idで呼び出したところ
+    ret=-1, msg='This order ID does not exist.' が返り、例外にならず正常に呼べることを確認した）。
+    成功時True。失敗時（moomoo側の拒否・タイムアウト・例外）はFalse。
+    """
+
+    def _call() -> bool:
+        from moomoo import ModifyOrderOp, TrdEnv
+
+        ctx = _open_trade_ctx()
+        try:
+            ret, data = ctx.modify_order(
+                ModifyOrderOp.CANCEL, order_id, 0, 0,
+                trd_env=TrdEnv.SIMULATE, acc_id=config.MOOMOO_ACC_ID,
+            )
+            if ret != 0:
+                raise RuntimeError(f"modify_order(CANCEL)失敗: {data}")
+            return True
+        finally:
+            ctx.close()
+
+    result = _run_with_timeout(_call, timeout=CALL_TIMEOUT_SEC)
+    return bool(result)
+
+
+# 米国市場が「場中」であることを示す market_us の値。
+# 公式ドキュメント（https://openapi.moomoo.com/moomoo-api-doc/en/quote/quote.html）で
+# QotMarketState_Afternoon (5) = "Afternoon session / Regular trading hours for U.S stock market"
+# と明記されている通り、米国株の通常取引時間（RTH）は丸ごと"AFTERNOON"として返る
+# （"MORNING"はアジア市場の前場専用で米国では返らない）。
+# PRE_MARKET_BEGIN/AFTER_HOURS_BEGIN は時間外取引を示す値であり、AFTERNOONのみを
+# 条件にすることで自動的に通常取引時間だけに限定される。
+# 2026-08-18 11:55 JST（閉場中）に実機確認したところ market_us='AFTER_HOURS_END' だった。
+# 場中の実測値（AFTERNOONが実際に返ること）は未確認のため、初回の場中実行時にログで裏取りすること。
+MARKET_US_OPEN_STATE = "AFTERNOON"
+
+
+def get_global_state() -> dict[str, Any] | None:
+    """moomooの全体状態（各市場の開閉状態を含む）を取得する。失敗時None。"""
+
+    def _call() -> dict[str, Any]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            ret, data = ctx.get_global_state()
+            if ret != 0:
+                raise RuntimeError(f"get_global_state失敗: {data}")
+            return dict(data)
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call)
+
+
+def get_market_us_state() -> str | None:
+    """moomooから返る米国市場の生の状態文字列（例: 'AFTERNOON'）を取得する。失敗時None。
+
+    新規発注前のゲート判定（2026-08-18 修正2）に使う。呼び出し元は1回の実行につき1回だけ
+    呼び、結果を使い回すこと（発注ごとに毎回問い合わせない）。AFTERNOONが本当に返ってくるかを
+    初回の本番実行で確認したいため、取得できた値は毎回ログに残す。
+    """
+    state = get_global_state()
+    if state is None:
+        return None
+    market_us = state.get("market_us")
+    logger.info("moomoo market_us=%s", market_us)
+    return market_us
+
+
+def is_market_open_us() -> bool | None:
+    """米国市場が場中かを判定する（自前の時差計算はせず、moomooに問い合わせる）。
+
+    戻り値: True=場中 / False=場中でない / None=問い合わせ失敗（呼び出し元は保守的に、
+    「場中でない」と同じ扱い＝何もしない、にすること）。
+    """
+    market_us = get_market_us_state()
+    if market_us is None:
+        return None
+    return market_us == MARKET_US_OPEN_STATE
