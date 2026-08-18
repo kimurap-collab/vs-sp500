@@ -97,15 +97,15 @@ RSI_HISTORY_CSV_PATH = RSI_LEDGER_DIR / "history.csv"
 RSI_UNIVERSE_PATH = BASE_DIR / "universe.json"
 
 RSI_INITIAL_CAPITAL_USD = 500_000.0  # moomoo仮想口座$1,000,000の半分
-RSI_ENTRY_RSI_THRESHOLD = 30.0  # RSI(14) <= 30 でエントリー
-RSI_ENTRY_AMOUNT_USD = 50_000.0
-# 買い増し（初期エントリー価格基準）: +2.5%→$25,000 / +5.0%→$12,500 / +7.5%→$12,500
+RSI_ENTRY_RSI_THRESHOLD = 32.0  # RSI(14) <= 32 でエントリー
+RSI_ENTRY_AMOUNT_USD = 30_000.0
+# 買い増し（初期エントリー価格基準）: +2.5%→$15,000 / +5.0%→$7,500 / +7.5%→$7,500
 RSI_PYRAMID_TRIGGERS = (0.025, 0.05, 0.075)
-RSI_PYRAMID_AMOUNTS_USD = (25_000.0, 12_500.0, 12_500.0)
-# 1ロット上限は上記4段の合計と一致する（$50,000+$25,000+$12,500+$12,500=$100,000）。
-# 別ロット（再エントリー）には適用されない上限であり、コードで別途強制はしない。
-RSI_MAX_LOT_INVESTMENT_USD = 100_000.0
+RSI_PYRAMID_AMOUNTS_USD = (15_000.0, 7_500.0, 7_500.0)
 RSI_STOP_LOSS_PCT = -0.08  # 初期エントリー価格から-8%で全株売却
+# moomooスクリーナーを1リクエストで収めるための時価総額の足切り
+# （S&P500/NASDAQ100の全構成銘柄はこれを上回る）
+RSI_SCREENER_MIN_MARKET_CAP_USD = 1_000_000_000.0
 RSI_PROFIT1_PCT = 0.20    # 平均取得単価+20%で総株数の50%を売却
 RSI_PROFIT1_SELL_FRACTION = 0.5
 RSI_PROFIT2_PCT = 0.25    # 平均取得単価+25%でさらに25%を売却（残り25%は無期限保有）

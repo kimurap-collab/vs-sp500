@@ -12,59 +12,187 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-from typing import Any
-
-import yfinance as yf
+import threading
+from typing import Any, Callable
 
 import broker
 import config
 import rsi_ledger
 import rsi_strategy
 import universe
-from market import TickerSnapshot, compute_rsi14
+from market import TickerSnapshot
 
 logger = logging.getLogger("vs-sp500.rsi_daily")
 
-UNIVERSE_FETCH_PERIOD = "3mo"
+_MOOMOO_CALL_TIMEOUT_SEC = 15.0  # broker.pyのCALL_TIMEOUT_SECに合わせる
+_MOOMOO_SCREENER_PAGE_SIZE = 200  # moomoo 1リクエストの最大件数
+
+
+def _run_with_timeout(fn: Callable[[], Any], timeout: float = _MOOMOO_CALL_TIMEOUT_SEC) -> Any | None:
+    """broker.pyと同じ方式: デーモンスレッドで実行しtimeoutで見切りをつける。
+
+    moomoo SDKが無応答で固まった実績がある（broker.py参照）ため、ここでも必ずタイムアウトを設ける。
+    """
+    result: dict[str, Any] = {}
+    error: dict[str, Exception] = {}
+
+    def _target() -> None:
+        try:
+            result["value"] = fn()
+        except Exception as e:  # noqa: BLE001 - moomoo SDK内部の例外型は不定
+            error["value"] = e
+
+    thread = threading.Thread(target=_target, daemon=True)
+    thread.start()
+    thread.join(timeout=timeout)
+    if thread.is_alive():
+        logger.error("moomoo呼び出しがタイムアウトした（%s秒）", timeout)
+        return None
+    if "value" in error:
+        logger.error("moomoo呼び出しが例外を送出した: %s", error["value"])
+        return None
+    return result.get("value")
+
+
+def _ticker_from_code(code: str) -> str:
+    """moomooのcode（例: 'US.AAPL'）からティッカーを取り出し、universe.pyと同じ正規化をする。"""
+    raw = code.split(".", 1)[1] if "." in code else code
+    return raw.strip().upper().replace(".", "-")
+
+
+def _moomoo_snapshot(tickers: list[str]) -> dict[str, dict[str, Any]] | None:
+    """get_market_snapshotで終値・日付を取得する。失敗時None。"""
+    if not tickers:
+        return {}
+
+    def _call() -> dict[str, dict[str, Any]]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            codes = [f"US.{t}" for t in tickers]
+            ret, data = ctx.get_market_snapshot(codes)
+            if ret != 0:
+                raise RuntimeError(f"get_market_snapshot失敗: {data}")
+            result: dict[str, dict[str, Any]] = {}
+            for row in data.to_dict(orient="records"):
+                ticker = _ticker_from_code(str(row["code"]))
+                update_time = str(row.get("update_time") or "")
+                date = update_time.split(" ")[0] if update_time else dt.date.today().isoformat()
+                result[ticker] = {"close": float(row["last_price"]), "date": date}
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call)
 
 
 def fetch_market_data(tickers: list[str]) -> dict[str, dict[str, Any]]:
-    """指定銘柄の直近終値・日付・当日配当・RSI14を一括取得する。
+    """指定銘柄の直近終値・日付をmoomooから一括取得する（配当は常に0.0。個別株の配当は無視する方針のため）。
 
-    個別銘柄の取得失敗（上場廃止・ティッカー変更等）は無視して続行する
-    （ユニバース全体が1銘柄の欠測で止まらないようにするため）。
+    個別銘柄の取得失敗は無視して続行する（1銘柄の欠測で全体が止まらないようにするため）。
     """
     if not tickers:
         return {}
-    try:
-        data = yf.download(
-            tickers, period=UNIVERSE_FETCH_PERIOD, group_by="ticker",
-            threads=True, auto_adjust=False, actions=True, progress=False,
-        )
-    except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
-        logger.error("RSIユニバースの一括取得に失敗した: %s", e)
+    snapshot = _moomoo_snapshot(tickers)
+    if snapshot is None:
+        logger.error("RSI銘柄の価格取得(get_market_snapshot)に失敗した")
         return {}
+    return {
+        ticker: {"close": info["close"], "date": info["date"], "dividend": 0.0}
+        for ticker, info in snapshot.items()
+    }
 
-    result: dict[str, dict[str, Any]] = {}
-    single = len(tickers) == 1
-    for ticker in tickers:
+
+def screen_rsi_candidates() -> list[dict[str, Any]]:
+    """moomooスクリーナーでRSI(14) < 閾値 かつ 時価総額条件を満たす銘柄を抽出する（RSI昇順）。
+
+    get_stock_filterを呼ぶ（時価総額の足切りにより通常は1ページで完結する）。
+    last_pageがFalseの場合は警告ログを出したうえでページを繰り、取りこぼしを黙って発生させない。
+    結果をuniverse.get_universe()の銘柄と突き合わせ、ユニバース内のものだけ残す。
+    価格はget_market_snapshotで別途取得する。moomoo接続失敗時は空リストを返す。
+    """
+    uni_tickers = set(universe.get_universe())
+
+    def _call() -> list[Any]:
+        from moomoo import (
+            CustomIndicatorFilter,
+            KLType,
+            Market,
+            OpenQuoteContext,
+            RelativePosition,
+            SimpleFilter,
+            StockField,
+        )
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
         try:
-            df = data if single else data[ticker]
-            closes = df["Close"].dropna()
-            if closes.empty:
-                continue
-            last_close = float(closes.iloc[-1])
-            last_date = closes.index[-1].date().isoformat()
-            rsi14 = compute_rsi14(closes)
-            dividend = 0.0
-            if "Dividends" in df.columns:
-                div_val = df["Dividends"].reindex(closes.index).iloc[-1]
-                if div_val and not (isinstance(div_val, float) and div_val != div_val):  # NaN対策
-                    dividend = float(div_val)
-            result[ticker] = {"close": last_close, "date": last_date, "rsi14": rsi14, "dividend": dividend}
-        except (KeyError, IndexError, ValueError, TypeError):
+            rsi_filter = CustomIndicatorFilter()
+            rsi_filter.ktype = KLType.K_DAY
+            rsi_filter.stock_field1 = StockField.RSI
+            rsi_filter.stock_field1_para = [14]
+            rsi_filter.stock_field2 = StockField.VALUE
+            rsi_filter.value = config.RSI_ENTRY_RSI_THRESHOLD
+            rsi_filter.relative_position = RelativePosition.LESS
+            rsi_filter.is_no_filter = False
+
+            cap_filter = SimpleFilter()
+            cap_filter.stock_field = StockField.MARKET_VAL
+            cap_filter.filter_min = config.RSI_SCREENER_MIN_MARKET_CAP_USD
+            cap_filter.is_no_filter = False
+
+            rows: list[Any] = []
+            begin = 0
+            while True:
+                ret, ret_data = ctx.get_stock_filter(
+                    market=Market.US, filter_list=[rsi_filter, cap_filter],
+                    begin=begin, num=_MOOMOO_SCREENER_PAGE_SIZE,
+                )
+                if ret != 0:
+                    raise RuntimeError(f"get_stock_filter失敗: {ret_data}")
+                last_page, all_count, ret_list = ret_data
+                rows.extend(ret_list)
+                if last_page or not ret_list:
+                    break
+                logger.warning(
+                    "RSIスクリーナー: last_pageがFalseのためページを繰る（取得済み%d件 / 全%d件）",
+                    len(rows), all_count,
+                )
+                begin += len(ret_list)
+            return rows
+        finally:
+            ctx.close()
+
+    rows = _run_with_timeout(_call)
+    if rows is None:
+        logger.error("RSIスクリーナー(get_stock_filter)の呼び出しに失敗した")
+        return []
+
+    screened: list[dict[str, Any]] = []
+    for row in rows:
+        ticker = _ticker_from_code(str(row.stock_code))
+        if ticker not in uni_tickers:
             continue
-    return result
+        rsi_val = row.__dict__.get(("rsi", "14", "k_day"))
+        if rsi_val is None:
+            continue
+        screened.append({"ticker": ticker, "rsi14": float(rsi_val)})
+
+    if not screened:
+        return []
+
+    prices = _moomoo_snapshot([c["ticker"] for c in screened])
+    if prices is None:
+        logger.error("RSI候補の価格取得(get_market_snapshot)に失敗した")
+        return []
+
+    candidates = [
+        {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": prices[c["ticker"]]["close"]}
+        for c in screened
+        if c["ticker"] in prices
+    ]
+    candidates.sort(key=lambda c: c["rsi14"])
+    return candidates
 
 
 def _new_lot_id(ticker: str, entry_date: str, existing_lots: list[dict[str, Any]]) -> str:
@@ -129,22 +257,17 @@ def run(
         state["bench_units_rsi"] = config.RSI_INITIAL_CAPITAL_USD / voo_snap.close
         log_lines.append(f"[RSI-0] 初回構築: start_date={state['start_date']} bench_units_rsi={state['bench_units_rsi']:.6f}")
 
-    uni_tickers = universe.get_universe()
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
-    fetch_tickers = sorted(set(uni_tickers) | set(held_tickers))
+    rsi_candidates = screen_rsi_candidates()
+    candidate_tickers = [c["ticker"] for c in rsi_candidates]
+    fetch_tickers = sorted(set(held_tickers) | set(candidate_tickers))
     market = fetch_market_data(fetch_tickers)
-    log_lines.append(f"[RSI-1] ユニバース{len(uni_tickers)}銘柄・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄")
+    log_lines.append(f"[RSI-1] 候補{len(rsi_candidates)}銘柄・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄")
 
     do_trade = can_trade and not already_processed_today and not dry_run
 
     if do_trade:
-        # --- 配当（保有銘柄の当日配当を現金に加算。ベンチマークはVOO口数に再投資） ---
-        for lot in state["lots"]:
-            if lot.get("closed"):
-                continue
-            info = market.get(lot["ticker"])
-            if info and info.get("dividend", 0.0) > 0:
-                state["cash_usd"] += lot["shares"] * info["dividend"]
+        # --- 配当（個別株の配当は無視。ベンチマークのみVOO口数に再投資） ---
         if voo_snap.dividend > 0 and state["bench_units_rsi"] > 0:
             state["bench_units_rsi"] += state["bench_units_rsi"] * voo_snap.dividend / voo_snap.close
 
@@ -244,9 +367,9 @@ def run(
 
         # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ） ---
         candidates = [
-            {"ticker": t, "rsi14": info["rsi14"], "price": info["close"]}
-            for t, info in market.items()
-            if t in uni_tickers and rsi_strategy.should_enter(info["rsi14"])
+            {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"]}
+            for c in rsi_candidates
+            if c["ticker"] in market
         ]
         selected = rsi_strategy.select_entries_within_cash(candidates, state["cash_usd"])
         for cand in selected:

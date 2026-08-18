@@ -19,39 +19,40 @@ def add_days(date_str: str, days: int) -> str:
 
 class TestPyramid(unittest.TestCase):
     """検証1-a: エントリー後に+2.5%/+5%/+7.5%と上昇 → 買い増しが3回入り、
-    総額$100,000・平均取得単価が正しいこと。"""
+    総額$60,000・平均取得単価が正しいこと。"""
 
     def test_three_pyramid_stages_fill_correctly(self):
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
-        self.assertEqual(lot["total_invested_usd"], 50000.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        self.assertEqual(lot["total_invested_usd"], 30000.0)
 
         lot, trades1 = rs.simulate_lot_day(lot, 102.5, "2026-01-06")  # +2.5%
         self.assertEqual([t["kind"] for t in trades1], ["pyramid1"])
-        self.assertEqual(trades1[0]["filled_qty"], 243)  # floor(25000/102.5)
+        self.assertEqual(trades1[0]["filled_qty"], 146)  # floor(15000/102.5)
         self.assertTrue(lot["pyramid_done"][0])
 
         lot, trades2 = rs.simulate_lot_day(lot, 105.0, "2026-01-07")  # +5.0%
         self.assertEqual([t["kind"] for t in trades2], ["pyramid2"])
-        self.assertEqual(trades2[0]["filled_qty"], 119)  # floor(12500/105)
+        self.assertEqual(trades2[0]["filled_qty"], 71)  # floor(7500/105)
         self.assertTrue(lot["pyramid_done"][1])
 
         lot, trades3 = rs.simulate_lot_day(lot, 107.5, "2026-01-08")  # +7.5%
         self.assertEqual([t["kind"] for t in trades3], ["pyramid3"])
-        self.assertEqual(trades3[0]["filled_qty"], 116)  # floor(12500/107.5)
+        self.assertEqual(trades3[0]["filled_qty"], 69)  # floor(7500/107.5)
         self.assertTrue(lot["pyramid_done"][2])
 
-        expected_shares = 500 + 243 + 119 + 116
-        expected_invested = 50000.0 + 243 * 102.5 + 119 * 105.0 + 116 * 107.5
+        expected_shares = 300 + 146 + 71 + 69
+        expected_invested = 30000.0 + 146 * 102.5 + 71 * 105.0 + 69 * 107.5
         self.assertEqual(lot["shares"], expected_shares)
         self.assertAlmostEqual(lot["total_invested_usd"], expected_invested, places=6)
         self.assertAlmostEqual(lot["avg_cost"], expected_invested / expected_shares, places=6)
-        # 4段合計は$100,000上限に収まる(整数株の切り捨てにより厳密には下回る)
-        self.assertLessEqual(lot["total_invested_usd"], config.RSI_MAX_LOT_INVESTMENT_USD)
-        self.assertGreater(lot["total_invested_usd"], config.RSI_MAX_LOT_INVESTMENT_USD * 0.95)
+        # 4段合計は$60,000上限に収まる(整数株の切り捨てにより厳密には下回る)
+        lot_max = config.RSI_ENTRY_AMOUNT_USD + sum(config.RSI_PYRAMID_AMOUNTS_USD)
+        self.assertLessEqual(lot["total_invested_usd"], lot_max)
+        self.assertGreater(lot["total_invested_usd"], lot_max * 0.95)
 
     def test_no_double_fill_same_stage(self):
         """一度実施した段は閾値を超え続けても再度買い増ししない。"""
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
         lot, _ = rs.simulate_lot_day(lot, 102.5, "2026-01-06")
         lot, trades = rs.simulate_lot_day(lot, 103.0, "2026-01-07")  # まだ+5%未満
         self.assertEqual(trades, [])
@@ -61,17 +62,17 @@ class TestStopLoss(unittest.TestCase):
     """検証1-b: エントリー後に-8%到達 → 全株売却されること。"""
 
     def test_stop_loss_sells_all(self):
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
         lot, trades = rs.simulate_lot_day(lot, 92.0, "2026-01-06")  # ちょうど-8%
         self.assertEqual(len(trades), 1)
         self.assertEqual(trades[0]["kind"], "stop_loss")
-        self.assertEqual(trades[0]["filled_qty"], 500)
+        self.assertEqual(trades[0]["filled_qty"], 300)
         self.assertEqual(lot["shares"], 0)
         self.assertTrue(lot["closed"])
         self.assertEqual(lot["closed_reason"], "stop_loss")
 
     def test_price_above_stop_does_not_trigger(self):
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
         lot, trades = rs.simulate_lot_day(lot, 92.5, "2026-01-06")  # -7.5%（未到達）
         self.assertEqual(trades, [])
         self.assertFalse(lot["closed"])
@@ -81,7 +82,7 @@ class TestProfitTaking(unittest.TestCase):
     """検証1-c: 買い増し後に平均取得単価+20% → 50%売却、+25% → さらに25%売却、25%が残ること。"""
 
     def _lot_after_pyramids(self):
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
         lot, _ = rs.simulate_lot_day(lot, 102.5, "2026-01-06")
         lot, _ = rs.simulate_lot_day(lot, 105.0, "2026-01-07")
         lot, _ = rs.simulate_lot_day(lot, 107.5, "2026-01-08")
@@ -125,7 +126,7 @@ class TestException15Day(unittest.TestCase):
     検証1-e: その期間中に-8%到達 → 損切りが実行されること。"""
 
     def _lot_after_pyramids(self, entry_date="2026-01-05"):
-        lot = rs.new_lot("TST", "TST-1", entry_date, filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", entry_date, filled_qty=300, fill_price=100.0)
         lot, _ = rs.simulate_lot_day(lot, 102.5, add_days(entry_date, 1))
         lot, _ = rs.simulate_lot_day(lot, 105.0, add_days(entry_date, 2))
         lot, _ = rs.simulate_lot_day(lot, 107.5, add_days(entry_date, 3))
@@ -183,7 +184,7 @@ class TestReentry(unittest.TestCase):
     """検証1-f: 伸ばす玉のみ保有中に再びRSI≤30 → 別ロットとして新規建てされること。"""
 
     def test_runner_only_lot_allows_independent_new_lot(self):
-        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=500, fill_price=100.0)
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
         lot, _ = rs.simulate_lot_day(lot, 102.5, "2026-01-06")
         lot, _ = rs.simulate_lot_day(lot, 105.0, "2026-01-07")
         lot, _ = rs.simulate_lot_day(lot, 107.5, "2026-01-08")
@@ -194,10 +195,10 @@ class TestReentry(unittest.TestCase):
         runner_shares = lot["shares"]
         self.assertGreater(runner_shares, 0)
 
-        # クールダウンは存在しない: RSI<=30なら常にTrue
-        self.assertTrue(rs.should_enter(29.9))
+        # クールダウンは存在しない: RSI<=32なら常にTrue
+        self.assertTrue(rs.should_enter(31.9))
         self.assertTrue(rs.should_enter(5.0))
-        self.assertFalse(rs.should_enter(30.1))
+        self.assertFalse(rs.should_enter(32.1))
 
         new_lot = rs.new_lot("TST", "TST-2", "2026-03-10", filled_qty=400, fill_price=80.0)
         # 新ロットは既存ロットと完全に独立
@@ -220,14 +221,14 @@ class TestCashPriority(unittest.TestCase):
             {"ticker": "D", "rsi14": 10.0, "price": 100.0},
             {"ticker": "E", "rsi14": 29.0, "price": 100.0},
         ]
-        # 1件$50,000 x 2件分だけ現金がある(5件中2件しか買えない)
+        # 1件$30,000 x 2件分だけ現金がある(5件中2件しか買えない)
         available_cash = config.RSI_ENTRY_AMOUNT_USD * 2
         selected = rs.select_entries_within_cash(candidates, available_cash)
         self.assertEqual([c["ticker"] for c in selected], ["D", "B"])  # RSI 10, 15の順
 
     def test_skips_unaffordable_and_continues_to_next(self):
         candidates = [
-            {"ticker": "CHEAP", "rsi14": 20.0, "price": 100.0},   # qty500, $50,000
+            {"ticker": "CHEAP", "rsi14": 20.0, "price": 100.0},   # qty300, $30,000
             {"ticker": "PRICEY", "rsi14": 5.0, "price": 100000.0},  # 1株も買えない
         ]
         selected = rs.select_entries_within_cash(candidates, available_cash=50000.0)
