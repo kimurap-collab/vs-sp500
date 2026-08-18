@@ -278,9 +278,8 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         else:
             log_and_report("[3] 初回構築スキップ（既に開始済み、またはターゲット未記入）")
 
-        # 3b. moomoo可用性確認・保有照合（charter.md「OpenD停止時の縮退」「保有の照合」準拠）
+        # 3b. moomoo可用性確認（保有照合は廃止。各枠は自分のpending_ordersだけを見る。2026-08-18仕様変更）
         moomoo_available = broker.is_available()
-        reconcile_ok = False
         moomoo_skip_reason: str | None = None
         moomoo_alert_lines: list[str] = []
         if not moomoo_available:
@@ -288,14 +287,22 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             moomoo_alert_lines.append("⚠️ moomoo未接続（売買停止・評価のみ）")
             log_and_report("[3b] moomoo未接続。売買停止・評価のみ実施")
         else:
-            reconcile_ok, reconcile_msg = portfolio.reconcile_positions(state, rsi_state)
-            if reconcile_ok:
-                log_and_report("[3b] moomoo接続確認・保有照合OK（本体+RSI枠の合算）")
-            else:
-                moomoo_skip_reason = f"保有不一致（{reconcile_msg}）"
-                moomoo_alert_lines.append(f"🔻 保有不一致（売買停止）: {reconcile_msg}")
-                log_and_report(f"[3b] moomoo接続確認OK・保有照合NG: {reconcile_msg}")
-        can_trade = moomoo_available and reconcile_ok
+            log_and_report("[3b] moomoo接続確認OK")
+        can_trade = moomoo_available
+
+        # 3c. 未決注文の決済（本体）。moomoo接続時のみ。他の判断より前に行う
+        accepted_trades: list[dict] = []
+        if moomoo_available:
+            state, settled_trades, settle_warnings = portfolio.settle_pending_orders(state, voo_snap.date)
+            for t in settled_trades:
+                if not dry_run:
+                    portfolio.append_trade_row(t)
+            accepted_trades.extend(settled_trades)
+            for w in settle_warnings:
+                logger.warning(w)
+            log_and_report(f"[3c] 本体pending決済: 確定{len(settled_trades)}件 警告{len(settle_warnings)}件")
+        else:
+            log_and_report("[3c] moomoo未接続のためpending決済スキップ")
 
         # 200日線カウンタ更新
         if voo_technicals.above_200dma_today:
@@ -316,8 +323,8 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         elif moomoo_skip_reason:
             skip_reason = moomoo_skip_reason
 
-        accepted_trades: list[dict] = []
         rejected_trades: list[dict] = []
+        queued_trades: list[dict] = []
         stop_loss_report_lines: list[str] = []
 
         # 5a. 損切り判定（Sonnetの判断より前に強制執行。ルール由来の強制執行であり番兵の裁量ではない）
@@ -334,23 +341,27 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 log_and_report(f"[5a] 損切り判定: {len(stop_loss_orders)}件該当（dry-runのため約定はスキップ）")
             else:
                 trade_date = voo_snap.date
-                state, stop_loss_accepted, stop_loss_rejected = portfolio.execute_trades(
+                state, stop_loss_accepted, stop_loss_rejected, stop_loss_queued = portfolio.execute_trades(
                     stop_loss_orders, state, snapshots, charter_targets, trade_date,
                 )
                 for t in stop_loss_accepted:
                     portfolio.append_trade_row(t)
                 accepted_trades.extend(stop_loss_accepted)
                 rejected_trades.extend(stop_loss_rejected)
+                queued_trades.extend(stop_loss_queued)
                 loss_pct_by_ticker = {o["ticker"]: o["loss_pct"] for o in stop_loss_orders}
                 stop_loss_report_lines = [
                     f"🔻 損切り: {t['ticker']} ({loss_pct_by_ticker[t['ticker']]:+.1%})"
                     for t in stop_loss_accepted
                 ]
                 log_and_report(
-                    f"[5a] 損切り約定完了: 約定{len(stop_loss_accepted)}件 拒否{len(stop_loss_rejected)}件"
+                    f"[5a] 損切り約定完了: 約定{len(stop_loss_accepted)}件 拒否{len(stop_loss_rejected)}件 "
+                    f"未決{len(stop_loss_queued)}件"
                 )
                 for r in stop_loss_rejected:
                     logger.warning("拒否された損切り注文: %s", r)
+                for q in stop_loss_queued:
+                    logger.info("未決キューに追加された損切り注文: %s", q)
 
         if skip_reason:
             log_and_report(f"[5] 売買判断スキップ: ホールド（{skip_reason}）")
@@ -367,16 +378,22 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 log_and_report("[6] dry-runのため約定処理はスキップ")
             else:
                 trade_date = voo_snap.date
-                state, sonnet_accepted, sonnet_rejected = portfolio.execute_trades(
+                state, sonnet_accepted, sonnet_rejected, sonnet_queued = portfolio.execute_trades(
                     proposed_trades, state, snapshots, charter_targets, trade_date,
                 )
                 for t in sonnet_accepted:
                     portfolio.append_trade_row(t)
                 accepted_trades.extend(sonnet_accepted)
                 rejected_trades.extend(sonnet_rejected)
-                log_and_report(f"[6] 約定処理完了: 約定{len(sonnet_accepted)}件 拒否{len(sonnet_rejected)}件")
+                queued_trades.extend(sonnet_queued)
+                log_and_report(
+                    f"[6] 約定処理完了: 約定{len(sonnet_accepted)}件 拒否{len(sonnet_rejected)}件 "
+                    f"未決{len(sonnet_queued)}件"
+                )
                 for r in sonnet_rejected:
                     logger.warning("拒否された注文: %s", r)
+                for q in sonnet_queued:
+                    logger.info("未決キューに追加された注文: %s", q)
 
         state["last_processed_voo_date"] = voo_snap.date
 

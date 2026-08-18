@@ -23,9 +23,11 @@ CALL_TIMEOUT_SEC = 15.0
 ORDER_FILL_TIMEOUT_SEC = 30.0
 ORDER_POLL_INTERVAL_SEC = 1.0
 
-# 約定を待たずに終了とみなす注文の終端ステータス（FILLED_ALL以外）
-_ORDER_TERMINAL_FAILURE_STATUSES = (
-    "FAILED", "SUBMIT_FAILED", "CANCELLED_ALL", "DISABLED", "DELETED", "FILL_CANCELLED", "TIMEOUT",
+# これ以上約定が進まないと確定できる終端ステータス（FILLED_ALLは別扱いの成功終端）。
+# CANCELLED_PARTは「一部約定・残数はキャンセル」を意味するためここに含める。
+ORDER_TERMINAL_STATUSES = (
+    "FAILED", "SUBMIT_FAILED", "CANCELLED_ALL", "CANCELLED_PART",
+    "DISABLED", "DELETED", "FILL_CANCELLED", "TIMEOUT",
 )
 
 
@@ -157,9 +159,12 @@ def get_snapshot(tickers: list[str]) -> dict[str, float] | None:
 
 
 def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | None:
-    """成行注文を出し、約定まで待つ。
+    """成行注文を出し、可能なら約定まで待つ（最大ORDER_FILL_TIMEOUT_SEC秒）。
 
-    戻り値: {'filled_qty': int, 'avg_price': float}。失敗（拒否・タイムアウト・未約定）時None。
+    戻り値: {'order_id': str, 'status': str, 'filled_qty': int, 'avg_price': float}。
+    未約定・一部約定のまま待ち時間が尽きた場合もNoneにはせず、その時点の状態を返す
+    （呼び出し元がclassify_fillで分類し、未約定分をpending_ordersとして追跡する）。
+    注文の送信そのものが失敗した場合のみNone。
     """
     if side not in ("BUY", "SELL"):
         raise ValueError(f"不正なside: {side}")
@@ -182,8 +187,6 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
             # そもそも設定できず、追加以降の全注文が提出時点で拒否され続けとった（4日間、
             # 実注文が発生せんかったので気付けんかった）。
             # 現在は実行が23:00ローカル（=11:00 EDT）に移りRTH内なので、フラグ自体が不要や。
-            # 万一RTH外に実行が流れた場合はSUBMITTEDのまま約定待ちがタイムアウトし、
-            # 既存の「拒否1件」として記録される（＝黙って約定せず、安全側に倒れる）。
             ret, data = ctx.place_order(
                 price=0,
                 qty=qty,
@@ -197,6 +200,9 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
                 raise RuntimeError(f"place_order失敗: {data}")
             order_id = str(data.iloc[0]["order_id"])
 
+            status = "SUBMITTED"
+            filled_qty = 0
+            avg_price = 0.0
             deadline = time.monotonic() + ORDER_FILL_TIMEOUT_SEC
             while time.monotonic() < deadline:
                 ret, orders = ctx.order_list_query(
@@ -204,17 +210,78 @@ def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | Non
                 )
                 if ret == 0 and not orders.empty:
                     row = orders.iloc[0]
-                    status = row["order_status"]
-                    if status == "FILLED_ALL":
-                        return {
-                            "filled_qty": int(float(row["dealt_qty"])),
-                            "avg_price": float(row["dealt_avg_price"]),
-                        }
-                    if status in _ORDER_TERMINAL_FAILURE_STATUSES:
-                        raise RuntimeError(f"注文が約定せず終端した: status={status} order_id={order_id}")
+                    status = str(row["order_status"])
+                    filled_qty = int(float(row["dealt_qty"]))
+                    avg_price = float(row["dealt_avg_price"])
+                    if status == "FILLED_ALL" or status in ORDER_TERMINAL_STATUSES:
+                        break
                 time.sleep(ORDER_POLL_INTERVAL_SEC)
-            raise RuntimeError(f"注文の約定待ちがタイムアウトした（{ORDER_FILL_TIMEOUT_SEC}秒）: order_id={order_id}")
+            # タイムアウトで抜けた場合、statusはまだSUBMITTED等の未確定のまま。
+            # 未約定・一部約定分は呼び出し元がpending_ordersとして追跡し、次回実行の冒頭で決済する。
+            return {"order_id": order_id, "status": status, "filled_qty": filled_qty, "avg_price": avg_price}
         finally:
             ctx.close()
 
     return _run_with_timeout(_call, timeout=ORDER_FILL_TIMEOUT_SEC + 10)
+
+
+def classify_fill(requested_qty: int, fill: dict[str, Any]) -> str:
+    """place_market_order/get_order_statusの戻り値を、要求株数と突き合わせて分類する。
+
+    'FULL': 全量約定。
+    'PARTIAL_OPEN': 一部約定・注文は継続中（残りは追跡が必要）。
+    'PARTIAL_TERMINAL': 一部約定のまま終端（残りは打ち切り、これ以上約定しない）。
+    'NONE_OPEN': 未約定・注文は継続中（全量を追跡する）。
+    'NONE_TERMINAL': 未約定のまま終端（実質的な発注失敗）。
+    """
+    filled_qty = fill["filled_qty"]
+    is_terminal = fill["status"] in ORDER_TERMINAL_STATUSES
+    if filled_qty >= requested_qty:
+        return "FULL"
+    if filled_qty > 0:
+        return "PARTIAL_TERMINAL" if is_terminal else "PARTIAL_OPEN"
+    return "NONE_TERMINAL" if is_terminal else "NONE_OPEN"
+
+
+def get_order_status(order_id: str) -> dict[str, Any] | None:
+    """指定order_idの現在状態をmoomooに問い合わせる（未決注文の決済に使う）。
+
+    まずorder_list_query（アクティブ注文）を試し、見つからなければ
+    history_order_list_query（確定済み注文。過去90日分）を試す。
+    戻り値: {'order_id': str, 'status': str, 'filled_qty': int, 'avg_price': float,
+             'updated_date': str | None}。問い合わせ自体が失敗した場合はNone
+    （呼び出し元はNoneの場合、pending_orderをそのまま残すこと＝黙って消さない）。
+    """
+
+    def _call() -> dict[str, Any] | None:
+        from moomoo import TrdEnv
+
+        ctx = _open_trade_ctx()
+        try:
+            ret, data = ctx.order_list_query(
+                order_id=order_id, trd_env=TrdEnv.SIMULATE, acc_id=config.MOOMOO_ACC_ID
+            )
+            if ret != 0:
+                raise RuntimeError(f"order_list_query失敗: {data}")
+            if data.empty:
+                ret2, data2 = ctx.history_order_list_query(trd_env=TrdEnv.SIMULATE, acc_id=config.MOOMOO_ACC_ID)
+                if ret2 != 0:
+                    raise RuntimeError(f"history_order_list_query失敗: {data2}")
+                data2 = data2[data2["order_id"].astype(str) == str(order_id)]
+                if data2.empty:
+                    return None
+                row = data2.iloc[0]
+            else:
+                row = data.iloc[0]
+            updated = str(row.get("updated_time") or "")
+            return {
+                "order_id": str(order_id),
+                "status": str(row["order_status"]),
+                "filled_qty": int(float(row["dealt_qty"])),
+                "avg_price": float(row["dealt_avg_price"]),
+                "updated_date": updated.split(" ")[0] if updated else None,
+            }
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call, timeout=CALL_TIMEOUT_SEC)

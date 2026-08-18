@@ -18,6 +18,7 @@ DEFAULT_RSI_PORTFOLIO: dict[str, Any] = {
     "lots": [],
     "bench_units_rsi": 0.0,
     "last_processed_date": None,
+    "pending_orders": [],
 }
 
 RSI_TRADES_CSV_HEADER = ["date", "action", "ticker", "shares", "price", "amount_usd", "rule", "lot_id", "note"]

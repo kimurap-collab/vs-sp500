@@ -23,6 +23,7 @@ DEFAULT_PORTFOLIO: dict[str, Any] = {
     "last_processed_voo_date": None,
     "below_200dma_streak": 0,
     "above_200dma_streak": 0,
+    "pending_orders": [],
 }
 
 TRADES_CSV_HEADER = [
@@ -227,45 +228,6 @@ def compute_stock_total_weight(state: dict[str, Any], market: dict[str, TickerSn
     )
 
 
-def combined_holdings(state: dict[str, Any], rsi_state: dict[str, Any] | None) -> dict[str, float]:
-    """本体の保有 + RSI枠の保有（銘柄ごとに合算）。
-
-    RSI枠は同じmoomoo口座に建玉を持つため、保有照合は本体単独ではなく
-    この合算値で行う必要がある（SPEC_RSI30.md「最大の危険箇所は保有照合」）。
-    rsi_stateがNone、またはロットが無ければ本体単独と一致する（後方互換）。
-    """
-    combined: dict[str, float] = dict(state.get("holdings", {}))
-    for lot in (rsi_state or {}).get("lots", []):
-        if lot.get("closed"):
-            continue
-        combined[lot["ticker"]] = combined.get(lot["ticker"], 0.0) + lot.get("shares", 0.0)
-    return combined
-
-
-def reconcile_positions(state: dict[str, Any], rsi_state: dict[str, Any] | None = None) -> tuple[bool, str]:
-    """台帳の保有（本体+RSI枠の合算）とmoomooの実保有を突き合わせる。全銘柄一致でTrue。"""
-    broker_positions = broker.get_positions()
-    if broker_positions is None:
-        return False, "moomooの保有取得に失敗した"
-
-    ledger_holdings = {t: s for t, s in combined_holdings(state, rsi_state).items() if abs(s) > 1e-6}
-    broker_holdings = {t: q for t, q in broker_positions.items() if abs(q) > 1e-6}
-
-    ticker_mismatch = set(ledger_holdings) ^ set(broker_holdings)
-    if ticker_mismatch:
-        return False, f"保有銘柄が不一致（台帳のみ/moomooのみ）: {sorted(ticker_mismatch)}"
-
-    qty_mismatches = [
-        f"{ticker}(台帳{ledger_holdings[ticker]:g} vs moomoo{broker_holdings[ticker]:g})"
-        for ticker in ledger_holdings
-        if abs(ledger_holdings[ticker] - broker_holdings[ticker]) > 1e-6
-    ]
-    if qty_mismatches:
-        return False, "株数不一致: " + ", ".join(qty_mismatches)
-
-    return True, "一致"
-
-
 def _pre_trade_guardrail_check(
     ticker: str,
     action: str,
@@ -312,20 +274,24 @@ def execute_trades(
     market: dict[str, TickerSnapshot],
     charter_targets: dict[str, dict[str, float]] | None,
     trade_date: str,
-) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     """提案された取引をガードレール検証のうえmoomooに実発注する。
 
     ガードレールは「見積り（現在値×想定株数）」で発注前に検証する（発注後は取り消せないため）。
-    検証を通過したら実際にbroker.place_market_orderへ委譲し、実約定株数・実約定価格・
-    moomooの現金増減（＝発注前後のbroker.get_cash()の差分）をそのまま台帳に反映する。
+    検証を通過したら実際にbroker.place_market_orderへ委譲する。その場で全量約定したら
+    従来どおり即座に台帳へ反映する（現金増減は発注前後のbroker.get_cash()の差分）。
+    その場で約定しなかった分（未約定・一部約定の残り）は台帳を変更せずpending_ordersに記録し、
+    次回実行の冒頭（settle_pending_orders）で決済する。保有照合は行わない
+    （各枠が自分の出したpending_ordersだけの面倒を見る。2026-08-18仕様変更）。
 
-    戻り値: (新しいstate, 約定した取引ログ, 拒否された取引ログ)
+    戻り値: (新しいstate, 約定した取引ログ, 拒否された取引ログ, 未決注文としてキューに積んだログ)
     """
     new_state = json.loads(json.dumps(state))
     # SELLを先に約定して現金を作ってからBUYを処理する（リバランス時の現金不足による誤拒否を防ぐ）
     proposed_trades = sorted(proposed_trades, key=lambda t: 0 if t.get("action") == "SELL" else 1)
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
+    queued: list[dict[str, Any]] = []
     nav_usd = compute_nav_usd(new_state, market)
     non_target_used_usd = 0.0
     trade_count = 0
@@ -390,12 +356,31 @@ def execute_trades(
                 cash_before = broker.get_cash()
                 fill = broker.place_market_order(ticker, qty, "BUY")
                 if fill is None:
-                    raise TradeRejected(
-                        "moomoo発注が失敗または未約定確認"
-                        "（実際に約定していた場合は翌朝reconcile_positionsが不一致として検知する）"
-                    )
+                    raise TradeRejected("moomoo発注の送信に失敗した")
+                trade_count += 1
+                if not is_target_directed and not is_forced_stop_loss:
+                    non_target_used_usd += amount_usd
+
+                outcome = broker.classify_fill(qty, fill)
                 filled_qty = fill["filled_qty"]
                 avg_price = fill["avg_price"]
+
+                if outcome == "NONE_TERMINAL":
+                    raise TradeRejected(f"moomoo注文が約定せず終端した（status={fill['status']}）")
+
+                if outcome == "NONE_OPEN":
+                    # その場で1株も約定しなかった。台帳は一切変更せず全量をpending_ordersへ記録する
+                    new_state.setdefault("pending_orders", []).append({
+                        "order_id": fill["order_id"], "ticker": ticker, "side": "BUY", "qty": qty,
+                        "submitted_date": trade_date, "applied_qty": 0, "applied_value_usd": 0.0,
+                        "rule": rule,
+                    })
+                    queued.append({
+                        "date": trade_date, "action": "BUY", "ticker": ticker, "qty": qty,
+                        "order_id": fill["order_id"], "rule": rule,
+                    })
+                    continue
+
                 cash_after = broker.get_cash()
                 if cash_before is not None and cash_after is not None:
                     cash_delta = cash_after - cash_before
@@ -407,6 +392,21 @@ def execute_trades(
                 new_state["holdings"][ticker] = new_state["holdings"].get(ticker, 0.0) + filled_qty
                 fee_usd = round(-cash_delta - filled_qty * avg_price, 4)
                 shares, price_for_log = filled_qty, avg_price
+                note = ""
+
+                if outcome == "PARTIAL_OPEN":
+                    new_state.setdefault("pending_orders", []).append({
+                        "order_id": fill["order_id"], "ticker": ticker, "side": "BUY", "qty": qty,
+                        "submitted_date": trade_date, "applied_qty": filled_qty,
+                        "applied_value_usd": filled_qty * avg_price, "rule": rule,
+                    })
+                    note = f"一部約定・残{qty - filled_qty}株はpending_orders追跡"
+                elif outcome == "PARTIAL_TERMINAL":
+                    logger.warning(
+                        "BUY %s: 一部約定(%d/%d株)のまま終端した（status=%s）。残数は打ち切り",
+                        ticker, filled_qty, qty, fill["status"],
+                    )
+                    note = f"一部約定({filled_qty}/{qty}株)のまま終端・残数は打ち切り"
 
             else:  # SELL
                 held = new_state["holdings"].get(ticker, 0.0)
@@ -428,12 +428,30 @@ def execute_trades(
                 cash_before = broker.get_cash()
                 fill = broker.place_market_order(ticker, qty, "SELL")
                 if fill is None:
-                    raise TradeRejected(
-                        "moomoo発注が失敗または未約定確認"
-                        "（実際に約定していた場合は翌朝reconcile_positionsが不一致として検知する）"
-                    )
+                    raise TradeRejected("moomoo発注の送信に失敗した")
+                trade_count += 1
+                if not is_target_directed and not is_forced_stop_loss:
+                    non_target_used_usd += amount_usd
+
+                outcome = broker.classify_fill(qty, fill)
                 filled_qty = fill["filled_qty"]
                 avg_price = fill["avg_price"]
+
+                if outcome == "NONE_TERMINAL":
+                    raise TradeRejected(f"moomoo注文が約定せず終端した（status={fill['status']}）")
+
+                if outcome == "NONE_OPEN":
+                    new_state.setdefault("pending_orders", []).append({
+                        "order_id": fill["order_id"], "ticker": ticker, "side": "SELL", "qty": qty,
+                        "submitted_date": trade_date, "applied_qty": 0, "applied_value_usd": 0.0,
+                        "rule": rule,
+                    })
+                    queued.append({
+                        "date": trade_date, "action": "SELL", "ticker": ticker, "qty": qty,
+                        "order_id": fill["order_id"], "rule": rule,
+                    })
+                    continue
+
                 cash_after = broker.get_cash()
                 if cash_before is not None and cash_after is not None:
                     cash_delta = cash_after - cash_before
@@ -447,23 +465,34 @@ def execute_trades(
                     del new_state["holdings"][ticker]
                 fee_usd = round(filled_qty * avg_price - cash_delta, 4)
                 shares, price_for_log = filled_qty, avg_price
+                note = ""
 
-            if not is_target_directed and not is_forced_stop_loss:
-                non_target_used_usd += amount_usd
-            trade_count += 1
+                if outcome == "PARTIAL_OPEN":
+                    new_state.setdefault("pending_orders", []).append({
+                        "order_id": fill["order_id"], "ticker": ticker, "side": "SELL", "qty": qty,
+                        "submitted_date": trade_date, "applied_qty": filled_qty,
+                        "applied_value_usd": filled_qty * avg_price, "rule": rule,
+                    })
+                    note = f"一部約定・残{qty - filled_qty}株はpending_orders追跡"
+                elif outcome == "PARTIAL_TERMINAL":
+                    logger.warning(
+                        "SELL %s: 一部約定(%d/%d株)のまま終端した（status=%s）。残数は打ち切り",
+                        ticker, filled_qty, qty, fill["status"],
+                    )
+                    note = f"一部約定({filled_qty}/{qty}株)のまま終端・残数は打ち切り"
 
             accepted.append({
                 "date": trade_date, "action": action, "ticker": ticker,
                 "shares": shares, "price": round(price_for_log, 4), "currency": currency,
                 "amount_usd": round(shares * price_for_log, 2), "fee_usd": fee_usd,
-                "rule": rule, "note": "",
+                "rule": rule, "note": note,
             })
 
         except TradeRejected as e:
             new_state = trade_snapshot  # この取引の変更を巻き戻す
             rejected.append({**trade, "reason": e.reason})
 
-    return new_state, accepted, rejected
+    return new_state, accepted, rejected, queued
 
 
 def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) -> list[dict[str, Any]]:
@@ -485,5 +514,92 @@ def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) 
                 "rule": "stop_loss", "loss_pct": change,
             })
     return orders
+
+
+# ---------------------------------------------------------------------------
+# 未決注文の決済（保有照合の代わり。各枠は自分のpending_ordersだけを見る。2026-08-18仕様変更）
+# ---------------------------------------------------------------------------
+
+def settle_pending_orders(state: dict[str, Any], today: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+    """本体のpending_ordersを毎回の実行冒頭でmoomooに問い合わせ、確定した分を台帳へ反映する。
+
+    - 全量/一部が新たに約定していたら、その約定株数・約定価格で保有・現金・trades.csvへ反映する
+      （決済は当日に限らず後日になるため、broker.get_cash()の前後差ではなく約定株数×約定単価で
+      現金へ反映する。moomoo APIから手数料を取得する経路が無いため、fee_usdは0とし
+      「手数料未計上」の旨をnoteとログに残す＝仕様の「現金の扱い」節の調査結果）。
+    - 全量約定 or 終端ステータス（キャンセル等）ならpending_ordersから外す。終端の場合は警告を残す。
+    - 問い合わせ自体が失敗（broker.get_order_statusがNone）した項目は変更せず残す。
+    - まだ進行中（SUBMITTED等）の項目もそのまま残す。
+
+    戻り値: (新しいstate, 反映した取引ログ, 警告メッセージのリスト)
+    """
+    new_state = json.loads(json.dumps(state))
+    pending = list(new_state.get("pending_orders", []))
+    remaining: list[dict[str, Any]] = []
+    applied_trades: list[dict[str, Any]] = []
+    warnings: list[str] = []
+
+    for order in pending:
+        info = broker.get_order_status(order["order_id"])
+        if info is None:
+            remaining.append(order)
+            continue
+
+        applied_qty = order.get("applied_qty", 0)
+        applied_value = order.get("applied_value_usd", 0.0)
+        dealt_qty = info["filled_qty"]
+        dealt_avg_price = info["avg_price"]
+        status = info["status"]
+
+        new_fill_qty = dealt_qty - applied_qty
+        if new_fill_qty > 0:
+            total_value = dealt_qty * dealt_avg_price
+            incremental_value = total_value - applied_value
+            incremental_price = incremental_value / new_fill_qty
+            fill_date = info.get("updated_date") or order["submitted_date"]
+            ticker = order["ticker"]
+            side = order["side"]
+
+            if side == "BUY":
+                new_state["holdings"][ticker] = new_state["holdings"].get(ticker, 0.0) + new_fill_qty
+                new_state["cash_usd"] -= incremental_price * new_fill_qty
+            else:
+                new_state["holdings"][ticker] = new_state["holdings"].get(ticker, 0.0) - new_fill_qty
+                if new_state["holdings"][ticker] < 1e-9:
+                    del new_state["holdings"][ticker]
+                new_state["cash_usd"] += incremental_price * new_fill_qty
+
+            trade_row = {
+                "date": fill_date, "action": side, "ticker": ticker,
+                "shares": new_fill_qty, "price": round(incremental_price, 4),
+                "currency": config.WHITELIST.get(ticker, {}).get("currency", "USD"),
+                "amount_usd": round(new_fill_qty * incremental_price, 2), "fee_usd": 0.0,
+                "rule": order.get("rule", ""),
+                "note": f"pending決済(order_id={order['order_id']})・手数料不明のため未計上",
+            }
+            applied_trades.append(trade_row)
+            warnings.append(
+                f"pending決済: {ticker} {side} {new_fill_qty}株 @ {incremental_price:.4f}"
+                f"（order_id={order['order_id']}・手数料は台帳に未計上）"
+            )
+
+            applied_qty = dealt_qty
+            applied_value = total_value
+
+        if status == "FILLED_ALL" or applied_qty >= order["qty"]:
+            continue  # 全量確定。pending_ordersから外す
+
+        if status in broker.ORDER_TERMINAL_STATUSES:
+            if applied_qty < order["qty"]:
+                warnings.append(
+                    f"未決注文が未達のまま終端した（status={status}）: order_id={order['order_id']} "
+                    f"{order['ticker']} 残数{order['qty'] - applied_qty}株は打ち切り"
+                )
+            continue  # 終端。pending_ordersから外す
+
+        remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+
+    new_state["pending_orders"] = remaining
+    return new_state, applied_trades, warnings
 
 

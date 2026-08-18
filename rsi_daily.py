@@ -189,9 +189,20 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
     return candidates
 
 
-def _new_lot_id(ticker: str, entry_date: str, existing_lots: list[dict[str, Any]]) -> str:
-    seq = sum(1 for lot in existing_lots if lot["ticker"] == ticker) + 1
-    return f"{ticker}-{entry_date}-{seq}"
+def _new_lot_id(
+    ticker: str, entry_date: str, existing_lots: list[dict[str, Any]],
+    pending_orders: list[dict[str, Any]] | None = None,
+) -> str:
+    """新しいlot_idを発番する。
+
+    未決のentry注文（まだロットが作られていない）も同じticker分を予約済みとして数える。
+    そうしないと、entryが未約定のままpending_orders行きになった翌日以降に同一銘柄へ
+    再エントリーした場合、後で決済されたときにlot_idが衝突しうる
+    （SPEC「再エントリーにクールダウンは無い」により同一銘柄の複数ロットは正規に起こりうる）。
+    """
+    seq = sum(1 for lot in existing_lots if lot["ticker"] == ticker)
+    seq += sum(1 for o in (pending_orders or []) if o.get("ticker") == ticker and o.get("rule") == "entry")
+    return f"{ticker}-{entry_date}-{seq + 1}"
 
 
 def _execute_order(ticker: str, qty: int, side: str) -> tuple[dict[str, Any] | None, float]:
@@ -208,6 +219,114 @@ def _execute_order(ticker: str, qty: int, side: str) -> tuple[dict[str, Any] | N
         signed = -1 if side == "BUY" else 1
         cash_delta = signed * fill["filled_qty"] * fill["avg_price"]
     return fill, cash_delta
+
+
+def settle_pending_orders(rsi_state: dict[str, Any], today: str) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
+    """RSI枠のpending_ordersを毎回の実行冒頭でmoomooに問い合わせ、確定した分をロット・現金へ反映する。
+
+    本体のsettle_pending_orders（portfolio.py）と同じ決済方針だが、反映先がロットである点が異なる。
+    entryロット（rule="entry"）はpending時点ではまだ存在しないため、ここで初めて生成する
+    （SPEC「entryで建ったロットが後日約定した場合、ロットが正しく生成されること」）。
+    本体のpending_ordersには一切触れない。
+    """
+    state = dict(rsi_state)
+    state["lots"] = [dict(lot) for lot in rsi_state.get("lots", [])]
+    pending = list(rsi_state.get("pending_orders", []))
+    remaining: list[dict[str, Any]] = []
+    applied_trades: list[dict[str, Any]] = []
+    warnings: list[str] = []
+
+    for order in pending:
+        info = broker.get_order_status(order["order_id"])
+        if info is None:
+            remaining.append(order)
+            continue
+
+        applied_qty = order.get("applied_qty", 0)
+        applied_value = order.get("applied_value_usd", 0.0)
+        dealt_qty = info["filled_qty"]
+        dealt_avg_price = info["avg_price"]
+        status = info["status"]
+
+        new_fill_qty = dealt_qty - applied_qty
+        if new_fill_qty > 0:
+            total_value = dealt_qty * dealt_avg_price
+            incremental_value = total_value - applied_value
+            incremental_price = incremental_value / new_fill_qty
+            fill_date = info.get("updated_date") or order["submitted_date"]
+            rule = order["rule"]
+            ticker = order["ticker"]
+            lot_id = order.get("lot_id", "")
+
+            applied_ok = True
+            if rule == "entry":
+                new_lot = rsi_strategy.new_lot(ticker, lot_id, fill_date, new_fill_qty, incremental_price)
+                state["lots"].append(new_lot)
+            else:
+                idx = next((i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot_id), None)
+                if idx is None:
+                    warnings.append(
+                        f"pending決済: lot_id={lot_id} が見つからない（{ticker}・{rule}）。反映をスキップした"
+                    )
+                    remaining.append(order)
+                    applied_ok = False
+                elif rule.startswith("pyramid"):
+                    state["lots"][idx] = rsi_strategy.apply_pyramid_fill(
+                        state["lots"][idx], order["stage_index"], new_fill_qty, incremental_price,
+                    )
+                elif rule == "profit1":
+                    state["lots"][idx] = rsi_strategy.apply_profit1_fill(
+                        state["lots"][idx], new_fill_qty, order["base_shares"],
+                    )
+                elif rule == "profit2":
+                    state["lots"][idx] = rsi_strategy.apply_profit2_fill(state["lots"][idx], new_fill_qty)
+                elif rule == "stop_loss":
+                    state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], new_fill_qty, fill_date)
+                else:
+                    warnings.append(f"pending決済: 未知のrule={rule}（lot_id={lot_id}）。反映をスキップした")
+                    remaining.append(order)
+                    applied_ok = False
+
+            if not applied_ok:
+                continue  # ロットが見つからない等の異常。この項目はpending_ordersに残したまま次回再試行する
+
+            side = order["side"]
+            if side == "BUY":
+                state["cash_usd"] -= incremental_price * new_fill_qty
+            else:
+                state["cash_usd"] += incremental_price * new_fill_qty
+
+            trade_row = {
+                "date": fill_date, "action": side, "ticker": ticker,
+                "shares": new_fill_qty, "price": round(incremental_price, 4),
+                "amount_usd": round(new_fill_qty * incremental_price, 2),
+                "rule": rule, "lot_id": lot_id,
+                "note": f"pending決済(order_id={order['order_id']})・手数料不明のため未計上",
+            }
+            applied_trades.append(trade_row)
+            warnings.append(
+                f"pending決済: {ticker} {side} {new_fill_qty}株 @ {incremental_price:.4f}"
+                f"（order_id={order['order_id']}・手数料は台帳に未計上）"
+            )
+
+            applied_qty = dealt_qty
+            applied_value = total_value
+
+        if status == "FILLED_ALL" or applied_qty >= order["qty"]:
+            continue  # 全量確定。pending_ordersから外す
+
+        if status in broker.ORDER_TERMINAL_STATUSES:
+            if applied_qty < order["qty"]:
+                warnings.append(
+                    f"未決注文が未達のまま終端した（status={status}）: order_id={order['order_id']} "
+                    f"{order['ticker']} {order.get('rule')} 残数{order['qty'] - applied_qty}株は打ち切り"
+                )
+            continue  # 終端。pending_ordersから外す
+
+        remaining.append({**order, "applied_qty": applied_qty, "applied_value_usd": applied_value})
+
+    state["pending_orders"] = remaining
+    return state, applied_trades, warnings
 
 
 def compute_snapshot_only(
@@ -241,9 +360,23 @@ def run(
     戻り値: (更新後のrsi_state, 約定した取引ログ, ログ用メッセージ行, NAV, ベンチマーク評価額, 保有銘柄の市場スナップショット)
     """
     log_lines: list[str] = []
+    accepted_trades: list[dict[str, Any]] = []
+
+    # 0. 未決注文の決済（moomoo接続時のみ。保有照合は行わない。他の判定より前に行う）
+    if can_trade:
+        rsi_state, settled_trades, settle_warnings = settle_pending_orders(rsi_state, trade_date)
+        for t in settled_trades:
+            if not dry_run:
+                rsi_ledger.append_trade_row(t)
+        accepted_trades.extend(settled_trades)
+        for w in settle_warnings:
+            logger.warning(w)
+        log_lines.append(f"[RSI-0a] pending決済: 確定{len(settled_trades)}件 警告{len(settle_warnings)}件")
+    else:
+        log_lines.append("[RSI-0a] moomoo未接続のためpending決済スキップ")
+
     state = dict(rsi_state)
     state["lots"] = [dict(lot) for lot in rsi_state.get("lots", [])]
-    accepted_trades: list[dict[str, Any]] = []
 
     # 初回構築（本体のstart_date/bench_units構築と同じ扱い。何度呼ばれても1回しか発火しない）
     if state["start_date"] is None:
@@ -283,18 +416,40 @@ def run(
                 if fill is None:
                     logger.warning("RSI損切り発注失敗: %s lot=%s", stop["ticker"], stop["lot_id"])
                     continue
-                state["cash_usd"] += cash_delta
-                state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(
-                    state["lots"][idx], fill["filled_qty"], trade_date,
-                )
-                trade_row = {
-                    "date": trade_date, "action": "SELL", "ticker": stop["ticker"],
-                    "shares": fill["filled_qty"], "price": round(fill["avg_price"], 4),
-                    "amount_usd": round(fill["filled_qty"] * fill["avg_price"], 2),
-                    "rule": "stop_loss", "lot_id": stop["lot_id"], "note": "",
-                }
-                rsi_ledger.append_trade_row(trade_row)
-                accepted_trades.append(trade_row)
+
+                outcome = broker.classify_fill(stop["qty"], fill)
+                filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+                if outcome == "NONE_TERMINAL":
+                    logger.warning(
+                        "RSI損切り: 注文が約定せず終端した lot=%s status=%s", stop["lot_id"], fill["status"],
+                    )
+                    continue
+
+                if filled_qty > 0:
+                    state["cash_usd"] += cash_delta
+                    state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], filled_qty, trade_date)
+                    trade_row = {
+                        "date": trade_date, "action": "SELL", "ticker": stop["ticker"],
+                        "shares": filled_qty, "price": round(avg_price, 4),
+                        "amount_usd": round(filled_qty * avg_price, 2),
+                        "rule": "stop_loss", "lot_id": stop["lot_id"], "note": "",
+                    }
+                    rsi_ledger.append_trade_row(trade_row)
+                    accepted_trades.append(trade_row)
+
+                if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+                    state.setdefault("pending_orders", [])
+                    state["pending_orders"].append({
+                        "order_id": fill["order_id"], "ticker": stop["ticker"], "side": "SELL",
+                        "qty": stop["qty"], "submitted_date": trade_date,
+                        "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                        "rule": "stop_loss", "lot_id": stop["lot_id"],
+                    })
+                elif outcome == "PARTIAL_TERMINAL":
+                    logger.warning(
+                        "RSI損切り: 一部約定(%d/%d株)のまま終端した lot=%s", filled_qty, stop["qty"], stop["lot_id"],
+                    )
                 continue  # 損切りした日は利確判定を行わない
 
             trading_days_elapsed = rsi_strategy.business_days_since(lot["initial_entry_date"], trade_date)
@@ -306,25 +461,58 @@ def run(
                 if intent["kind"] == "exception_trigger":
                     state["lots"][idx] = rsi_strategy.apply_exception_trigger(state["lots"][idx])
                     break
+
                 fill, cash_delta = _execute_order(intent["ticker"], intent["qty"], "SELL")
                 if fill is None:
                     logger.warning("RSI利確発注失敗: %s lot=%s kind=%s", intent["ticker"], intent["lot_id"], intent["kind"])
                     break
-                state["cash_usd"] += cash_delta
-                if intent["kind"] == "profit1":
-                    state["lots"][idx] = rsi_strategy.apply_profit1_fill(
-                        state["lots"][idx], fill["filled_qty"], intent["base_shares"],
+
+                outcome = broker.classify_fill(intent["qty"], fill)
+                filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+                if outcome == "NONE_TERMINAL":
+                    logger.warning(
+                        "RSI利確: 注文が約定せず終端した lot=%s kind=%s status=%s",
+                        intent["lot_id"], intent["kind"], fill["status"],
                     )
-                else:
-                    state["lots"][idx] = rsi_strategy.apply_profit2_fill(state["lots"][idx], fill["filled_qty"])
-                trade_row = {
-                    "date": trade_date, "action": "SELL", "ticker": intent["ticker"],
-                    "shares": fill["filled_qty"], "price": round(fill["avg_price"], 4),
-                    "amount_usd": round(fill["filled_qty"] * fill["avg_price"], 2),
-                    "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
-                }
-                rsi_ledger.append_trade_row(trade_row)
-                accepted_trades.append(trade_row)
+                    break
+
+                if filled_qty > 0:
+                    state["cash_usd"] += cash_delta
+                    if intent["kind"] == "profit1":
+                        state["lots"][idx] = rsi_strategy.apply_profit1_fill(
+                            state["lots"][idx], filled_qty, intent["base_shares"],
+                        )
+                    else:
+                        state["lots"][idx] = rsi_strategy.apply_profit2_fill(state["lots"][idx], filled_qty)
+                    trade_row = {
+                        "date": trade_date, "action": "SELL", "ticker": intent["ticker"],
+                        "shares": filled_qty, "price": round(avg_price, 4),
+                        "amount_usd": round(filled_qty * avg_price, 2),
+                        "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
+                    }
+                    rsi_ledger.append_trade_row(trade_row)
+                    accepted_trades.append(trade_row)
+
+                if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+                    pending_entry = {
+                        "order_id": fill["order_id"], "ticker": intent["ticker"], "side": "SELL",
+                        "qty": intent["qty"], "submitted_date": trade_date,
+                        "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                        "rule": intent["kind"], "lot_id": intent["lot_id"],
+                    }
+                    if intent["kind"] == "profit1":
+                        pending_entry["base_shares"] = intent["base_shares"]
+                    state.setdefault("pending_orders", [])
+                    state["pending_orders"].append(pending_entry)
+                    break  # 未決分の帰結が付くまで、このロットへの追加判定は次回実行に持ち越す
+
+                if outcome == "PARTIAL_TERMINAL":
+                    logger.warning(
+                        "RSI利確: 一部約定(%d/%d株)のまま終端した lot=%s kind=%s",
+                        filled_qty, intent["qty"], intent["lot_id"], intent["kind"],
+                    )
+                # outcome == FULL、またはPARTIAL_TERMINAL処理後はループ先頭に戻り次の利確条件を判定する
 
         # --- 2. 買い増し（新規エントリーより優先） ---
         for lot in sorted(state["lots"], key=lambda x: (x["ticker"], x["lot_id"])):
@@ -347,18 +535,44 @@ def run(
                 if fill is None:
                     logger.warning("RSI買い増し発注失敗: %s lot=%s kind=%s", intent["ticker"], intent["lot_id"], intent["kind"])
                     continue
-                state["cash_usd"] += cash_delta
-                state["lots"][idx] = rsi_strategy.apply_pyramid_fill(
-                    state["lots"][idx], intent["stage_index"], fill["filled_qty"], fill["avg_price"],
-                )
-                trade_row = {
-                    "date": trade_date, "action": "BUY", "ticker": intent["ticker"],
-                    "shares": fill["filled_qty"], "price": round(fill["avg_price"], 4),
-                    "amount_usd": round(fill["filled_qty"] * fill["avg_price"], 2),
-                    "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
-                }
-                rsi_ledger.append_trade_row(trade_row)
-                accepted_trades.append(trade_row)
+
+                outcome = broker.classify_fill(qty, fill)
+                filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+                if outcome == "NONE_TERMINAL":
+                    logger.warning(
+                        "RSI買い増し: 注文が約定せず終端した lot=%s kind=%s status=%s",
+                        intent["lot_id"], intent["kind"], fill["status"],
+                    )
+                    continue
+
+                if filled_qty > 0:
+                    state["cash_usd"] += cash_delta
+                    state["lots"][idx] = rsi_strategy.apply_pyramid_fill(
+                        state["lots"][idx], intent["stage_index"], filled_qty, avg_price,
+                    )
+                    trade_row = {
+                        "date": trade_date, "action": "BUY", "ticker": intent["ticker"],
+                        "shares": filled_qty, "price": round(avg_price, 4),
+                        "amount_usd": round(filled_qty * avg_price, 2),
+                        "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
+                    }
+                    rsi_ledger.append_trade_row(trade_row)
+                    accepted_trades.append(trade_row)
+
+                if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+                    state.setdefault("pending_orders", [])
+                    state["pending_orders"].append({
+                        "order_id": fill["order_id"], "ticker": intent["ticker"], "side": "BUY",
+                        "qty": qty, "submitted_date": trade_date,
+                        "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                        "rule": intent["kind"], "lot_id": intent["lot_id"], "stage_index": intent["stage_index"],
+                    })
+                elif outcome == "PARTIAL_TERMINAL":
+                    logger.warning(
+                        "RSI買い増し: 一部約定(%d/%d株)のまま終端した lot=%s kind=%s",
+                        filled_qty, qty, intent["lot_id"], intent["kind"],
+                    )
 
         # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ） ---
         candidates = [
@@ -372,21 +586,46 @@ def run(
             if fill is None:
                 logger.warning("RSI新規エントリー発注失敗: %s", cand["ticker"])
                 continue
-            state["cash_usd"] += cash_delta
-            lot_id = _new_lot_id(cand["ticker"], trade_date, state["lots"])
-            new_lot = rsi_strategy.new_lot(cand["ticker"], lot_id, trade_date, fill["filled_qty"], fill["avg_price"])
-            state["lots"].append(new_lot)
-            trade_row = {
-                "date": trade_date, "action": "BUY", "ticker": cand["ticker"],
-                "shares": fill["filled_qty"], "price": round(fill["avg_price"], 4),
-                "amount_usd": round(fill["filled_qty"] * fill["avg_price"], 2),
-                "rule": "entry", "lot_id": lot_id, "note": f"RSI14={cand['rsi14']:.1f}",
-            }
-            rsi_ledger.append_trade_row(trade_row)
-            accepted_trades.append(trade_row)
+
+            outcome = broker.classify_fill(cand["qty"], fill)
+            filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+            if outcome == "NONE_TERMINAL":
+                logger.warning("RSI新規エントリー: 注文が約定せず終端した %s status=%s", cand["ticker"], fill["status"])
+                continue
+
+            lot_id = _new_lot_id(cand["ticker"], trade_date, state["lots"], state.get("pending_orders"))
+
+            if filled_qty > 0:
+                state["cash_usd"] += cash_delta
+                new_lot = rsi_strategy.new_lot(cand["ticker"], lot_id, trade_date, filled_qty, avg_price)
+                state["lots"].append(new_lot)
+                trade_row = {
+                    "date": trade_date, "action": "BUY", "ticker": cand["ticker"],
+                    "shares": filled_qty, "price": round(avg_price, 4),
+                    "amount_usd": round(filled_qty * avg_price, 2),
+                    "rule": "entry", "lot_id": lot_id, "note": f"RSI14={cand['rsi14']:.1f}",
+                }
+                rsi_ledger.append_trade_row(trade_row)
+                accepted_trades.append(trade_row)
+
+            if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+                # entryロットはまだ存在しない（0株のロットを作らない）。settle_pending_ordersが後で生成する
+                state.setdefault("pending_orders", [])
+                state["pending_orders"].append({
+                    "order_id": fill["order_id"], "ticker": cand["ticker"], "side": "BUY",
+                    "qty": cand["qty"], "submitted_date": trade_date,
+                    "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                    "rule": "entry", "lot_id": lot_id,
+                })
+            elif outcome == "PARTIAL_TERMINAL":
+                logger.warning(
+                    "RSI新規エントリー: 一部約定(%d/%d株)のまま終端した %s lot=%s",
+                    filled_qty, cand["qty"], cand["ticker"], lot_id,
+                )
 
         state["last_processed_date"] = trade_date
-        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（損切り/利確/買い増し/新規エントリー込み）")
+        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（pending決済/損切り/利確/買い増し/新規エントリー込み）")
     else:
         reason = "dry-run" if dry_run else ("休場/処理済み" if already_processed_today else "売買停止中")
         log_lines.append(f"[RSI-2] 売買スキップ（{reason}）")
