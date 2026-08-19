@@ -98,6 +98,11 @@ RSI_UNIVERSE_PATH = BASE_DIR / "universe.json"
 # 寄り前(現地20:00)に確定させた候補のキャッシュ（2026-08-19改修1）。発注しない専用ジョブが書く
 RSI_FROZEN_CANDIDATES_PATH = RSI_LEDGER_DIR / "frozen_candidates.json"
 RSI_FROZEN_CANDIDATES_MAX_AGE_HOURS = 12.0
+# 候補確定(freeze_candidates)がmoomooから取得できなかった場合のリトライ設定
+# （OpenD停止・接続失敗・空の結果を対象。1回目失敗後60秒・2回目失敗後300秒。
+# loop_run.shのリトライ間隔に合わせた値で、大将の指示ではなくFableが決めた値）。
+RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS = 3
+RSI_FREEZE_CANDIDATES_RETRY_DELAYS_SEC = (60.0, 300.0)
 
 RSI_INITIAL_CAPITAL_USD = 500_000.0  # moomoo仮想口座$1,000,000の半分
 RSI_ENTRY_RSI_THRESHOLD = 32.0  # RSI(14) <= 32 でエントリー

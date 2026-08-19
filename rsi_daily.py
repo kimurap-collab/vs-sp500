@@ -15,6 +15,7 @@ import datetime as dt
 import json
 import logging
 import threading
+import time
 from typing import Any, Callable
 
 import broker
@@ -191,6 +192,11 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
     return candidates
 
 
+def _sleep_seconds(seconds: float) -> None:
+    """time.sleepの薄いラッパー（テストでリトライ待ちをモックできるようにするため）。"""
+    time.sleep(seconds)
+
+
 def freeze_candidates() -> dict[str, Any] | None:
     """RSI候補を寄り前(現地20:00launchdジョブ)に確定し frozen_candidates.json へ保存する。
 
@@ -198,13 +204,33 @@ def freeze_candidates() -> dict[str, Any] | None:
     （2026-08-19改修1-a）。市場が閉まっている時間に叩けば、返るRSIは前日終値ベースになる。
     どの基準で取得したかはbroker.is_market_open_us()の実測で判定してrsi_basisに記録する
     （常に"prev_close"と決め打ちしない。手動再実行等で場中に叩かれる場合もありうるため）。
-    moomoo未接続時はNoneを返し、ファイルは書かない（古い候補を残したまま次回に賭ける）。
+
+    moomooから候補を取得できなかった場合（OpenD未接続・呼び出し失敗・空の結果）は、
+    間隔を空けて最大config.RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS回まで再試行する
+    （2026-08-19改修2。候補確定ジョブが失敗すると黙って場中の値に切り替わっていた対策）。
+    全試行が失敗したらログに残してNoneを返し、ファイルは書かない
+    （古い候補を残したまま次回に賭ける。Telegram通知はしない＝通知ではなく自動復旧の方針）。
     """
-    if not broker.is_available():
-        logger.error("moomoo未接続のため候補確定を中止した")
+    max_attempts = config.RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS
+    candidates: list[dict[str, Any]] = []
+    for attempt in range(1, max_attempts + 1):
+        if not broker.is_available():
+            logger.error("候補確定 試行%d/%d回目: moomoo未接続", attempt, max_attempts)
+        else:
+            candidates = screen_rsi_candidates()
+            if candidates:
+                break
+            logger.error("候補確定 試行%d/%d回目: 候補を取得できなかった（0件）", attempt, max_attempts)
+
+        if attempt < max_attempts:
+            delay = config.RSI_FREEZE_CANDIDATES_RETRY_DELAYS_SEC[attempt - 1]
+            logger.warning("候補確定: %.0f秒待って再試行する", delay)
+            _sleep_seconds(delay)
+
+    if not candidates:
+        logger.error("候補確定: %d回試行しても取得できなかったため中止した", max_attempts)
         return None
 
-    candidates = screen_rsi_candidates()
     market_open = broker.is_market_open_us()
     # Noneで基準が確定できない場合は「前日終値ベース」と言い切れないためliveとして扱う
     rsi_basis = "prev_close" if market_open is False else "live"
@@ -522,6 +548,19 @@ def run(
         f"[RSI-1] 候補{len(rsi_candidates)}銘柄(basis={rsi_basis})・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄"
     )
 
+    # 新規エントリー候補から、保有中・利確前の銘柄を抑止する（2026-08-19改修1。大将「１だな」）。
+    # dry-runでも現金が余った理由が追えるよう、実行判断（do_trade）とは独立に必ず計算・ログする。
+    raw_entry_candidates = [
+        {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"]}
+        for c in rsi_candidates
+        if c["ticker"] in market
+    ]
+    entry_candidates, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(raw_entry_candidates, state["lots"])
+    for ticker in blocked_entry_tickers:
+        logger.info("RSI新規エントリー見送り(保有中のため): %s", ticker)
+    if blocked_entry_tickers:
+        log_lines.append(f"[RSI-1] 新規エントリー見送り(保有中のため): {', '.join(blocked_entry_tickers)}")
+
     do_trade = can_trade and not already_processed_today and not dry_run
 
     if do_trade:
@@ -702,14 +741,9 @@ def run(
                         filled_qty, qty, intent["lot_id"], intent["kind"],
                     )
 
-        # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ） ---
-        candidates = [
-            {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"]}
-            for c in rsi_candidates
-            if c["ticker"] in market
-        ]
+        # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ。保有中・利確前は抑止済み） ---
         selected = rsi_strategy.select_entries_within_cash(
-            candidates, rsi_ledger.compute_available_cash(state, market_prices),
+            entry_candidates, rsi_ledger.compute_available_cash(state, market_prices),
         )
         for cand in selected:
             fill, cash_delta = _execute_order(cand["ticker"], cand["qty"], "BUY", market_us)

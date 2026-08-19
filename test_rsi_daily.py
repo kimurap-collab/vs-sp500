@@ -54,11 +54,13 @@ class TestFreezeCandidates(unittest.TestCase):
             fake_path = Path(tmp) / "frozen_candidates.json"
             with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
                  patch("rsi_daily.broker.is_available", return_value=False), \
-                 patch("rsi_daily.screen_rsi_candidates") as mock_screen:
+                 patch("rsi_daily.screen_rsi_candidates") as mock_screen, \
+                 patch("rsi_daily._sleep_seconds") as mock_sleep:
                 result = rsi_daily.freeze_candidates()
             self.assertIsNone(result)
             mock_screen.assert_not_called()
             self.assertFalse(fake_path.exists())
+            self.assertEqual(mock_sleep.call_count, 2)  # 3回試行・間に2回待つ（改修2）
 
     def test_market_closed_records_prev_close_basis(self):
         """市場が閉まっている時間に叩けばrsi_basis="prev_close"として保存されること。"""
@@ -88,7 +90,10 @@ class TestFreezeCandidates(unittest.TestCase):
                  patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
                  patch("rsi_daily.broker.is_available", return_value=True), \
                  patch("rsi_daily.broker.is_market_open_us", return_value=True), \
-                 patch("rsi_daily.screen_rsi_candidates", return_value=[]):
+                 patch("rsi_daily.screen_rsi_candidates", return_value=[
+                     {"ticker": "AAPL", "rsi14": 25.7, "price": 150.0, "date": "2026-08-18"},
+                 ]), \
+                 patch("rsi_daily._sleep_seconds"):
                 result = rsi_daily.freeze_candidates()
             self.assertEqual(result["rsi_basis"], "live")
 
@@ -100,9 +105,72 @@ class TestFreezeCandidates(unittest.TestCase):
                  patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
                  patch("rsi_daily.broker.is_available", return_value=True), \
                  patch("rsi_daily.broker.is_market_open_us", return_value=None), \
-                 patch("rsi_daily.screen_rsi_candidates", return_value=[]):
+                 patch("rsi_daily.screen_rsi_candidates", return_value=[
+                     {"ticker": "AAPL", "rsi14": 25.7, "price": 150.0, "date": "2026-08-18"},
+                 ]), \
+                 patch("rsi_daily._sleep_seconds"):
                 result = rsi_daily.freeze_candidates()
             self.assertEqual(result["rsi_basis"], "live")
+
+
+# ---------------------------------------------------------------------------
+# 改修2: freeze_candidates()のリトライ（OpenD停止・接続失敗・空の結果を最大3回まで再試行）
+# ---------------------------------------------------------------------------
+
+class TestFreezeCandidatesRetry(unittest.TestCase):
+    def test_empty_result_retries_then_succeeds_on_third_attempt(self):
+        """空の結果が2回続いても3回目で候補が取れればそれを採用すること。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
+                 patch("rsi_daily.broker.is_available", return_value=True), \
+                 patch("rsi_daily.broker.is_market_open_us", return_value=False), \
+                 patch("rsi_daily.screen_rsi_candidates", side_effect=[
+                     [], [], [{"ticker": "AAPL", "rsi14": 25.7, "price": 150.0, "date": "2026-08-18"}],
+                 ]) as mock_screen, \
+                 patch("rsi_daily._sleep_seconds") as mock_sleep:
+                result = rsi_daily.freeze_candidates()
+
+            self.assertEqual(mock_screen.call_count, 3)
+            self.assertEqual(mock_sleep.call_args_list, [((60.0,),), ((300.0,),)])
+            self.assertEqual(len(result["candidates"]), 1)
+            self.assertTrue(fake_path.exists())
+
+    def test_moomoo_unavailable_retries_then_recovers(self):
+        """OpenD停止(is_available=False)が2回続いても3回目で復旧すれば採用すること。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
+                 patch("rsi_daily.broker.is_available", side_effect=[False, False, True]) as mock_avail, \
+                 patch("rsi_daily.broker.is_market_open_us", return_value=False), \
+                 patch("rsi_daily.screen_rsi_candidates", return_value=[
+                     {"ticker": "MSFT", "rsi14": 20.0, "price": 300.0, "date": "2026-08-18"},
+                 ]) as mock_screen, \
+                 patch("rsi_daily._sleep_seconds") as mock_sleep:
+                result = rsi_daily.freeze_candidates()
+
+            self.assertEqual(mock_avail.call_count, 3)
+            mock_screen.assert_called_once()  # is_available=Falseの間はscreenを叩かない
+            self.assertEqual(mock_sleep.call_count, 2)
+            self.assertEqual(len(result["candidates"]), 1)
+
+    def test_all_three_attempts_fail_returns_none_and_writes_nothing(self):
+        """3回とも取得できなければNoneを返しファイルを書かない（Telegram通知はしない）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
+                 patch("rsi_daily.broker.is_available", return_value=True), \
+                 patch("rsi_daily.screen_rsi_candidates", return_value=[]) as mock_screen, \
+                 patch("rsi_daily._sleep_seconds") as mock_sleep:
+                result = rsi_daily.freeze_candidates()
+
+            self.assertIsNone(result)
+            self.assertEqual(mock_screen.call_count, 3)
+            self.assertEqual(mock_sleep.call_count, 2)
+            self.assertFalse(fake_path.exists())
 
 
 # ---------------------------------------------------------------------------

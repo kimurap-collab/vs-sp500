@@ -73,6 +73,28 @@ def select_entries_within_cash(candidates: list[dict[str, Any]], available_cash:
     return selected
 
 
+def filter_blocked_entries(
+    candidates: list[dict[str, Any]], lots: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """新規エントリー候補から、対象銘柄に未クローズかつ利確前のロットがある分を除外する
+    （2026-08-19改修1。大将「１だな」＝同じ銘柄は保有中は1ロットまで）。
+
+    未クローズのロットが利確1（または利確2）を実施済み（＝「伸ばす玉」の状態）の銘柄は
+    再エントリーを許可する。未クローズのロットが存在しない銘柄（損切り済み・全売却済み・
+    未保有）も許可する。買い増し・損切り・利確の判定には一切関与しない。
+
+    candidates: [{"ticker": str, ...}, ...]（select_entries_within_cashと同じ形）
+    戻り値: (抑止後の候補リスト, 抑止された銘柄のリスト)
+    """
+    blocked_tickers = {
+        lot["ticker"] for lot in lots
+        if not lot["closed"] and not lot["profit1_taken"]
+    }
+    allowed = [c for c in candidates if c["ticker"] not in blocked_tickers]
+    blocked = [c["ticker"] for c in candidates if c["ticker"] in blocked_tickers]
+    return allowed, blocked
+
+
 def new_lot(ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_price: float) -> dict[str, Any]:
     """RSI<=30のエントリー約定後、新しいロットを作る。"""
     total_invested = filled_qty * fill_price

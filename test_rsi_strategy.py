@@ -210,6 +210,69 @@ class TestReentry(unittest.TestCase):
         self.assertTrue(lot["profit1_taken"] and lot["profit2_taken"])
 
 
+class TestFilterBlockedEntries(unittest.TestCase):
+    """改修1検証（2026-08-19・大将「１だな」）: 同じ銘柄は保有中1ロットまで。
+
+    a. 未クローズかつ利確前のロットがある銘柄 → 新規エントリーされない
+    b. 未クローズだが利確1実施済みのロットがある銘柄 → 新規エントリーされる
+    c. ロットが無い（または損切りでクローズ済み）銘柄 → 新規エントリーされる
+    """
+
+    def test_a_unclosed_lot_before_any_profit_blocks_new_entry(self):
+        lot = rs.new_lot("DVA", "DVA-1", "2026-08-18", filled_qty=169, fill_price=177.64)
+        candidates = [{"ticker": "DVA", "rsi14": 25.0, "price": 170.0}]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [lot])
+
+        self.assertEqual(allowed, [])
+        self.assertEqual(blocked, ["DVA"])
+
+    def test_b_unclosed_lot_after_profit1_allows_new_entry(self):
+        lot = rs.new_lot("AAPL", "AAPL-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot = rs.apply_profit1_fill(lot, filled_qty=150, base_shares=300)  # 伸ばす玉の状態
+        self.assertFalse(lot["closed"])
+        self.assertTrue(lot["profit1_taken"])
+        candidates = [{"ticker": "AAPL", "rsi14": 25.0, "price": 90.0}]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [lot])
+
+        self.assertEqual([c["ticker"] for c in allowed], ["AAPL"])
+        self.assertEqual(blocked, [])
+
+    def test_c_no_lot_allows_new_entry(self):
+        candidates = [{"ticker": "MSFT", "rsi14": 25.0, "price": 300.0}]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [])
+
+        self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
+        self.assertEqual(blocked, [])
+
+    def test_c_stop_loss_closed_lot_allows_new_entry(self):
+        lot = rs.new_lot("MSFT", "MSFT-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot = rs.apply_stop_loss_fill(lot, filled_qty=300, current_date="2026-01-06")
+        self.assertTrue(lot["closed"])
+        candidates = [{"ticker": "MSFT", "rsi14": 25.0, "price": 90.0}]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [lot])
+
+        self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
+        self.assertEqual(blocked, [])
+
+    def test_unrelated_tickers_pass_through_untouched(self):
+        blocked_lot = rs.new_lot("DVA", "DVA-1", "2026-08-18", filled_qty=169, fill_price=177.64)
+        candidates = [
+            {"ticker": "DVA", "rsi14": 25.0, "price": 170.0},
+            {"ticker": "MSFT", "rsi14": 20.0, "price": 300.0},
+        ]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [blocked_lot])
+
+        self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
+        self.assertEqual(blocked, ["DVA"])
+        # 買い増し・損切り・利確の判定用フィールドはそのまま(関与しない)
+        self.assertFalse(blocked_lot["profit1_taken"])
+
+
 class TestCashPriority(unittest.TestCase):
     """検証2: 現金不足時にRSIの低い順で選ばれること（信号5件・現金2件分で検証）。"""
 
