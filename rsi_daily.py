@@ -5,7 +5,7 @@ daily_run.py が本体（配分戦略）の処理を終えた後に run() を1�
 place_market_orderは常にTrdEnv.SIMULATE・config.MOOMOO_ACC_IDに固定されているため、
 このファイルが増えても実口座への発注リスクは増えない）。
 
-処理順序（1日): 損切り→利確（SELL群を先に処理して現金を作る）→買い増し→新規エントリー
+処理順序（1日): 利確（SELL群を先に処理して現金を作る）→買い増し→新規エントリー
 （買い増しはエントリーより優先。エントリーはRSIが低い順。SPEC_RSI30.md「資金不足時」準拠）。
 """
 from __future__ import annotations
@@ -414,8 +414,6 @@ def settle_pending_orders(
                     )
                 elif rule == "profit2":
                     state["lots"][idx] = rsi_strategy.apply_profit2_fill(state["lots"][idx], new_fill_qty)
-                elif rule == "stop_loss":
-                    state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], new_fill_qty, fill_date)
                 else:
                     warnings.append(f"pending決済: 未知のrule={rule}（lot_id={lot_id}）。反映をスキップした")
                     remaining.append(order)
@@ -519,7 +517,7 @@ def run(
     逆算するためdaily_run.py側で先に呼ばれる（2026-08-18 修正3。渡されるrsi_stateは決済済み）。
 
     market_us: daily_run.py側が1回の実行につき1回だけ問い合わせたbroker.get_market_us_state()の
-    戻り値。損切り・利確・買い増し・新規エントリーの全発注経路（_execute_order）にそのまま渡す
+    戻り値。利確・買い増し・新規エントリーの全発注経路（_execute_order）にそのまま渡す
     （2026-08-18 修正2）。
 
     戻り値: (更新後のrsi_state, 約定した取引ログ, ログ用メッセージ行, NAV, ベンチマーク評価額, 保有銘柄の市場スナップショット)
@@ -574,7 +572,7 @@ def run(
     do_trade = can_trade and not already_processed_today and not dry_run
 
     if do_trade:
-        # --- 1. 損切り・利確（SELL群を先に処理して現金を作る） ---
+        # --- 1. 利確（SELL群を先に処理して現金を作る） ---
         for lot in sorted(state["lots"], key=lambda x: (x["ticker"], x["lot_id"])):
             if lot.get("closed"):
                 continue
@@ -584,48 +582,6 @@ def run(
                 continue
             price = info["close"]
             idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot["lot_id"])
-
-            stop = rsi_strategy.decide_stop_loss(state["lots"][idx], price)
-            if stop is not None:
-                fill, cash_delta = _execute_order(stop["ticker"], stop["qty"], "SELL", market_us)
-                if fill is None:
-                    logger.warning("RSI損切り発注失敗: %s lot=%s", stop["ticker"], stop["lot_id"])
-                    continue
-
-                outcome = broker.classify_fill(stop["qty"], fill)
-                filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
-
-                if outcome == "NONE_TERMINAL":
-                    logger.warning(
-                        "RSI損切り: 注文が約定せず終端した lot=%s status=%s", stop["lot_id"], fill["status"],
-                    )
-                    continue
-
-                if filled_qty > 0:
-                    state["cash_usd"] += cash_delta
-                    state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], filled_qty, trade_date)
-                    trade_row = {
-                        "date": trade_date, "action": "SELL", "ticker": stop["ticker"],
-                        "shares": filled_qty, "price": round(avg_price, 4),
-                        "amount_usd": round(filled_qty * avg_price, 2),
-                        "rule": "stop_loss", "lot_id": stop["lot_id"], "note": "",
-                    }
-                    rsi_ledger.append_trade_row(trade_row)
-                    accepted_trades.append(trade_row)
-
-                if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
-                    state.setdefault("pending_orders", [])
-                    state["pending_orders"].append({
-                        "order_id": fill["order_id"], "ticker": stop["ticker"], "side": "SELL",
-                        "qty": stop["qty"], "submitted_date": trade_date,
-                        "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
-                        "rule": "stop_loss", "lot_id": stop["lot_id"],
-                    })
-                elif outcome == "PARTIAL_TERMINAL":
-                    logger.warning(
-                        "RSI損切り: 一部約定(%d/%d株)のまま終端した lot=%s", filled_qty, stop["qty"], stop["lot_id"],
-                    )
-                continue  # 損切りした日は利確判定を行わない
 
             trading_days_elapsed = rsi_strategy.business_days_since(lot["initial_entry_date"], trade_date)
             while True:
@@ -799,7 +755,7 @@ def run(
                 )
 
         state["last_processed_date"] = trade_date
-        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（pending決済/損切り/利確/買い増し/新規エントリー込み）")
+        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（pending決済/利確/買い増し/新規エントリー込み）")
     else:
         reason = "dry-run" if dry_run else ("休場/処理済み" if already_processed_today else "売買停止中")
         log_lines.append(f"[RSI-2] 売買スキップ（{reason}）")

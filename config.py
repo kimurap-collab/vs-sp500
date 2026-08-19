@@ -110,7 +110,6 @@ RSI_ENTRY_AMOUNT_USD = 30_000.0
 # 買い増し（初期エントリー価格基準）: +2.5%→$15,000 / +5.0%→$7,500 / +7.5%→$7,500
 RSI_PYRAMID_TRIGGERS = (0.025, 0.05, 0.075)
 RSI_PYRAMID_AMOUNTS_USD = (15_000.0, 7_500.0, 7_500.0)
-RSI_STOP_LOSS_PCT = -0.08  # 初期エントリー価格から-8%で全株売却
 # moomooスクリーナーを1リクエストで収めるための時価総額の足切り
 # （S&P500/NASDAQ100の全構成銘柄はこれを上回る）
 RSI_SCREENER_MIN_MARKET_CAP_USD = 1_000_000_000.0
