@@ -95,6 +95,9 @@ RSI_PORTFOLIO_PATH = RSI_LEDGER_DIR / "portfolio.json"
 RSI_TRADES_CSV_PATH = RSI_LEDGER_DIR / "trades.csv"
 RSI_HISTORY_CSV_PATH = RSI_LEDGER_DIR / "history.csv"
 RSI_UNIVERSE_PATH = BASE_DIR / "universe.json"
+# 寄り前(現地20:00)に確定させた候補のキャッシュ（2026-08-19改修1）。発注しない専用ジョブが書く
+RSI_FROZEN_CANDIDATES_PATH = RSI_LEDGER_DIR / "frozen_candidates.json"
+RSI_FROZEN_CANDIDATES_MAX_AGE_HOURS = 12.0
 
 RSI_INITIAL_CAPITAL_USD = 500_000.0  # moomoo仮想口座$1,000,000の半分
 RSI_ENTRY_RSI_THRESHOLD = 32.0  # RSI(14) <= 32 でエントリー

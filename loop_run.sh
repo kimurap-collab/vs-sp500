@@ -24,25 +24,50 @@ export VS_SP500_DEFER_TELEGRAM=1
 
 echo "[loop_run.sh] 開始 $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 
-"$CLAUDE_BIN" -p "$(cat LOOP_PROMPT.md)" \
-    --allowedTools "Read" "Glob" "Grep" "Bash" "Write" "Edit" \
-    >> "$LOG_FILE" 2>&1 &
-CLAUDE_PID=$!
+# 529のような一時的なサーバ側エラーは待てば回復するため、間隔を空けて最大3回まで試行する
+# （1回目失敗後60秒・2回目失敗後300秒。この間隔はFableが決めた値で大将の指示ではない。
+# 2026-08-19改修2-a: 8/19未明に529で一発死しリトライ無く朝の自己点検が丸ごと飛んだ対策）。
+RETRY_DELAYS_SEC=(60 300)
+ATTEMPT=1
+EXIT_CODE=1
 
-(
-    sleep "$TIMEOUT_SECONDS"
-    if kill -0 "$CLAUDE_PID" 2>/dev/null; then
-        echo "[loop_run.sh] タイムアウト(${TIMEOUT_SECONDS}秒)のため強制終了" >> "$LOG_FILE"
-        kill -9 "$CLAUDE_PID" 2>/dev/null
+while :; do
+    echo "[loop_run.sh] 試行${ATTEMPT}回目" >> "$LOG_FILE"
+
+    "$CLAUDE_BIN" -p "$(cat LOOP_PROMPT.md)" \
+        --allowedTools "Read" "Glob" "Grep" "Bash" "Write" "Edit" \
+        >> "$LOG_FILE" 2>&1 &
+    CLAUDE_PID=$!
+
+    (
+        sleep "$TIMEOUT_SECONDS"
+        if kill -0 "$CLAUDE_PID" 2>/dev/null; then
+            echo "[loop_run.sh] タイムアウト(${TIMEOUT_SECONDS}秒)のため強制終了" >> "$LOG_FILE"
+            kill -9 "$CLAUDE_PID" 2>/dev/null
+        fi
+    ) &
+    WATCHER_PID=$!
+
+    wait "$CLAUDE_PID"
+    EXIT_CODE=$?
+
+    kill "$WATCHER_PID" 2>/dev/null
+    wait "$WATCHER_PID" 2>/dev/null
+
+    if [ "$EXIT_CODE" -eq 0 ]; then
+        break
     fi
-) &
-WATCHER_PID=$!
 
-wait "$CLAUDE_PID"
-EXIT_CODE=$?
+    if [ "$ATTEMPT" -ge $((${#RETRY_DELAYS_SEC[@]} + 1)) ]; then
+        echo "[loop_run.sh] 試行${ATTEMPT}回目も失敗(exit=${EXIT_CODE})。リトライ上限に達したため終了する" >> "$LOG_FILE"
+        break
+    fi
 
-kill "$WATCHER_PID" 2>/dev/null
-wait "$WATCHER_PID" 2>/dev/null
+    DELAY="${RETRY_DELAYS_SEC[$((ATTEMPT - 1))]}"
+    echo "[loop_run.sh] 試行${ATTEMPT}回目が失敗(exit=${EXIT_CODE})。${DELAY}秒待って再試行する" >> "$LOG_FILE"
+    sleep "$DELAY"
+    ATTEMPT=$((ATTEMPT + 1))
+done
 
 # ループ本体が残した変更をここでcommit&pushする。
 # claude内のBashは「いけゲート」でgit pushがブロックされるため、
@@ -57,8 +82,6 @@ fi
 
 echo "[loop_run.sh] 終了 exit=${EXIT_CODE} $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 
-if [ "$EXIT_CODE" -ne 0 ]; then
-    python3 -c "import report; report.send_telegram_message('⚠️ 自律ループ実行失敗（exit ${EXIT_CODE}）。${LOG_FILE} を確認')"
-fi
-
+# 大将への通知はしない（2026-08-19改修2。全部失敗してもログに残すのみ）。
+# 復旧は send_report.py（07:00・改修2-b）と翌朝のループ（改修2-c）が引き継ぐ。
 exit "$EXIT_CODE"

@@ -10,7 +10,9 @@ place_market_orderは常にTrdEnv.SIMULATE・config.MOOMOO_ACC_IDに固定され
 """
 from __future__ import annotations
 
+import argparse
 import datetime as dt
+import json
 import logging
 import threading
 from typing import Any, Callable
@@ -187,6 +189,74 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
     ]
     candidates.sort(key=lambda c: c["rsi14"])
     return candidates
+
+
+def freeze_candidates() -> dict[str, Any] | None:
+    """RSI候補を寄り前(現地20:00launchdジョブ)に確定し frozen_candidates.json へ保存する。
+
+    screen_rsi_candidates()を1回呼ぶだけ。発注はせず、台帳も一切変更しない
+    （2026-08-19改修1-a）。市場が閉まっている時間に叩けば、返るRSIは前日終値ベースになる。
+    どの基準で取得したかはbroker.is_market_open_us()の実測で判定してrsi_basisに記録する
+    （常に"prev_close"と決め打ちしない。手動再実行等で場中に叩かれる場合もありうるため）。
+    moomoo未接続時はNoneを返し、ファイルは書かない（古い候補を残したまま次回に賭ける）。
+    """
+    if not broker.is_available():
+        logger.error("moomoo未接続のため候補確定を中止した")
+        return None
+
+    candidates = screen_rsi_candidates()
+    market_open = broker.is_market_open_us()
+    # Noneで基準が確定できない場合は「前日終値ベース」と言い切れないためliveとして扱う
+    rsi_basis = "prev_close" if market_open is False else "live"
+
+    payload = {
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "rsi_basis": rsi_basis,
+        "candidates": candidates,
+    }
+    config.RSI_LEDGER_DIR.mkdir(parents=True, exist_ok=True)
+    config.RSI_FROZEN_CANDIDATES_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8",
+    )
+    logger.info(
+        "候補確定完了: %d件 rsi_basis=%s → %s",
+        len(candidates), rsi_basis, config.RSI_FROZEN_CANDIDATES_PATH,
+    )
+    return payload
+
+
+def _load_frozen_candidates() -> dict[str, Any] | None:
+    """frozen_candidates.jsonを読む。無い・壊れている・12時間より古ければNoneを返す。"""
+    path = config.RSI_FROZEN_CANDIDATES_PATH
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        generated_at = dt.datetime.fromisoformat(payload["generated_at"])
+    except (OSError, ValueError, KeyError) as e:
+        logger.warning("frozen_candidates.jsonの読み込みに失敗した: %s", e)
+        return None
+    if generated_at.tzinfo is None:
+        generated_at = generated_at.replace(tzinfo=dt.timezone.utc)
+    age_hours = (dt.datetime.now(dt.timezone.utc) - generated_at).total_seconds() / 3600
+    if age_hours > config.RSI_FROZEN_CANDIDATES_MAX_AGE_HOURS:
+        logger.warning("frozen_candidates.jsonが%.1f時間前と古いため無視する", age_hours)
+        return None
+    return payload
+
+
+def get_rsi_candidates() -> tuple[list[dict[str, Any]], str]:
+    """執行時に使うRSI候補と、その基準(rsi_basis)を返す（2026-08-19改修1-b/1-c）。
+
+    frozen_candidates.jsonが新しければそれをそのまま使う（執行時にRSIを再判定しない。
+    RSIが閾値を超えていても大将の指示どおり買う）。無い・古い場合はその場でスクリーナーを
+    叩いて売買を止めない。その場合は場中の値になるためrsi_basis="live"とする。
+    """
+    frozen = _load_frozen_candidates()
+    if frozen is not None:
+        return frozen["candidates"], frozen["rsi_basis"]
+    logger.warning("frozen_candidates.jsonが無いか古いため、その場でRSIスクリーナーを実行する")
+    return screen_rsi_candidates(), "live"
 
 
 def _new_lot_id(
@@ -430,18 +500,27 @@ def run(
         state["bench_units_rsi"] = config.RSI_INITIAL_CAPITAL_USD / voo_snap.close
         log_lines.append(f"[RSI-0] 初回構築: start_date={state['start_date']} bench_units_rsi={state['bench_units_rsi']:.6f}")
 
-    # 候補の価格はscreen_rsi_candidates()が内部でget_market_snapshot済みなのでその戻り値を使う。
-    # fetch_market_dataは保有銘柄だけに絞って呼ぶ（候補分の価格取得を二重に行わないため）。
-    # 重複銘柄（保有中の再エントリー候補）は保有側の値を優先する。
+    # 候補はfrozen_candidates.jsonが新しければそれを使う（rsi_basis="prev_close"）。
+    # その場合、候補のRSIは信頼するが価格は古い可能性があるため、株数計算に使う価格は
+    # get_market_snapshotで執行時の最新値を取り直す（2026-08-19改修1-b。大将「株価は執行時の最新値」）。
+    # frozen候補が無い・古い場合はscreen_rsi_candidates()を今叩く（rsi_basis="live"）。
+    # この場合はget_market_snapshot済みの戻り値をそのまま使い、価格取得を二重に行わない。
+    # いずれの経路でも、重複銘柄（保有中の再エントリー候補）は保有側の値を優先する。
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
-    rsi_candidates = screen_rsi_candidates()
-    candidate_market = {
-        c["ticker"]: {"close": c["price"], "date": c["date"]} for c in rsi_candidates
-    }
+    rsi_candidates, rsi_basis = get_rsi_candidates()
+    if rsi_basis == "prev_close":
+        candidate_tickers = [c["ticker"] for c in rsi_candidates]
+        candidate_market = fetch_market_data(candidate_tickers) if candidate_tickers else {}
+    else:
+        candidate_market = {
+            c["ticker"]: {"close": c["price"], "date": c["date"]} for c in rsi_candidates
+        }
     held_market = fetch_market_data(held_tickers) if held_tickers else {}
     market = {**candidate_market, **held_market}
     market_prices = {t: v["close"] for t, v in market.items()}
-    log_lines.append(f"[RSI-1] 候補{len(rsi_candidates)}銘柄・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄")
+    log_lines.append(
+        f"[RSI-1] 候補{len(rsi_candidates)}銘柄(basis={rsi_basis})・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄"
+    )
 
     do_trade = can_trade and not already_processed_today and not dry_run
 
@@ -655,7 +734,7 @@ def run(
                     "date": trade_date, "action": "BUY", "ticker": cand["ticker"],
                     "shares": filled_qty, "price": round(avg_price, 4),
                     "amount_usd": round(filled_qty * avg_price, 2),
-                    "rule": "entry", "lot_id": lot_id, "note": f"RSI14={cand['rsi14']:.1f}",
+                    "rule": "entry", "lot_id": lot_id, "note": f"RSI14={cand['rsi14']:.1f} basis={rsi_basis}",
                 }
                 rsi_ledger.append_trade_row(trade_row)
                 accepted_trades.append(trade_row)
@@ -711,3 +790,40 @@ def run(
         if t in {lot["ticker"] for lot in rsi_ledger.open_lots(state)}
     }
     return state, accepted_trades, log_lines, nav_usd, bench_usd, held_snapshots
+
+
+def _setup_freeze_logging() -> None:
+    """--freeze-candidates単独起動用のログ設定（daily_run.py経由では呼ばれない）。"""
+    config.LOG_DIR.mkdir(parents=True, exist_ok=True)
+    if not logger.handlers:
+        fh = logging.FileHandler(config.LOG_DIR / "freeze_candidates.log", encoding="utf-8")
+        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+        logger.addHandler(fh)
+        logger.setLevel(logging.INFO)
+
+
+def main() -> None:
+    """単独起動エントリポイント（2026-08-19改修1-a）。現状は--freeze-candidatesのみ。"""
+    parser = argparse.ArgumentParser(description="vs-sp500 RSI-30枠の単独ジョブ")
+    parser.add_argument(
+        "--freeze-candidates", action="store_true",
+        help="screen_rsi_candidates()を1回呼び、結果をfrozen_candidates.jsonに保存する（発注・台帳変更なし）",
+    )
+    args = parser.parse_args()
+    if not args.freeze_candidates:
+        parser.print_help()
+        return
+
+    _setup_freeze_logging()
+    result = freeze_candidates()
+    if result is None:
+        print("候補確定に失敗した（moomoo未接続）")
+        raise SystemExit(1)
+    print(
+        f"候補確定完了: {len(result['candidates'])}件 rsi_basis={result['rsi_basis']} "
+        f"generated_at={result['generated_at']}"
+    )
+
+
+if __name__ == "__main__":
+    main()

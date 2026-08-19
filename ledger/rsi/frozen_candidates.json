@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-08-19T00:26:10.898428+00:00",
+  "rsi_basis": "prev_close",
+  "candidates": [
+    {
+      "ticker": "DVA",
+      "rsi14": 26.207,
+      "price": 177.91,
+      "date": "2026-08-18"
+    },
+    {
+      "ticker": "APP",
+      "rsi14": 29.158,
+      "price": 307.26,
+      "date": "2026-08-18"
+    },
+    {
+      "ticker": "ROL",
+      "rsi14": 29.237,
+      "price": 36.32,
+      "date": "2026-08-18"
+    },
+    {
+      "ticker": "LII",
+      "rsi14": 30.161,
+      "price": 411.05,
+      "date": "2026-08-18"
+    },
+    {
+      "ticker": "TTD",
+      "rsi14": 31.995,
+      "price": 13.42,
+      "date": "2026-08-18"
+    }
+  ]
+}
