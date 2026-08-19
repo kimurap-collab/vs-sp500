@@ -98,13 +98,18 @@ def fetch_market_data(tickers: list[str]) -> dict[str, dict[str, Any]]:
     return snapshot
 
 
-def screen_rsi_candidates() -> list[dict[str, Any]]:
+def screen_rsi_candidates() -> list[dict[str, Any]] | None:
     """moomooスクリーナーでRSI(14) < 閾値 かつ 時価総額条件を満たす銘柄を抽出する（RSI昇順）。
 
     get_stock_filterを呼ぶ（時価総額の足切りにより通常は1ページで完結する）。
     last_pageがFalseの場合は警告ログを出したうえでページを繰り、取りこぼしを黙って発生させない。
     結果をuniverse.get_universe()の銘柄と突き合わせ、ユニバース内のものだけ残す。
-    価格はget_market_snapshotで別途取得する。moomoo接続失敗時は空リストを返す。
+    価格はget_market_snapshotで別途取得する。
+
+    戻り値: moomoo接続・取得に失敗した場合はNone。取得に成功したが該当銘柄が0件の場合は
+    空リスト（[]）を返す。呼び出し側（freeze_candidates）はこの2つを区別してリトライ要否を
+    判断する（2026-08-19改修3。RSI32以下が本当に0件の日にNoneと空リストが同一視され、
+    無駄なリトライ待機とfrozen_candidates.json未更新を招いていた対策）。
     """
     uni_tickers = set(universe.get_universe())
 
@@ -160,7 +165,7 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
     rows = _run_with_timeout(_call)
     if rows is None:
         logger.error("RSIスクリーナー(get_stock_filter)の呼び出しに失敗した")
-        return []
+        return None
 
     screened: list[dict[str, Any]] = []
     for row in rows:
@@ -178,7 +183,7 @@ def screen_rsi_candidates() -> list[dict[str, Any]]:
     prices = _moomoo_snapshot([c["ticker"] for c in screened])
     if prices is None:
         logger.error("RSI候補の価格取得(get_market_snapshot)に失敗した")
-        return []
+        return None
 
     candidates = [
         {
@@ -205,29 +210,33 @@ def freeze_candidates() -> dict[str, Any] | None:
     どの基準で取得したかはbroker.is_market_open_us()の実測で判定してrsi_basisに記録する
     （常に"prev_close"と決め打ちしない。手動再実行等で場中に叩かれる場合もありうるため）。
 
-    moomooから候補を取得できなかった場合（OpenD未接続・呼び出し失敗・空の結果）は、
+    moomooから候補を取得できなかった場合（OpenD未接続・呼び出し失敗）は、
     間隔を空けて最大config.RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS回まで再試行する
     （2026-08-19改修2。候補確定ジョブが失敗すると黙って場中の値に切り替わっていた対策）。
     全試行が失敗したらログに残してNoneを返し、ファイルは書かない
     （古い候補を残したまま次回に賭ける。Telegram通知はしない＝通知ではなく自動復旧の方針）。
+
+    取得自体に成功したが該当銘柄が0件だった場合はリトライしない。RSI32以下の銘柄が
+    本当に1つも無い日（相場が強い日）は正常にありうるため、空の候補で即座に確定させる
+    （2026-08-19改修3。以前は0件をNoneと区別できず無駄にリトライ待機していた）。
     """
     max_attempts = config.RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS
-    candidates: list[dict[str, Any]] = []
+    candidates: list[dict[str, Any]] | None = None
     for attempt in range(1, max_attempts + 1):
         if not broker.is_available():
             logger.error("候補確定 試行%d/%d回目: moomoo未接続", attempt, max_attempts)
         else:
             candidates = screen_rsi_candidates()
-            if candidates:
-                break
-            logger.error("候補確定 試行%d/%d回目: 候補を取得できなかった（0件）", attempt, max_attempts)
+            if candidates is not None:
+                break  # 空リスト([])も取得成功として即座に受け入れる
+            logger.error("候補確定 試行%d/%d回目: 候補の取得に失敗した", attempt, max_attempts)
 
         if attempt < max_attempts:
             delay = config.RSI_FREEZE_CANDIDATES_RETRY_DELAYS_SEC[attempt - 1]
             logger.warning("候補確定: %.0f秒待って再試行する", delay)
             _sleep_seconds(delay)
 
-    if not candidates:
+    if candidates is None:
         logger.error("候補確定: %d回試行しても取得できなかったため中止した", max_attempts)
         return None
 
@@ -282,7 +291,8 @@ def get_rsi_candidates() -> tuple[list[dict[str, Any]], str]:
     if frozen is not None:
         return frozen["candidates"], frozen["rsi_basis"]
     logger.warning("frozen_candidates.jsonが無いか古いため、その場でRSIスクリーナーを実行する")
-    return screen_rsi_candidates(), "live"
+    candidates = screen_rsi_candidates()
+    return candidates or [], "live"
 
 
 def _new_lot_id(

@@ -16,6 +16,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -114,12 +115,13 @@ class TestFreezeCandidates(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# 改修2: freeze_candidates()のリトライ（OpenD停止・接続失敗・空の結果を最大3回まで再試行）
+# 改修2: freeze_candidates()のリトライ（OpenD停止・接続失敗を最大3回まで再試行）
+# 改修3: 取得失敗(None)と該当0件([])を区別する（0件はリトライせず即座に確定させる）
 # ---------------------------------------------------------------------------
 
 class TestFreezeCandidatesRetry(unittest.TestCase):
-    def test_empty_result_retries_then_succeeds_on_third_attempt(self):
-        """空の結果が2回続いても3回目で候補が取れればそれを採用すること。"""
+    def test_connection_failure_retries_then_succeeds_on_third_attempt(self):
+        """接続失敗(None)が2回続いても3回目で候補が取れればそれを採用すること。"""
         with tempfile.TemporaryDirectory() as tmp:
             fake_path = Path(tmp) / "frozen_candidates.json"
             with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
@@ -127,7 +129,7 @@ class TestFreezeCandidatesRetry(unittest.TestCase):
                  patch("rsi_daily.broker.is_available", return_value=True), \
                  patch("rsi_daily.broker.is_market_open_us", return_value=False), \
                  patch("rsi_daily.screen_rsi_candidates", side_effect=[
-                     [], [], [{"ticker": "AAPL", "rsi14": 25.7, "price": 150.0, "date": "2026-08-18"}],
+                     None, None, [{"ticker": "AAPL", "rsi14": 25.7, "price": 150.0, "date": "2026-08-18"}],
                  ]) as mock_screen, \
                  patch("rsi_daily._sleep_seconds") as mock_sleep:
                 result = rsi_daily.freeze_candidates()
@@ -157,13 +159,13 @@ class TestFreezeCandidatesRetry(unittest.TestCase):
             self.assertEqual(len(result["candidates"]), 1)
 
     def test_all_three_attempts_fail_returns_none_and_writes_nothing(self):
-        """3回とも取得できなければNoneを返しファイルを書かない（Telegram通知はしない）。"""
+        """3回とも接続に失敗(None)すればNoneを返しファイルを書かない（Telegram通知はしない）。"""
         with tempfile.TemporaryDirectory() as tmp:
             fake_path = Path(tmp) / "frozen_candidates.json"
             with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
                  patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
                  patch("rsi_daily.broker.is_available", return_value=True), \
-                 patch("rsi_daily.screen_rsi_candidates", return_value=[]) as mock_screen, \
+                 patch("rsi_daily.screen_rsi_candidates", return_value=None) as mock_screen, \
                  patch("rsi_daily._sleep_seconds") as mock_sleep:
                 result = rsi_daily.freeze_candidates()
 
@@ -171,6 +173,30 @@ class TestFreezeCandidatesRetry(unittest.TestCase):
             self.assertEqual(mock_screen.call_count, 3)
             self.assertEqual(mock_sleep.call_count, 2)
             self.assertFalse(fake_path.exists())
+
+    def test_zero_candidates_is_success_no_retry_writes_immediately(self):
+        """該当0件(取得は成功=[])はリトライせず、待機ゼロで即座に空の候補ファイルを書くこと
+        （2026-08-19改修3の本題。RSI32以下が本当に0件の強い相場日にNoneと区別できず
+        6分間の無駄なリトライ待機の末にファイル未更新となっていたバグの修正）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch.object(config, "RSI_LEDGER_DIR", fake_path.parent), \
+                 patch("rsi_daily.broker.is_available", return_value=True), \
+                 patch("rsi_daily.broker.is_market_open_us", return_value=False), \
+                 patch("rsi_daily.screen_rsi_candidates", return_value=[]) as mock_screen, \
+                 patch("rsi_daily._sleep_seconds") as mock_sleep:
+                start = time.monotonic()
+                result = rsi_daily.freeze_candidates()
+                elapsed = time.monotonic() - start
+
+            mock_screen.assert_called_once()  # リトライせず1回で確定
+            mock_sleep.assert_not_called()  # 待機ゼロ（_sleep_secondsが一切呼ばれない）
+            self.assertLess(elapsed, 1.0)  # 実時間でも待機が発生していないことを示す
+            self.assertIsNotNone(result)
+            self.assertEqual(result["candidates"], [])
+            saved = json.loads(fake_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved["candidates"], [])
 
 
 # ---------------------------------------------------------------------------
@@ -204,6 +230,23 @@ class TestGetRsiCandidates(unittest.TestCase):
             mock_screen.assert_called_once()
             self.assertEqual(basis, "live")
             self.assertEqual(candidates[0]["ticker"], "MSFT")
+
+    def test_fresh_empty_file_used_without_live_screening(self):
+        """空の候補ファイル(該当0件で確定されたもの)は「買う銘柄なし」の正常な結果として
+        そのまま使い、場中の再取得(rsi_basis="live")に落ちないこと（改修3・検証c）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            fake_path.write_text(json.dumps({
+                "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                "rsi_basis": "prev_close",
+                "candidates": [],
+            }), encoding="utf-8")
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("rsi_daily.screen_rsi_candidates") as mock_screen:
+                candidates, basis = rsi_daily.get_rsi_candidates()
+            mock_screen.assert_not_called()  # ファイルが無い扱いにして再取得に落ちていないこと
+            self.assertEqual(basis, "prev_close")  # "live"に化けていないこと
+            self.assertEqual(candidates, [])
 
     def test_stale_file_falls_back_to_live_screening(self):
         with tempfile.TemporaryDirectory() as tmp:
