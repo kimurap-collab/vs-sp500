@@ -10,7 +10,7 @@
     3. 候補の配分表がパース可能（charter.mdと同じ表形式）
     4. 銘柄がホワイトリストのみ／通常・防衛それぞれ合計100±0.5%
     5. 可動域: 株式合計（VOO+QQQ+XLV+1306.T）通常≤90%・防衛≤50%／
-       1銘柄≤30%（VOOのみ≤65%）／現金≥2%（両モード）
+       1銘柄≤30%（VOOのみ≤65%）／現金>実行器の下限2%（両モード。同値は実行不能になるため不可）
 
 検証に全て合格した場合のみ、charter.mdの「## ターゲット配分」セクションの表だけを
 候補の表で置換し（他セクションは一切変更しない）、改訂履歴に1行追記、候補ファイルの
@@ -40,7 +40,12 @@ NORMAL_STOCK_MAX = 0.90
 DEFENSE_STOCK_MAX = 0.50
 SINGLE_TICKER_MAX = 0.30
 VOO_MAX = 0.65
-MIN_CASH = 0.02
+# 現金の可動域の下限。実行器の下限(config.MIN_CASH_RATIO=2%)と「同値」を許すと、
+# 目標へ収束する買いが下限に触れて弾かれ、採用した途端に沈黙して実行不能になる
+# （2026-08-18実測: 現金目標2%の買付は事後1.9664%となり拒否。3%・5%は通る）。
+# よって実行器の下限より厳密に大きい値を要求する。上乗せ0.1ptは1回の買付の手数料が
+# 現金比率に与える影響（NAV$64,270・手数料$22で0.033pt）を吸収できる幅。
+MIN_CASH = config.MIN_CASH_RATIO + 0.001
 COOLDOWN_DAYS = 7
 
 ADOPTIONS_PATH = config.LEDGER_DIR / "adoptions.json"
@@ -143,7 +148,7 @@ def _check_ranges(targets: dict[str, dict[str, float]]) -> None:
 
         cash = targets.get("現金", {}).get(mode, 0.0)
         if cash < MIN_CASH - 1e-9:
-            raise ValidationError(f"{mode}モードの現金比率が下限未満: {cash * 100:.1f}% < {MIN_CASH * 100:.0f}%")
+            raise ValidationError(f"{mode}モードの現金比率が下限未満: {cash * 100:.1f}% < {MIN_CASH * 100:.1f}%")
 
 
 def validate(candidate_path: Path, today: dt.date) -> dict[str, dict[str, float]]:
