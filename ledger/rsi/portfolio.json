@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 350355.855,
+  "cash_usd": 260488.75,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -111,9 +111,75 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "TJX-2026-08-20-1",
+      "ticker": "TJX",
+      "initial_entry_date": "2026-08-20",
+      "initial_entry_price": 141.48,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 212,
+      "total_invested_usd": 29993.76,
+      "avg_cost": 141.48,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "NI-2026-08-20-1",
+      "ticker": "NI",
+      "initial_entry_date": "2026-08-20",
+      "initial_entry_price": 41.915,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 715,
+      "total_invested_usd": 29969.225,
+      "avg_cost": 41.915,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "CHRW-2026-08-20-1",
+      "ticker": "CHRW",
+      "initial_entry_date": "2026-08-20",
+      "initial_entry_price": 144.45,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 207,
+      "total_invested_usd": 29901.149999999998,
+      "avg_cost": 144.45,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-08-19",
+  "last_processed_date": "2026-08-20",
   "pending_orders": []
 }
