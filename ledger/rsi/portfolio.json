@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 260488.75,
+  "cash_usd": 140641.46999999997,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -177,9 +177,97 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "LUV-2026-08-21-1",
+      "ticker": "LUV",
+      "initial_entry_date": "2026-08-21",
+      "initial_entry_price": 40.08,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 748,
+      "total_invested_usd": 29979.84,
+      "avg_cost": 40.08,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "STLD-2026-08-21-1",
+      "ticker": "STLD",
+      "initial_entry_date": "2026-08-21",
+      "initial_entry_price": 224.825,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 133,
+      "total_invested_usd": 29901.725,
+      "avg_cost": 224.825,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "WMT-2026-08-21-1",
+      "ticker": "WMT",
+      "initial_entry_date": "2026-08-21",
+      "initial_entry_price": 103.045,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 291,
+      "total_invested_usd": 29986.095,
+      "avg_cost": 103.045,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "CDNS-2026-08-21-1",
+      "ticker": "CDNS",
+      "initial_entry_date": "2026-08-21",
+      "initial_entry_price": 318.89,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 94,
+      "total_invested_usd": 29975.66,
+      "avg_cost": 318.89,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-08-20",
+  "last_processed_date": "2026-08-21",
   "pending_orders": []
 }

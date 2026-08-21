@@ -7,3 +7,7 @@ date,action,ticker,shares,price,amount_usd,rule,lot_id,note
 2026-08-20,BUY,TJX,212,141.48,29993.76,entry,TJX-2026-08-20-1,RSI14=30.3 basis=prev_close
 2026-08-20,BUY,NI,715,41.915,29969.22,entry,NI-2026-08-20-1,RSI14=30.4 basis=prev_close
 2026-08-20,BUY,CHRW,207,144.45,29901.15,entry,CHRW-2026-08-20-1,RSI14=32.0 basis=prev_close
+2026-08-21,BUY,LUV,748,40.08,29979.84,entry,LUV-2026-08-21-1,RSI14=28.9 basis=prev_close
+2026-08-21,BUY,STLD,133,224.825,29901.72,entry,STLD-2026-08-21-1,RSI14=29.6 basis=prev_close
+2026-08-21,BUY,WMT,291,103.045,29986.1,entry,WMT-2026-08-21-1,RSI14=29.8 basis=prev_close
+2026-08-21,BUY,CDNS,94,318.89,29975.66,entry,CDNS-2026-08-21-1,RSI14=31.4 basis=prev_close
