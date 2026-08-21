@@ -5,7 +5,7 @@
     python3 tools/validate_and_adopt.py candidates/candidate_YYYYMMDD.md [--dry-run]
 
 検証（1つでも不合格なら理由を出力してexit 1・何も変更しない）:
-    1. 候補の「作成日:」から7日以上経過している（冷却期間）
+    1. 冷却期間: 「作成日:」と「表の改訂履歴」の最終日付の遅い方から7日以上経過している
     2. ledger/adoptions.json を見て今月まだ採用していない（暦月で月1回まで）
     3. 候補の配分表がパース可能（charter.mdと同じ表形式）
     4. 銘柄がホワイトリストのみ／通常・防衛それぞれ合計100±0.5%
@@ -94,14 +94,41 @@ def _extract_allocation_table(md_text: str) -> dict[str, dict[str, float]]:
     return targets
 
 
+def _latest_table_revision_date(candidate_text: str) -> dt.date | None:
+    """「表の改訂履歴」セクションの箇条書き先頭の日付のうち最新を返す。セクションか日付が無ければNone。
+
+    冷却期間の起点は「配分表が最後に変わった日」であるべきで、作成日だけを見ると採用直前に
+    表を書き換えても冷却済み扱いになる（2026-08-20発覚・2026-08-22修正）。
+    観察ログの追記で冷却が巻き戻らんよう、このセクションの箇条書きだけを数える。
+    """
+    dates: list[dt.date] = []
+    in_section = False
+    for line in candidate_text.splitlines():
+        stripped = line.strip()
+        if "表の改訂履歴" in stripped:
+            in_section = True
+            continue
+        if in_section:
+            if stripped.startswith("#"):
+                break
+            m = re.match(r"-\s*\*{0,2}(\d{4}-\d{2}-\d{2})", stripped)
+            if m:
+                dates.append(dt.date.fromisoformat(m.group(1)))
+    return max(dates) if dates else None
+
+
 def _check_created_date(candidate_text: str, today: dt.date) -> None:
     m = re.search(r"作成日:\s*(\d{4}-\d{2}-\d{2})", candidate_text)
     if not m:
         raise ValidationError("候補ファイルに「作成日:」が見つからない")
     created = dt.date.fromisoformat(m.group(1))
-    elapsed = (today - created).days
+    revised = _latest_table_revision_date(candidate_text)
+    origin = max(created, revised) if revised else created
+    elapsed = (today - origin).days
     if elapsed < COOLDOWN_DAYS:
-        raise ValidationError(f"冷却期間不足（作成から{elapsed}日。{COOLDOWN_DAYS}日必要）")
+        raise ValidationError(
+            f"冷却期間不足（起点{origin.isoformat()}から{elapsed}日。{COOLDOWN_DAYS}日必要）"
+        )
 
 
 def _load_adoptions() -> dict:
