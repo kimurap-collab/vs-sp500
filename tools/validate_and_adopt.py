@@ -6,7 +6,7 @@
 
 検証（1つでも不合格なら理由を出力してexit 1・何も変更しない）:
     1. 冷却期間: 「作成日:」と「表の改訂履歴」の最終日付の遅い方から7日以上経過している
-    2. ledger/adoptions.json を見て今月まだ採用していない（暦月で月1回まで）
+    2. ledger/adoptions.json を見て今月まだ採用しておらず、前回採用から28日以上経過している
     3. 候補の配分表がパース可能（charter.mdと同じ表形式）
     4. 銘柄がホワイトリストのみ／通常・防衛それぞれ合計100±0.5%
     5. 可動域: 株式合計（VOO+QQQ+XLV+1306.T）通常≤90%・防衛≤50%／
@@ -47,6 +47,10 @@ VOO_MAX = 0.65
 # 現金比率に与える影響（NAV$64,270・手数料$22で0.033pt）を吸収できる幅。
 MIN_CASH = config.MIN_CASH_RATIO + 0.001
 COOLDOWN_DAYS = 7
+# 暦月判定だけでは月境界の連続採用（8/31採用→9/1再採用＝2日で2回）が通る
+# （2026-08-20発覚の発見2・2026-08-23修正）。28日は最短の月（平年2月）で、
+# 毎月1日の月次レビューでの採用は常に通り、それより速いペースだけを止める。
+MIN_ADOPTION_INTERVAL_DAYS = 28
 
 ADOPTIONS_PATH = config.LEDGER_DIR / "adoptions.json"
 JST = dt.timezone(dt.timedelta(hours=9))
@@ -139,11 +143,19 @@ def _load_adoptions() -> dict:
 
 
 def _check_monthly_limit(today: dt.date) -> None:
-    adoptions = _load_adoptions()
+    adoptions = _load_adoptions()["adoptions"]
     this_month = today.strftime("%Y-%m")
-    for a in adoptions["adoptions"]:
+    for a in adoptions:
         if a["date"][:7] == this_month:
             raise ValidationError(f"今月は既に採用済み（{a['date']} {a['candidate']}）")
+    if adoptions:
+        last = max(adoptions, key=lambda a: a["date"])
+        elapsed = (today - dt.date.fromisoformat(last["date"])).days
+        if elapsed < MIN_ADOPTION_INTERVAL_DAYS:
+            raise ValidationError(
+                f"前回採用（{last['date']} {last['candidate']}）から{elapsed}日。"
+                f"{MIN_ADOPTION_INTERVAL_DAYS}日必要"
+            )
 
 
 def _check_whitelist_and_sums(targets: dict[str, dict[str, float]]) -> None:
