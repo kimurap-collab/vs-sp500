@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-08-22 03:00 JST",
+  "updated_at": "2026-08-23 03:00 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64022.02,
-  "bench_usd": 62988.76,
-  "diff_usd": 1033.26,
+  "nav_usd": 64027.59,
+  "bench_usd": 62995.03,
+  "diff_usd": 1032.55,
   "diff_pct": 1.64,
   "mode": "normal",
   "holdings": [
@@ -11,9 +11,9 @@
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 14975.73,
-      "weight_pct": 23.39,
-      "price": 713.1299,
+      "value_usd": 14982.24,
+      "weight_pct": 23.4,
+      "price": 713.44,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -24,9 +24,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3144.87,
+      "value_usd": 3143.16,
       "weight_pct": 4.91,
-      "price": 174.715,
+      "price": 174.62,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -37,9 +37,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 23.0,
-      "value_usd": 9747.98,
-      "weight_pct": 15.23,
-      "price": 423.825,
+      "value_usd": 9737.28,
+      "weight_pct": 15.21,
+      "price": 423.36,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -50,9 +50,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.0,
-      "value_usd": 3061.58,
+      "value_usd": 3063.06,
       "weight_pct": 4.78,
-      "price": 92.775,
+      "price": 92.82,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -63,9 +63,9 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.0,
-      "value_usd": 21812.84,
+      "value_usd": 21815.01,
       "weight_pct": 34.07,
-      "price": 703.6399,
+      "price": 703.71,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -76,9 +76,9 @@
       "ticker": "EWJ",
       "name": "MSCI日本株 ETF",
       "shares": 65.0,
-      "value_usd": 6178.9,
-      "weight_pct": 9.65,
-      "price": 95.06,
+      "value_usd": 6186.7,
+      "weight_pct": 9.66,
+      "price": 95.18,
       "avg_cost": 96.49,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/EWJ",
@@ -140,8 +140,8 @@
     },
     {
       "date": "2026-08-21",
-      "nav": 64022.02,
-      "bench": 62988.76
+      "nav": 64027.59,
+      "bench": 62995.03
     }
   ],
   "trades": [
@@ -245,127 +245,127 @@
   "monthly": [
     {
       "month": "2026-08",
-      "nav": 64022.02,
-      "bench": 62988.76,
+      "nav": 64027.59,
+      "bench": 62995.03,
       "result": "win"
     }
   ],
   "rsi": {
     "start_date": "2026-08-14",
-    "nav_usd": 497661.04,
-    "bench_usd": 493014.33,
-    "diff_usd": 4646.71,
-    "diff_pct": 0.94,
+    "nav_usd": 497551.04,
+    "bench_usd": 493063.45,
+    "diff_usd": 4487.59,
+    "diff_pct": 0.91,
     "cash_usd": 140641.47,
     "open_lots": 12,
     "holdings": [
       {
+        "ticker": "STLD",
+        "shares": 133.0,
+        "value_usd": 30414.44,
+        "weight_pct": 6.11,
+        "price": 228.68,
+        "avg_cost": 224.825,
+        "link": "https://finance.yahoo.com/quote/STLD"
+      },
+      {
         "ticker": "ROL",
         "shares": 823.0,
-        "value_usd": 30306.98,
-        "weight_pct": 6.09,
-        "price": 36.825,
+        "value_usd": 30376.93,
+        "weight_pct": 6.11,
+        "price": 36.91,
         "avg_cost": 36.415,
         "link": "https://finance.yahoo.com/quote/ROL"
       },
       {
         "ticker": "LUV",
         "shares": 748.0,
-        "value_usd": 29985.82,
-        "weight_pct": 6.03,
-        "price": 40.088,
+        "value_usd": 30204.24,
+        "weight_pct": 6.07,
+        "price": 40.38,
         "avg_cost": 40.08,
         "link": "https://finance.yahoo.com/quote/LUV"
       },
       {
         "ticker": "WMT",
         "shares": 291.0,
-        "value_usd": 29965.11,
-        "weight_pct": 6.02,
-        "price": 102.9729,
+        "value_usd": 30176.7,
+        "weight_pct": 6.07,
+        "price": 103.7,
         "avg_cost": 103.045,
         "link": "https://finance.yahoo.com/quote/WMT"
       },
       {
         "ticker": "CDNS",
         "shares": 94.0,
-        "value_usd": 29938.53,
-        "weight_pct": 6.02,
-        "price": 318.495,
+        "value_usd": 29987.88,
+        "weight_pct": 6.03,
+        "price": 319.02,
         "avg_cost": 318.89,
         "link": "https://finance.yahoo.com/quote/CDNS"
       },
       {
-        "ticker": "STLD",
-        "shares": 133.0,
-        "value_usd": 29899.73,
-        "weight_pct": 6.01,
-        "price": 224.81,
-        "avg_cost": 224.825,
-        "link": "https://finance.yahoo.com/quote/STLD"
-      },
-      {
         "ticker": "TJX",
         "shares": 212.0,
-        "value_usd": 29876.1,
-        "weight_pct": 6.0,
-        "price": 140.925,
+        "value_usd": 29792.36,
+        "weight_pct": 5.99,
+        "price": 140.53,
         "avg_cost": 141.48,
         "link": "https://finance.yahoo.com/quote/TJX"
       },
       {
         "ticker": "TTD",
         "shares": 2235.0,
-        "value_usd": 29658.23,
-        "weight_pct": 5.96,
-        "price": 13.2699,
+        "value_usd": 29457.3,
+        "weight_pct": 5.92,
+        "price": 13.18,
         "avg_cost": 13.415,
         "link": "https://finance.yahoo.com/quote/TTD"
       },
       {
-        "ticker": "CHRW",
-        "shares": 207.0,
-        "value_usd": 29619.63,
-        "weight_pct": 5.95,
-        "price": 143.09,
-        "avg_cost": 144.45,
-        "link": "https://finance.yahoo.com/quote/CHRW"
-      },
-      {
-        "ticker": "DVA",
-        "shares": 169.0,
-        "value_usd": 29609.65,
-        "weight_pct": 5.95,
-        "price": 175.205,
-        "avg_cost": 177.64,
-        "link": "https://finance.yahoo.com/quote/DVA"
-      },
-      {
         "ticker": "LII",
         "shares": 73.0,
-        "value_usd": 29601.5,
-        "weight_pct": 5.95,
-        "price": 405.5,
+        "value_usd": 29409.51,
+        "weight_pct": 5.91,
+        "price": 402.87,
         "avg_cost": 410.565,
         "link": "https://finance.yahoo.com/quote/LII"
       },
       {
-        "ticker": "NI",
-        "shares": 715.0,
-        "value_usd": 29415.1,
-        "weight_pct": 5.91,
-        "price": 41.14,
-        "avg_cost": 41.915,
-        "link": "https://finance.yahoo.com/quote/NI"
+        "ticker": "DVA",
+        "shares": 169.0,
+        "value_usd": 29375.58,
+        "weight_pct": 5.9,
+        "price": 173.82,
+        "avg_cost": 177.64,
+        "link": "https://finance.yahoo.com/quote/DVA"
       },
       {
         "ticker": "APP",
         "shares": 96.0,
-        "value_usd": 29143.2,
-        "weight_pct": 5.86,
-        "price": 303.575,
+        "value_usd": 29353.92,
+        "weight_pct": 5.9,
+        "price": 305.77,
         "avg_cost": 309.32,
         "link": "https://finance.yahoo.com/quote/APP"
+      },
+      {
+        "ticker": "CHRW",
+        "shares": 207.0,
+        "value_usd": 29317.41,
+        "weight_pct": 5.89,
+        "price": 141.63,
+        "avg_cost": 144.45,
+        "link": "https://finance.yahoo.com/quote/CHRW"
+      },
+      {
+        "ticker": "NI",
+        "shares": 715.0,
+        "value_usd": 29043.3,
+        "weight_pct": 5.84,
+        "price": 40.62,
+        "avg_cost": 41.915,
+        "link": "https://finance.yahoo.com/quote/NI"
       }
     ],
     "history": [
@@ -396,8 +396,8 @@
       },
       {
         "date": "2026-08-21",
-        "nav": 497661.04,
-        "bench": 493014.33
+        "nav": 497551.04,
+        "bench": 493063.45
       }
     ],
     "trades": [
@@ -537,8 +537,8 @@
     "monthly": [
       {
         "month": "2026-08",
-        "nav": 497661.04,
-        "bench": 493014.33,
+        "nav": 497551.04,
+        "bench": 493063.45,
         "result": "win"
       }
     ]
