@@ -20,6 +20,7 @@ from typing import Any, Callable
 
 import broker
 import config
+import jp_rsi_daily
 import rsi_ledger
 import rsi_strategy
 import universe
@@ -655,7 +656,7 @@ def run(
             price = info["close"]
             idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot["lot_id"])
             for intent in rsi_strategy.decide_pyramid_buys(state["lots"][idx], price):
-                qty = int(intent["amount_usd"] / price + 1e-9)
+                qty = rsi_strategy.qty_for_amount(intent["amount_usd"], price, lot.get("lot_size", 1))
                 if qty <= 0:
                     continue
                 estimated_cost = qty * price
@@ -793,21 +794,36 @@ def run(
 
 
 def _setup_freeze_logging() -> None:
-    """--freeze-candidates単独起動用のログ設定（daily_run.py経由では呼ばれない）。"""
+    """--freeze-candidates単独起動用のログ設定（daily_run.py経由では呼ばれない）。
+
+    日本株RSI枠(jp_rsi_daily)のログも同じfreeze_candidates.logへ出す（2026-08-24追加。
+    新しいlaunchdジョブは作らずこの20:00ジョブに相乗りするため、ログも1本にまとめる）。
+    """
     config.LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not logger.handlers:
         fh = logging.FileHandler(config.LOG_DIR / "freeze_candidates.log", encoding="utf-8")
         fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
         logger.addHandler(fh)
         logger.setLevel(logging.INFO)
+    if not jp_rsi_daily.logger.handlers:
+        jp_fh = logging.FileHandler(config.LOG_DIR / "freeze_candidates.log", encoding="utf-8")
+        jp_fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+        jp_rsi_daily.logger.addHandler(jp_fh)
+        jp_rsi_daily.logger.setLevel(logging.INFO)
 
 
 def main() -> None:
-    """単独起動エントリポイント（2026-08-19改修1-a）。現状は--freeze-candidatesのみ。"""
-    parser = argparse.ArgumentParser(description="vs-sp500 RSI-30枠の単独ジョブ")
+    """単独起動エントリポイント（2026-08-19改修1-a）。現状は--freeze-candidatesのみ。
+
+    2026-08-24: 日本株RSI枠の候補確定もここに相乗りさせる（新しいlaunchdジョブは作らない。
+    大将の指示「20:00の候補確定ジョブに日本株の候補確定を追加する」）。米国枠とJP枠は互いに
+    独立しているため、片方が失敗してももう片方は試行する。
+    """
+    parser = argparse.ArgumentParser(description="vs-sp500 RSI枠の単独ジョブ")
     parser.add_argument(
         "--freeze-candidates", action="store_true",
-        help="screen_rsi_candidates()を1回呼び、結果をfrozen_candidates.jsonに保存する（発注・台帳変更なし）",
+        help="screen_rsi_candidates()を1回呼び、結果をfrozen_candidates.jsonに保存する（発注・台帳変更なし）。"
+             "日本株RSI枠の候補確定も同時に行う",
     )
     args = parser.parse_args()
     if not args.freeze_candidates:
@@ -815,14 +831,24 @@ def main() -> None:
         return
 
     _setup_freeze_logging()
+
     result = freeze_candidates()
     if result is None:
         print("候補確定に失敗した（moomoo未接続）")
+    else:
+        print(
+            f"候補確定完了: {len(result['candidates'])}件 rsi_basis={result['rsi_basis']} "
+            f"generated_at={result['generated_at']}"
+        )
+
+    jp_result = jp_rsi_daily.freeze_candidates_jp()
+    if jp_result is None:
+        print("JP候補確定に失敗した（moomoo未接続）")
+    else:
+        print(f"JP候補確定完了: {len(jp_result['candidates'])}件 generated_at={jp_result['generated_at']}")
+
+    if result is None or jp_result is None:
         raise SystemExit(1)
-    print(
-        f"候補確定完了: {len(result['candidates'])}件 rsi_basis={result['rsi_basis']} "
-        f"generated_at={result['generated_at']}"
-    )
 
 
 if __name__ == "__main__":

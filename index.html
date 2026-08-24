@@ -103,8 +103,18 @@
       <div class="label">S&P500ベンチマーク</div>
       <div class="value" id="bench-usd">-</div>
     </div>
+    <div class="nav-box">
+      <div class="label">元本からの増減</div>
+      <div class="value" id="principal-diff-usd">-</div>
+    </div>
   </div>
   <div class="note">※評価通貨はドル。約定・手数料はmoomoo仮想口座の実績（TrdEnv.SIMULATE）に連動</div>
+  <div class="note">
+    ※配分戦略（本体）のルール: ターゲット比率から±5ptずれたらリバランス。個別株は1銘柄5%上限・合計20%上限、
+    平均取得単価から−20%で自動損切り。52週高値から12%以上下落かつRSI(14)&lt;30で押し目買い（現金の50%まで）。
+    トレンド防衛/復帰はVOOの200日線を3営業日連続で上抜け/下抜けで切替。銘柄ごとのロット管理は無し（比率で管理）。
+    開始元本 $63,343.06
+  </div>
 
   <section>
     <h2>資産推移</h2>
@@ -165,8 +175,18 @@
       <div class="label">S&P500ベンチマーク</div>
       <div class="value" id="rsi-bench-usd">-</div>
     </div>
+    <div class="nav-box">
+      <div class="label">元本からの増減</div>
+      <div class="value" id="rsi-principal-diff-usd">-</div>
+    </div>
   </div>
-  <div class="note">※前日終値のRSI(14)&lt;=32で1銘柄$30,000を買い、上昇したら買い増し。+20%で半分・+25%でさらに1/4を利確し、残り25%は無期限保有。損切りは無し（「RSI32以下で買うと本当に儲かるのか」を素で測るため）。同じ銘柄は保有中1ロットまで。開始資金$500,000</div>
+  <div class="note">
+    ※ルール: 前日終値のRSI(14)&lt;=32で1銘柄$30,000を買い（整数株）、上昇したら買い増し
+    （+2.5%→$15,000/+5.0%→$7,500/+7.5%→$7,500）。+20%で総株数の50%・+25%でさらに25%を利確し、
+    残り25%は無期限保有。損切りは無し（「RSI32以下で買うと本当に儲かるのか」を素で測るため）。
+    同じ銘柄は保有中1ロットまで（利確済みなら再エントリー可）。対象は S&amp;P500+NASDAQ100 構成銘柄。
+    開始資金 $500,000
+  </div>
 
   <section>
     <h2>資産推移</h2>
@@ -205,6 +225,76 @@
     <div class="empty" id="rsiTradesEmpty" style="display:none;">取引履歴なし</div>
   </section>
   </div>
+
+  <header style="margin-top:32px;">
+    <h1>日本株RSI枠</h1>
+    <div class="updated" id="rsi-jp-updated"></div>
+  </header>
+
+  <div id="rsi-jp-panel">
+  <div class="diff-card">
+    <div class="label">元本からの増減（日本株RSI枠）</div>
+    <div class="amount" id="rsi-jp-diff-amount">-</div>
+    <div class="pct" id="rsi-jp-diff-pct">-</div>
+  </div>
+
+  <div class="nav-row">
+    <div class="nav-box">
+      <div class="label">日本株RSI枠の評価額</div>
+      <div class="value" id="rsi-jp-nav">-</div>
+    </div>
+    <div class="nav-box">
+      <div class="label">元本</div>
+      <div class="value" id="rsi-jp-principal">-</div>
+    </div>
+  </div>
+  <div class="note">
+    ※円建て。ベンチマーク無し（元本からの増減のみを記録）。前日終値のRSI(14)&lt;=35 かつ時価総額300億円以上の
+    銘柄を対象に、1銘柄300万円分を単元株数(lot_size)の倍数に切り捨てて買う（1単元が300万円を超える銘柄・
+    単元株数が取得できない銘柄はスキップ）。上昇したら買い増し（+2.5%→150万円/+5.0%→75万円/+7.5%→75万円）。
+    +20%で総株数の50%・+25%でさらに25%を利確し、残り25%は無期限保有。損切りは無し。
+    同じ銘柄は保有中1ロットまで。開始資金 1億円。
+    <strong>moomooに日本の仮想口座が存在しないため、この枠だけ実際の発注を伴わない台帳上の仮想売買</strong>
+    （約定価格はその日の終値をそのまま使う）。
+  </div>
+
+  <section>
+    <h2>資産推移</h2>
+    <canvas id="rsiJpHistoryChart" height="180"></canvas>
+  </section>
+
+  <section>
+    <h2>月次勝敗（元本比）</h2>
+    <table id="rsiJpMonthlyTable">
+      <thead><tr><th>月</th><th class="num">評価額</th><th class="num">元本</th><th>結果</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="rsiJpMonthlyEmpty" style="display:none;">まだデータがありません</div>
+  </section>
+
+  <section>
+    <h2>保有一覧（銘柄ごとに複数ロットを合算）</h2>
+    <div class="table-scroll">
+    <table id="rsiJpHoldingsTable">
+      <thead><tr>
+        <th>銘柄</th><th class="num">株数</th><th class="num">平均取得単価</th>
+        <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="rsiJpHoldingsEmpty" style="display:none;">保有なし（全額現金）</div>
+  </section>
+
+  <section>
+    <h2>取引記録</h2>
+    <table id="rsiJpTradesTable">
+      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="rsiJpTradesEmpty" style="display:none;">取引履歴なし</div>
+  </section>
+  </div>
 </div>
 
 <script>
@@ -233,6 +323,14 @@ async function load() {
 
   document.getElementById("nav-usd").textContent = "$" + data.nav_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   document.getElementById("bench-usd").textContent = "$" + data.bench_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const principalDiffUsd = data.principal_diff_usd;
+  const principalWin = principalDiffUsd >= 0;
+  const principalSign = principalWin ? "+" : "";
+  const principalEl = document.getElementById("principal-diff-usd");
+  principalEl.textContent = principalSign + "$" + principalDiffUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+    " (" + principalSign + data.principal_diff_pct.toFixed(2) + "%)";
+  principalEl.className = "value " + (principalWin ? "win" : "lose");
 
   // 資産推移グラフ
   const hist = data.history || [];
@@ -351,6 +449,14 @@ async function load() {
     document.getElementById("rsi-nav-usd").textContent = "$" + rsi.nav_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById("rsi-bench-usd").textContent = "$" + rsi.bench_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+    const rsiPrincipalDiffUsd = rsi.principal_diff_usd;
+    const rsiPrincipalWin = rsiPrincipalDiffUsd >= 0;
+    const rsiPrincipalSign = rsiPrincipalWin ? "+" : "";
+    const rsiPrincipalEl = document.getElementById("rsi-principal-diff-usd");
+    rsiPrincipalEl.textContent = rsiPrincipalSign + "$" + rsiPrincipalDiffUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+      " (" + rsiPrincipalSign + rsi.principal_diff_pct.toFixed(2) + "%)";
+    rsiPrincipalEl.className = "value " + (rsiPrincipalWin ? "win" : "lose");
+
     const rsiHist = rsi.history || [];
     new Chart(document.getElementById("rsiHistoryChart"), {
       type: "line",
@@ -429,6 +535,105 @@ async function load() {
   } else {
     document.getElementById("rsi-updated").textContent = "まだ開始していません";
     document.getElementById("rsi-panel").style.display = "none";
+  }
+
+  // --- 日本株RSI枠（円建て・ベンチマーク無し。data.rsi_jpがまだ無い/未開始なら空表示のまま） ---
+  const rsiJp = data.rsi_jp;
+  if (rsiJp && rsiJp.start_date) {
+    document.getElementById("rsi-jp-updated").textContent =
+      "開始日: " + rsiJp.start_date + "（保有ロット数: " + (rsiJp.open_lots || 0) + "）";
+
+    const jpDiff = rsiJp.diff_jpy;
+    const jpWin = jpDiff >= 0;
+    const jpSign = jpWin ? "+" : "";
+    const jpAmountEl = document.getElementById("rsi-jp-diff-amount");
+    jpAmountEl.textContent = jpSign + "¥" + jpDiff.toLocaleString();
+    jpAmountEl.className = "amount " + (jpWin ? "win" : "lose");
+    const jpPctEl = document.getElementById("rsi-jp-diff-pct");
+    jpPctEl.textContent = jpSign + rsiJp.diff_pct.toFixed(2) + "%";
+    jpPctEl.className = "pct " + (jpWin ? "win" : "lose");
+
+    document.getElementById("rsi-jp-nav").textContent = "¥" + rsiJp.nav_jpy.toLocaleString();
+    document.getElementById("rsi-jp-principal").textContent = "¥" + rsiJp.principal_jpy.toLocaleString();
+
+    const jpHist = rsiJp.history || [];
+    new Chart(document.getElementById("rsiJpHistoryChart"), {
+      type: "line",
+      data: {
+        labels: jpHist.map(h => h.date),
+        datasets: [
+          { label: "日本株RSI枠", data: jpHist.map(h => h.nav), borderColor: "#3ddc84", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+          { label: "元本", data: jpHist.map(h => h.principal), borderColor: "#8b93a3", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: "#e6e8ec" } } },
+        scales: {
+          x: { ticks: { color: "#8b93a3", maxTicksLimit: 6 }, grid: { color: "#262b36" } },
+          y: { ticks: { color: "#8b93a3" }, grid: { color: "#262b36" } },
+        },
+      },
+    });
+
+    const jpMonthlyBody = document.querySelector("#rsiJpMonthlyTable tbody");
+    const jpMonthly = (rsiJp.monthly || []).slice().reverse();
+    if (jpMonthly.length === 0) {
+      document.getElementById("rsiJpMonthlyEmpty").style.display = "block";
+    } else {
+      jpMonthly.forEach(m => {
+        const tr = document.createElement("tr");
+        const resultJp = m.result === "win" ? "勝ち" : "負け";
+        const cls = m.result === "win" ? "win" : "lose";
+        tr.innerHTML = `<td>${m.month}</td><td class="num">¥${m.nav.toLocaleString()}</td>` +
+          `<td class="num">¥${m.principal.toLocaleString()}</td><td class="${cls}">${resultJp}</td>`;
+        jpMonthlyBody.appendChild(tr);
+      });
+    }
+
+    const jpHoldingsBody = document.querySelector("#rsiJpHoldingsTable tbody");
+    const jpHoldings = rsiJp.holdings || [];
+    if (jpHoldings.length === 0) {
+      document.getElementById("rsiJpHoldingsEmpty").style.display = "block";
+    } else {
+      jpHoldings.forEach(h => {
+        const priceStr = fmtPrice(h.price, "JPY");
+        const avgCostStr = fmtPrice(h.avg_cost, "JPY");
+        let pnlStr = "-", pnlCls = "";
+        if (h.avg_cost > 0 && h.price != null) {
+          const pnl = (h.price / h.avg_cost - 1) * 100;
+          pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+          pnlCls = pnl >= 0 ? "win" : "lose";
+        }
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a></td>` +
+          `<td class="num">${h.shares}</td>` +
+          `<td class="num">${avgCostStr}</td>` +
+          `<td class="num">${priceStr}</td>` +
+          `<td class="num ${pnlCls}">${pnlStr}</td>` +
+          `<td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
+          `<td class="num">${h.weight_pct}%</td>`;
+        jpHoldingsBody.appendChild(tr);
+      });
+    }
+
+    const jpTradesBody = document.querySelector("#rsiJpTradesTable tbody");
+    const jpTrades = rsiJp.trades || [];
+    if (jpTrades.length === 0) {
+      document.getElementById("rsiJpTradesEmpty").style.display = "block";
+    } else {
+      jpTrades.forEach(t => {
+        const tr = document.createElement("tr");
+        const amt = Number(t.amount_jpy || 0).toLocaleString();
+        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
+          `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${t.rule}</td>`;
+        jpTradesBody.appendChild(tr);
+      });
+    }
+  } else {
+    document.getElementById("rsi-jp-updated").textContent = "まだ開始していません";
+    document.getElementById("rsi-jp-panel").style.display = "none";
   }
 }
 

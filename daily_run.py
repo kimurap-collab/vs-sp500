@@ -13,6 +13,9 @@ import yfinance as yf
 import account_state
 import broker
 import config
+import jp_market
+import jp_rsi_daily
+import jp_rsi_ledger
 import market
 import portfolio
 import report
@@ -51,6 +54,8 @@ def git_commit_and_push(now_jst: dt.datetime, logger: logging.Logger) -> None:
         add_paths = ["ledger/", "data.json"]
         if config.RSI_UNIVERSE_PATH.exists():
             add_paths.append("universe.json")
+        if config.RSI_JP_LOTSIZE_CACHE_PATH.exists():
+            add_paths.append("jp_lotsize.json")
         subprocess.run(["git", "add", *add_paths], cwd=config.BASE_DIR, check=True, capture_output=True)
         result = subprocess.run(
             ["git", "commit", "-m", f"update {date_str}"],
@@ -166,6 +171,39 @@ def check_alerts(
     return alerts
 
 
+def _run_jp_rsi_safe(
+    jp_state: dict, dry_run: bool, logger: logging.Logger,
+) -> tuple[dict, list[dict], list[str], float, dict]:
+    """日本株RSI枠の実行を例外から守る（2026-08-24追加。3本目の戦略枠。
+
+    Fableが自分で決めた安全策（大将の指示にはない）: この枠だけmoomoo発注が無い実験的な
+    追加のため、ここで例外が漏れるとdaily_run.py全体のtry/exceptに巻き込まれ、本体・
+    米国RSI枠のdata.json更新やTelegram送信まで止まってしまう。それを避けるため、
+    ここだけ個別にtry/exceptで包み、失敗時は前回のjp_stateをそのまま返してログにだけ残す。
+    """
+    try:
+        trading_date = jp_market.get_jp_trading_date()
+    except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+        logger.exception("JP RSI枠: 取引日の取得に失敗した")
+        try:
+            nav_jpy, market_snap = jp_rsi_daily.compute_snapshot_only_jp(jp_state)
+        except Exception:
+            logger.exception("JP RSI枠: スナップショット計算にも失敗した")
+            nav_jpy, market_snap = 0.0, {}
+        return jp_state, [], [f"[JP] 取引日取得エラーのため売買スキップ: {e}"], nav_jpy, market_snap
+
+    try:
+        return jp_rsi_daily.run_jp(jp_state, trading_date, dry_run)
+    except Exception as e:  # noqa: BLE001 - JP枠の障害で本体・米国RSI枠の報告まで止めないため
+        logger.exception("JP RSI枠の実行中に例外が発生した")
+        try:
+            nav_jpy, market_snap = jp_rsi_daily.compute_snapshot_only_jp(jp_state)
+        except Exception:
+            logger.exception("JP RSI枠: スナップショット計算にも失敗した")
+            nav_jpy, market_snap = 0.0, {}
+        return jp_state, [], [f"[JP] 実行エラーのため売買スキップ: {e}"], nav_jpy, market_snap
+
+
 def run(dry_run: bool = False, report_only: bool = False) -> str:
     logger = setup_logging()
     now_jst = dt.datetime.now(JST)
@@ -178,9 +216,10 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
     try:
         state = portfolio.load_portfolio()
         rsi_state = rsi_ledger.load_portfolio()
+        jp_state = jp_rsi_ledger.load_portfolio()
         log_and_report(
             f"[1] 台帳読み込み完了。mode={state['mode']} start_date={state['start_date']} "
-            f"RSI枠start_date={rsi_state['start_date']}"
+            f"RSI枠start_date={rsi_state['start_date']} JP RSI枠start_date={jp_state['start_date']}"
         )
 
         tickers_to_fetch = sorted(set(list(config.WHITELIST.keys()) + list(state["holdings"].keys())))
@@ -198,7 +237,15 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report(f"[3] NAV計算: NAV=${nav_usd:,.2f} ベンチマーク=${bench_usd:,.2f}")
             rsi_nav, rsi_bench, rsi_market = rsi_daily.compute_snapshot_only(rsi_state, voo_snap)
             rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, [])
-            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block)
+            try:
+                rsi_jp_nav, rsi_jp_market = jp_rsi_daily.compute_snapshot_only_jp(jp_state)
+            except Exception:
+                logger.exception("JP RSI枠: --report-onlyのスナップショット計算に失敗した")
+                rsi_jp_nav, rsi_jp_market = 0.0, {}
+            rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, [])
+            data = report.build_data_json(
+                state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
+            )
             report.save_data_json(data)
             log_and_report("[4] data.json更新完了（--report-onlyのためhistory.csv追記・portfolio.json保存はスキップ）")
             git_commit_and_push(now_jst, logger)
@@ -242,7 +289,33 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                     "open_lots": len(rsi_ledger.open_lots(rsi_state)),
                 })
             rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, [])
-            data = report.build_data_json(state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block)
+
+            # JP RSI枠も異常停止時は売買せず評価のみ行う（本体・米国RSI枠と同じ縮退方針。
+            # 米国市場の異常停止判定に日本株枠を巻き込むこと自体は大将の指示に無いFableの判断だが、
+            # 「売買を止めて観察のみ」という全体方針に合わせるのが最も安全と考えた）
+            try:
+                rsi_jp_nav, rsi_jp_market = jp_rsi_daily.compute_snapshot_only_jp(jp_state)
+                if not dry_run:
+                    jp_trading_date = jp_market.get_jp_trading_date()
+                    jp_principal = config.RSI_JP_INITIAL_CAPITAL_JPY
+                    jp_diff = rsi_jp_nav - jp_principal
+                    jp_rsi_ledger.append_history_row({
+                        "date": jp_trading_date,
+                        "nav_jpy": round(rsi_jp_nav, 0),
+                        "principal_jpy": round(jp_principal, 0),
+                        "diff_jpy": round(jp_diff, 0),
+                        "diff_pct": round(jp_diff / jp_principal * 100, 4) if jp_principal else 0.0,
+                        "cash_ratio": round(jp_rsi_ledger.compute_cash_ratio(jp_state, rsi_jp_nav), 4) if rsi_jp_nav else 0.0,
+                        "open_lots": len(jp_rsi_ledger.open_lots(jp_state)),
+                    })
+            except Exception:
+                logger.exception("JP RSI枠: 異常停止時のスナップショット計算に失敗した")
+                rsi_jp_nav, rsi_jp_market = 0.0, {}
+            rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, [])
+
+            data = report.build_data_json(
+                state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
+            )
             if not dry_run:
                 report.save_data_json(data)
                 git_commit_and_push(now_jst, logger)
@@ -490,6 +563,16 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report(line)
         rsi_block = report.build_rsi_block(rsi_state, rsi_market, rsi_nav, rsi_bench, rsi_accepted_trades)
 
+        # 7d. 日本株RSI枠（3本目の戦略枠。米国RSI枠の後に実行。moomoo発注は一切行わない
+        #     台帳のみの仮想売買のため、moomoo可用性(can_trade)には依存せず常に試みる。
+        #     この枠の障害で本体・米国RSI枠の報告まで止めないよう_run_jp_rsi_safeで保護する）
+        jp_state, rsi_jp_accepted_trades, rsi_jp_log_lines, rsi_jp_nav, rsi_jp_market = _run_jp_rsi_safe(
+            jp_state, dry_run, logger,
+        )
+        for line in rsi_jp_log_lines:
+            log_and_report(line)
+        rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, rsi_jp_accepted_trades)
+
         # 3f. 口座全体の現金残高を記録（次回の手数料逆算の基準値。本日の全取引が終わった後に記録する。
         #     dry-runでは記録しない（触ってはいけない実運用のチェックポイントを汚さないため）
         if not dry_run and moomoo_available:
@@ -510,7 +593,8 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
 
         # 8. data.json再生成
         data = report.build_data_json(
-            state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst, rsi_block=rsi_block,
+            state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst,
+            rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
         )
         if not dry_run:
             report.save_data_json(data)

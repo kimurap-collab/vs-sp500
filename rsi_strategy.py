@@ -1,6 +1,6 @@
-"""vs-sp500: RSI-30枠のロット状態機械（SPEC_RSI30.md準拠）。
+"""vs-sp500: RSI枠のロット状態機械（SPEC_RSI30.md準拠。米国RSI-32枠と日本株RSI枠が共用する）。
 
-本体（portfolio.py）とは完全に独立した2本目の戦略枠。同一銘柄に複数ロットが
+本体（portfolio.py）とは完全に独立した戦略枠。同一銘柄に複数ロットが
 並びうる（再エントリーにクールダウンは無い）。
 
 この関数群は純粋関数のみで構成する（broker呼び出し・ファイルI/Oを含まない）。
@@ -9,10 +9,15 @@
 テストは decide → apply を約定価格=見積り価格として直接呼び出すことで、
 brokerに触れずにルールだけを検証する。
 
+売買ルールの金額・閾値は StrategyRules にまとめ、引数で受け取る（2026-08-24改修。
+日本株RSI枠の追加にあたり、ルールを複製せずこのモジュールを共用するため）。
+省略時は US_RULES（従来のRSI-32枠の定数）を使うため、rulesを渡さない既存呼び出し・
+既存テストの挙動は一切変わらない。
+
 ロットのスキーマ:
     lot_id, ticker, initial_entry_date, initial_entry_price,
     pyramid_done (3要素のbool配列: +2.5%/+5.0%/+7.5%),
-    shares, total_invested_usd, avg_cost,
+    shares, total_invested_usd, avg_cost, lot_size（単元株数。米国は1固定）,
     profit1_taken, profit2_taken, base_shares（利確1発動時点の株数）,
     exception_active, exception_deadline_date,
     closed, closed_reason, closed_date
@@ -20,9 +25,67 @@ brokerに触れずにルールだけを検証する。
 from __future__ import annotations
 
 import datetime as dt
+from dataclasses import dataclass
 from typing import Any
 
 import config
+
+
+@dataclass(frozen=True)
+class StrategyRules:
+    """RSI枠の売買ルール定数。通貨は問わない（呼び出し側が金額の単位を揃える）。"""
+
+    entry_rsi_threshold: float
+    entry_amount: float
+    pyramid_triggers: tuple[float, ...]
+    pyramid_amounts: tuple[float, ...]
+    profit1_pct: float
+    profit1_sell_fraction: float
+    profit2_pct: float
+    profit2_sell_fraction: float
+    exception_window_trading_days: int
+    exception_hold_calendar_days: int
+
+
+# RSI-32枠（米国・ドル建て）。SPEC_RSI30.md準拠、従来のconfig定数をそのまま束ねただけ。
+US_RULES = StrategyRules(
+    entry_rsi_threshold=config.RSI_ENTRY_RSI_THRESHOLD,
+    entry_amount=config.RSI_ENTRY_AMOUNT_USD,
+    pyramid_triggers=config.RSI_PYRAMID_TRIGGERS,
+    pyramid_amounts=config.RSI_PYRAMID_AMOUNTS_USD,
+    profit1_pct=config.RSI_PROFIT1_PCT,
+    profit1_sell_fraction=config.RSI_PROFIT1_SELL_FRACTION,
+    profit2_pct=config.RSI_PROFIT2_PCT,
+    profit2_sell_fraction=config.RSI_PROFIT2_SELL_FRACTION,
+    exception_window_trading_days=config.RSI_EXCEPTION_WINDOW_TRADING_DAYS,
+    exception_hold_calendar_days=config.RSI_EXCEPTION_HOLD_CALENDAR_DAYS,
+)
+
+# 日本株RSI枠（円建て）。SPEC出典は2026-08-24 大将の発言（GOAL.mdおよびdaily_run.py組み込み指示書参照）。
+JP_RULES = StrategyRules(
+    entry_rsi_threshold=config.RSI_JP_ENTRY_RSI_THRESHOLD,
+    entry_amount=config.RSI_JP_ENTRY_AMOUNT_JPY,
+    pyramid_triggers=config.RSI_JP_PYRAMID_TRIGGERS,
+    pyramid_amounts=config.RSI_JP_PYRAMID_AMOUNTS_JPY,
+    profit1_pct=config.RSI_JP_PROFIT1_PCT,
+    profit1_sell_fraction=config.RSI_JP_PROFIT1_SELL_FRACTION,
+    profit2_pct=config.RSI_JP_PROFIT2_PCT,
+    profit2_sell_fraction=config.RSI_JP_PROFIT2_SELL_FRACTION,
+    exception_window_trading_days=config.RSI_JP_EXCEPTION_WINDOW_TRADING_DAYS,
+    exception_hold_calendar_days=config.RSI_JP_EXCEPTION_HOLD_CALENDAR_DAYS,
+)
+
+
+def qty_for_amount(amount: float, price: float, lot_size: int = 1) -> int:
+    """amount分をpriceで買える株数を、lot_size単位に切り捨てて返す。
+
+    米国枠はlot_size=1（従来どおり1株単位の切り捨て）。日本株枠は単元株数を渡すことで
+    「単元株数の倍数に切り捨て」（SPEC）を満たす。price<=0やlot_size<=0では0を返す。
+    """
+    if price <= 0 or lot_size <= 0:
+        return 0
+    raw_qty = int(amount / price + 1e-9)
+    return (raw_qty // lot_size) * lot_size
 
 
 def business_days_since(start_date: str, current_date: str) -> int:
@@ -44,25 +107,28 @@ def business_days_since(start_date: str, current_date: str) -> int:
     return count
 
 
-def should_enter(rsi14: float) -> bool:
-    """ENTRY: RSI(14) <= 30。"""
-    return rsi14 <= config.RSI_ENTRY_RSI_THRESHOLD
+def should_enter(rsi14: float, rules: StrategyRules = US_RULES) -> bool:
+    """ENTRY: RSI(14) <= entry_rsi_threshold。"""
+    return rsi14 <= rules.entry_rsi_threshold
 
 
-def select_entries_within_cash(candidates: list[dict[str, Any]], available_cash: float) -> list[dict[str, Any]]:
+def select_entries_within_cash(
+    candidates: list[dict[str, Any]], available_cash: float, rules: StrategyRules = US_RULES,
+) -> list[dict[str, Any]]:
     """新規エントリー候補をRSIが低い順に並べ、現金が足りる分だけ選ぶ。
 
     呼び出し側は買い増し（pyramid）を先に実行し終えた後の残現金をavailable_cashとして渡すこと
     （SPEC_RSI30.md「資金不足時: 買い増しを優先し、その後に新規エントリーをRSIが低い順に」）。
     現金が足りない候補はスキップし、次（RSIが次に低い候補）を試す。
 
-    candidates: [{"ticker": str, "rsi14": float, "price": float}, ...]
+    candidates: [{"ticker": str, "rsi14": float, "price": float, "lot_size": int(省略可・既定1)}, ...]
+    lot_sizeを省略した候補（米国枠）は1株単位のまま従来どおり計算する。
     戻り値: 選ばれた候補に "qty" を付加したリスト（RSI昇順）。
     """
     remaining = available_cash
     selected: list[dict[str, Any]] = []
     for c in sorted(candidates, key=lambda x: x["rsi14"]):
-        qty = int(config.RSI_ENTRY_AMOUNT_USD / c["price"] + 1e-9)
+        qty = qty_for_amount(rules.entry_amount, c["price"], c.get("lot_size", 1))
         if qty <= 0:
             continue
         cost = qty * c["price"]
@@ -95,8 +161,15 @@ def filter_blocked_entries(
     return allowed, blocked
 
 
-def new_lot(ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_price: float) -> dict[str, Any]:
-    """RSI<=30のエントリー約定後、新しいロットを作る。"""
+def new_lot(
+    ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_price: float, lot_size: int = 1,
+) -> dict[str, Any]:
+    """RSIエントリー条件成立後の約定を受け、新しいロットを作る。
+
+    lot_size: このロットの買い増しに使う単元株数（米国枠は既定の1のまま）。
+    フィールド名は"total_invested_usd"のままだが、日本株RSI枠では円建ての値を保持する
+    （米国枠と完全に同じスキーマを共用するための既知の命名の名残。値の単位は通貨で変わる）。
+    """
     total_invested = filled_qty * fill_price
     return {
         "lot_id": lot_id,
@@ -105,6 +178,7 @@ def new_lot(ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_pri
         "initial_entry_price": fill_price,
         "pyramid_done": [False, False, False],
         "shares": filled_qty,
+        "lot_size": lot_size,
         "total_invested_usd": total_invested,
         "avg_cost": fill_price,
         "profit1_taken": False,
@@ -122,16 +196,20 @@ def new_lot(ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_pri
 # 決定（decide_*）: 現在の状態と当日の価格から必要な意思決定を返す。状態は変更しない。
 # ---------------------------------------------------------------------------
 
-def decide_pyramid_buys(lot: dict[str, Any], price: float) -> list[dict[str, Any]]:
+def decide_pyramid_buys(
+    lot: dict[str, Any], price: float, rules: StrategyRules = US_RULES,
+) -> list[dict[str, Any]]:
     """PYRAMID: 未実施の買い増し段のうち、価格が閾値(初期エントリー価格基準)を超えている分を全て返す。
 
     1日で複数段の閾値に同時到達した場合（大きな寄り付き）は複数件返す。
+    キー名は"amount_usd"のままだが、日本株RSI枠では円建ての金額を保持する
+    （new_lotのtotal_invested_usdと同じ命名の名残。intentは呼び出し元がすぐ消費する内部値）。
     """
     if lot["closed"]:
         return []
     intents = []
     base = lot["initial_entry_price"]
-    for i, (trigger_pct, amount) in enumerate(zip(config.RSI_PYRAMID_TRIGGERS, config.RSI_PYRAMID_AMOUNTS_USD)):
+    for i, (trigger_pct, amount) in enumerate(zip(rules.pyramid_triggers, rules.pyramid_amounts)):
         if lot["pyramid_done"][i]:
             continue
         if price >= base * (1 + trigger_pct):
@@ -142,7 +220,10 @@ def decide_pyramid_buys(lot: dict[str, Any], price: float) -> list[dict[str, Any
     return intents
 
 
-def decide_profit_takes(lot: dict[str, Any], price: float, current_date: str, trading_days_elapsed: int) -> list[dict[str, Any]]:
+def decide_profit_takes(
+    lot: dict[str, Any], price: float, current_date: str, trading_days_elapsed: int,
+    rules: StrategyRules = US_RULES,
+) -> list[dict[str, Any]]:
     """NORMAL PROFIT / EXCEPTION: 利確1(50%)・利確2(25%)の判定。
 
     例外発動中（exception_active かつ deadline未到達）は何も返さない。
@@ -158,14 +239,14 @@ def decide_profit_takes(lot: dict[str, Any], price: float, current_date: str, tr
     avg_cost = lot["avg_cost"]
 
     if not lot["profit1_taken"]:
-        threshold = avg_cost * (1 + config.RSI_PROFIT1_PCT)
+        threshold = avg_cost * (1 + rules.profit1_pct)
         if price < threshold:
             return []
-        if not lot["exception_active"] and trading_days_elapsed <= config.RSI_EXCEPTION_WINDOW_TRADING_DAYS:
+        if not lot["exception_active"] and trading_days_elapsed <= rules.exception_window_trading_days:
             return [{
                 "kind": "exception_trigger", "action": "HOLD", "ticker": lot["ticker"], "lot_id": lot["lot_id"],
             }]
-        qty = int(lot["shares"] * config.RSI_PROFIT1_SELL_FRACTION)
+        qty = int(lot["shares"] * rules.profit1_sell_fraction)
         if qty <= 0:
             return []
         return [{
@@ -174,11 +255,11 @@ def decide_profit_takes(lot: dict[str, Any], price: float, current_date: str, tr
         }]
 
     if not lot["profit2_taken"]:
-        threshold = avg_cost * (1 + config.RSI_PROFIT2_PCT)
+        threshold = avg_cost * (1 + rules.profit2_pct)
         if price < threshold:
             return []
         base_shares = lot["base_shares"]
-        qty = min(int(base_shares * config.RSI_PROFIT2_SELL_FRACTION), int(lot["shares"]))
+        qty = min(int(base_shares * rules.profit2_sell_fraction), int(lot["shares"]))
         if qty <= 0:
             return []
         return [{
@@ -205,11 +286,11 @@ def apply_pyramid_fill(lot: dict[str, Any], stage_index: int, filled_qty: int, f
     return new_lot
 
 
-def apply_exception_trigger(lot: dict[str, Any]) -> dict[str, Any]:
+def apply_exception_trigger(lot: dict[str, Any], rules: StrategyRules = US_RULES) -> dict[str, Any]:
     new_lot = dict(lot)
     new_lot["exception_active"] = True
     entry = dt.date.fromisoformat(lot["initial_entry_date"])
-    deadline = entry + dt.timedelta(days=config.RSI_EXCEPTION_HOLD_CALENDAR_DAYS)
+    deadline = entry + dt.timedelta(days=rules.exception_hold_calendar_days)
     new_lot["exception_deadline_date"] = deadline.isoformat()
     return new_lot
 
@@ -236,7 +317,9 @@ def apply_profit2_fill(lot: dict[str, Any], filled_qty: int) -> dict[str, Any]:
 # 実運用（rsi_daily.py）はbroker実約定を挟むため、この関数はそのまま流用しない。
 # ---------------------------------------------------------------------------
 
-def simulate_lot_day(lot: dict[str, Any], price: float, current_date: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def simulate_lot_day(
+    lot: dict[str, Any], price: float, current_date: str, rules: StrategyRules = US_RULES,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """1ロット・1日分の判定と約定を、約定価格=price として全て適用する（テスト専用の簡易実行器）。
 
     戻り値: (更新後のlot, 発生した取引記録のリスト)
@@ -245,9 +328,9 @@ def simulate_lot_day(lot: dict[str, Any], price: float, current_date: str) -> tu
 
     trading_days_elapsed = business_days_since(lot["initial_entry_date"], current_date)
 
-    # 買い増し（同日に複数段到達しうる）
-    for intent in decide_pyramid_buys(lot, price):
-        qty = int(intent["amount_usd"] / price + 1e-9)
+    # 買い増し（同日に複数段到達しうる）。lot_sizeが無い（米国枠）ロットは1株単位のまま。
+    for intent in decide_pyramid_buys(lot, price, rules):
+        qty = qty_for_amount(intent["amount_usd"], price, lot.get("lot_size", 1))
         if qty <= 0:
             continue
         lot = apply_pyramid_fill(lot, intent["stage_index"], qty, price)
@@ -255,12 +338,12 @@ def simulate_lot_day(lot: dict[str, Any], price: float, current_date: str) -> tu
 
     # 利確（利確1約定後に利確2条件も満たしうるため、決定が尽きるまで繰り返す）
     while True:
-        intents = decide_profit_takes(lot, price, current_date, trading_days_elapsed)
+        intents = decide_profit_takes(lot, price, current_date, trading_days_elapsed, rules)
         if not intents:
             break
         intent = intents[0]
         if intent["kind"] == "exception_trigger":
-            lot = apply_exception_trigger(lot)
+            lot = apply_exception_trigger(lot, rules)
             trades.append(intent)
             break
         if intent["kind"] == "profit1":

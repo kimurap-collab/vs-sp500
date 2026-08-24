@@ -120,3 +120,30 @@ RSI_PROFIT2_SELL_FRACTION = 0.25
 RSI_EXCEPTION_WINDOW_TRADING_DAYS = 15  # 初期エントリーからこの営業日数以内に+20%到達したら例外発動
 RSI_EXCEPTION_HOLD_CALENDAR_DAYS = 56   # 例外発動時、初期エントリーからこの暦日数まで利確を停止（8週間）
 RSI_UNIVERSE_REFRESH_DAY_OF_MONTH = 1   # ユニバース更新は月初のみ（この日以降で当月未更新なら更新）
+
+# --- 日本株RSI枠（2026-08-24 SPEC_RSI30.md追補。3本目の戦略枠。円建て・ベンチマーク無し） ---
+RSI_JP_LEDGER_DIR = LEDGER_DIR / "rsi_jp"
+RSI_JP_PORTFOLIO_PATH = RSI_JP_LEDGER_DIR / "portfolio.json"
+RSI_JP_TRADES_CSV_PATH = RSI_JP_LEDGER_DIR / "trades.csv"
+RSI_JP_HISTORY_CSV_PATH = RSI_JP_LEDGER_DIR / "history.csv"
+RSI_JP_FROZEN_CANDIDATES_PATH = RSI_JP_LEDGER_DIR / "frozen_candidates.json"
+RSI_JP_LOTSIZE_CACHE_PATH = BASE_DIR / "jp_lotsize.json"
+RSI_JP_LOTSIZE_REFRESH_DAY_OF_MONTH = 1  # lot_sizeキャッシュ更新は月初のみ（universe.jsonと同じ規約）
+
+RSI_JP_INITIAL_CAPITAL_JPY = 100_000_000.0  # 大将「予算は一億円」
+RSI_JP_ENTRY_RSI_THRESHOLD = 35.0  # 大将「rsi35-30までの銘柄」択一（１）＝35以下
+RSI_JP_ENTRY_AMOUNT_JPY = 3_000_000.0  # 大将「１銘柄３００万円でいこう」
+# 買い増し（初期エントリー価格基準）: +2.5%→150万円 / +5.0%→75万円 / +7.5%→75万円（比率4:2:1:1・米国版と同じ）
+RSI_JP_PYRAMID_TRIGGERS = (0.025, 0.05, 0.075)
+RSI_JP_PYRAMID_AMOUNTS_JPY = (1_500_000.0, 750_000.0, 750_000.0)
+RSI_JP_SCREENER_MIN_MARKET_CAP_JPY = 30_000_000_000.0  # 時価総額300億円以上
+RSI_JP_PROFIT1_PCT = 0.20    # 平均取得単価+20%で総株数の50%を売却（米国版と同じ）
+RSI_JP_PROFIT1_SELL_FRACTION = 0.5
+RSI_JP_PROFIT2_PCT = 0.25    # 平均取得単価+25%でさらに25%を売却（残り25%は無期限保有）
+RSI_JP_PROFIT2_SELL_FRACTION = 0.25
+RSI_JP_EXCEPTION_WINDOW_TRADING_DAYS = 15  # 米国版と同じ
+RSI_JP_EXCEPTION_HOLD_CALENDAR_DAYS = 56   # 米国版と同じ
+# 候補確定(freeze_candidates)のリトライはRSI米国枠と共用の定数をそのまま使う
+# （RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS / RSI_FREEZE_CANDIDATES_RETRY_DELAYS_SEC）
+RSI_JP_FROZEN_CANDIDATES_MAX_AGE_HOURS = 12.0
+JP_TRADING_DAY_TICKER = "1306.T"  # 日本の取引日判定用（TOPIX ETF。yfinance）

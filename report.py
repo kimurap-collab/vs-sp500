@@ -52,6 +52,9 @@ def build_rsi_block(
 
     diff_usd = rsi_nav_usd - rsi_bench_usd
     diff_pct = (diff_usd / rsi_bench_usd * 100.0) if rsi_bench_usd else 0.0
+    principal_usd = config.RSI_INITIAL_CAPITAL_USD
+    principal_diff_usd = rsi_nav_usd - principal_usd
+    principal_diff_pct = (principal_diff_usd / principal_usd * 100.0) if principal_usd else 0.0
 
     by_ticker: dict[str, dict[str, float]] = {}
     for lot in rsi_ledger.open_lots(rsi_state):
@@ -94,8 +97,92 @@ def build_rsi_block(
         "bench_usd": round(rsi_bench_usd, 2),
         "diff_usd": round(diff_usd, 2),
         "diff_pct": round(diff_pct, 2),
+        "principal_usd": round(principal_usd, 2),
+        "principal_diff_usd": round(principal_diff_usd, 2),
+        "principal_diff_pct": round(principal_diff_pct, 2),
         "cash_usd": round(rsi_state.get("cash_usd", 0.0), 2),
         "open_lots": len(rsi_ledger.open_lots(rsi_state)),
+        "holdings": holdings,
+        "history": history,
+        "trades": trades_recent,
+        "monthly": monthly,
+    }
+
+
+def build_rsi_jp_block(
+    jp_state: dict[str, Any],
+    jp_market_snap: dict[str, Any],
+    jp_nav_jpy: float,
+    jp_accepted_trades: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """日本株RSI枠のdata.json用ブロックを組み立てる（build_rsi_blockの日本株版）。
+
+    ベンチマーク無し（大将「戦わなくていい。元本からどれだけ増えたかだけでしい」）のため、
+    diff系の指標は全て元本(config.RSI_JP_INITIAL_CAPITAL_JPY)比で計算する。円建て・ドル換算はしない。
+    """
+    import jp_rsi_ledger
+
+    principal_jpy = config.RSI_JP_INITIAL_CAPITAL_JPY
+    diff_jpy = jp_nav_jpy - principal_jpy
+    diff_pct = (diff_jpy / principal_jpy * 100.0) if principal_jpy else 0.0
+
+    by_ticker: dict[str, dict[str, float]] = {}
+    for lot in jp_rsi_ledger.open_lots(jp_state):
+        t = lot["ticker"]
+        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0})
+        agg["shares"] += lot["shares"]
+        agg["invested"] += lot["shares"] * lot["avg_cost"]
+
+    holdings = []
+    for ticker, agg in by_ticker.items():
+        snap = jp_market_snap.get(ticker)
+        if snap is None or agg["shares"] <= 0:
+            continue
+        value_jpy = agg["shares"] * snap.close
+        weight_pct = (value_jpy / jp_nav_jpy * 100.0) if jp_nav_jpy else 0.0
+        holdings.append({
+            "ticker": ticker,
+            "shares": round(agg["shares"], 4),
+            "value_jpy": round(value_jpy, 0),
+            "weight_pct": round(weight_pct, 2),
+            "price": round(snap.close, 2),
+            "avg_cost": round(agg["invested"] / agg["shares"], 2),
+            "link": _ticker_link(ticker, "JPY"),
+        })
+    holdings.sort(key=lambda h: -h["value_jpy"])
+
+    history_rows = jp_rsi_ledger.read_history_rows()
+    history = [
+        {"date": r["date"], "nav": round(float(r["nav_jpy"]), 0), "principal": round(float(r["principal_jpy"]), 0)}
+        for r in history_rows
+    ]
+
+    trade_rows = jp_rsi_ledger.read_trade_rows()
+    trades_recent = trade_rows[-config.DATA_JSON_TRADES_LIMIT:]
+    trades_recent.reverse()
+
+    monthly = []
+    by_month: dict[str, dict[str, Any]] = {}
+    for row in history_rows:
+        by_month[row["date"][:7]] = row
+    for month, row in sorted(by_month.items()):
+        nav = float(row["nav_jpy"])
+        principal = float(row["principal_jpy"])
+        monthly.append({
+            "month": month,
+            "nav": round(nav, 0),
+            "principal": round(principal, 0),
+            "result": "win" if nav >= principal else "lose",
+        })
+
+    return {
+        "start_date": jp_state.get("start_date"),
+        "nav_jpy": round(jp_nav_jpy, 0),
+        "principal_jpy": round(principal_jpy, 0),
+        "diff_jpy": round(diff_jpy, 0),
+        "diff_pct": round(diff_pct, 2),
+        "cash_jpy": round(jp_state.get("cash_jpy", 0.0), 0),
+        "open_lots": len(jp_rsi_ledger.open_lots(jp_state)),
         "holdings": holdings,
         "history": history,
         "trades": trades_recent,
@@ -111,9 +198,13 @@ def build_data_json(
     accepted_trades: list[dict[str, Any]],
     now_jst: dt.datetime,
     rsi_block: dict[str, Any] | None = None,
+    rsi_jp_block: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     diff_usd = nav_usd - bench_usd
     diff_pct = (diff_usd / bench_usd * 100.0) if bench_usd else 0.0
+    principal_usd = config.INITIAL_CAPITAL_USD
+    principal_diff_usd = nav_usd - principal_usd
+    principal_diff_pct = (principal_diff_usd / principal_usd * 100.0) if principal_usd else 0.0
 
     from portfolio import compute_avg_costs, read_history_rows, read_trade_rows
 
@@ -160,6 +251,9 @@ def build_data_json(
         "bench_usd": round(bench_usd, 2),
         "diff_usd": round(diff_usd, 2),
         "diff_pct": round(diff_pct, 2),
+        "principal_usd": round(principal_usd, 2),
+        "principal_diff_usd": round(principal_diff_usd, 2),
+        "principal_diff_pct": round(principal_diff_pct, 2),
         "mode": state.get("mode"),
         "holdings": holdings,
         "cash_usd": round(state.get("cash_usd", 0.0), 2),
@@ -167,6 +261,7 @@ def build_data_json(
         "trades": trades_recent,
         "monthly": monthly,
         "rsi": rsi_block,
+        "rsi_jp": rsi_jp_block,
     }
 
 
@@ -225,6 +320,17 @@ def build_telegram_message(
     lines.append(f"評価額: ${data['nav_usd']:,.2f}")
     lines.append(f"対S&P: {sign}${diff_usd:,.2f} ({sign}{diff_pct:.2f}%) {emoji}")
     lines.append(trade_block)
+
+    rsi_jp = data.get("rsi_jp")
+    if rsi_jp and rsi_jp.get("start_date"):
+        jp_diff = rsi_jp["diff_jpy"]
+        jp_emoji = "🟢" if jp_diff >= 0 else "🔴"
+        jp_sign = "+" if jp_diff >= 0 else ""
+        lines.append(
+            f"🇯🇵 日本株RSI枠: ¥{rsi_jp['nav_jpy']:,.0f}（元本比 {jp_sign}¥{jp_diff:,.0f} "
+            f"{jp_sign}{rsi_jp['diff_pct']:.2f}%）{jp_emoji}"
+        )
+
     if resolved_pending_lines:
         # 滞留・行方不明の注文を自己解決した記録（行動を求める警告ではなくFYI。2026-08-18 修正2）
         lines.append("処理ログ:\n" + "\n".join(f"・{m}" for m in resolved_pending_lines))
