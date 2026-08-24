@@ -1,19 +1,22 @@
 {
-  "updated_at": "2026-08-24 03:00 JST",
+  "updated_at": "2026-08-25 03:00 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64027.59,
-  "bench_usd": 62995.03,
-  "diff_usd": 1032.55,
-  "diff_pct": 1.64,
+  "nav_usd": 63842.91,
+  "bench_usd": 62807.49,
+  "diff_usd": 1035.42,
+  "diff_pct": 1.65,
+  "principal_usd": 63343.06,
+  "principal_diff_usd": 499.85,
+  "principal_diff_pct": 0.79,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 14982.24,
-      "weight_pct": 23.4,
-      "price": 713.44,
+      "value_usd": 14845.11,
+      "weight_pct": 23.25,
+      "price": 706.91,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -24,9 +27,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3143.16,
-      "weight_pct": 4.91,
-      "price": 174.62,
+      "value_usd": 3138.39,
+      "weight_pct": 4.92,
+      "price": 174.355,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -37,9 +40,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 23.0,
-      "value_usd": 9737.28,
-      "weight_pct": 15.21,
-      "price": 423.36,
+      "value_usd": 9781.44,
+      "weight_pct": 15.32,
+      "price": 425.28,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -50,9 +53,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.0,
-      "value_usd": 3063.06,
-      "weight_pct": 4.78,
-      "price": 92.82,
+      "value_usd": 3070.32,
+      "weight_pct": 4.81,
+      "price": 93.04,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -63,9 +66,9 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.0,
-      "value_usd": 21815.01,
+      "value_usd": 21750.06,
       "weight_pct": 34.07,
-      "price": 703.71,
+      "price": 701.615,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -76,9 +79,9 @@
       "ticker": "EWJ",
       "name": "MSCI日本株 ETF",
       "shares": 65.0,
-      "value_usd": 6186.7,
-      "weight_pct": 9.66,
-      "price": 95.18,
+      "value_usd": 6157.45,
+      "weight_pct": 9.64,
+      "price": 94.73,
       "avg_cost": 96.49,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/EWJ",
@@ -142,6 +145,11 @@
       "date": "2026-08-21",
       "nav": 64027.59,
       "bench": 62995.03
+    },
+    {
+      "date": "2026-08-24",
+      "nav": 63842.91,
+      "bench": 62807.49
     }
   ],
   "trades": [
@@ -245,127 +253,157 @@
   "monthly": [
     {
       "month": "2026-08",
-      "nav": 64027.59,
-      "bench": 62995.03,
+      "nav": 63842.91,
+      "bench": 62807.49,
       "result": "win"
     }
   ],
   "rsi": {
     "start_date": "2026-08-14",
-    "nav_usd": 497551.04,
-    "bench_usd": 493063.45,
-    "diff_usd": 4487.59,
-    "diff_pct": 0.91,
-    "cash_usd": 140641.47,
-    "open_lots": 12,
+    "nav_usd": 496806.69,
+    "bench_usd": 491595.56,
+    "diff_usd": 5211.14,
+    "diff_pct": 1.06,
+    "principal_usd": 500000.0,
+    "principal_diff_usd": -3193.31,
+    "principal_diff_pct": -0.64,
+    "cash_usd": 21183.95,
+    "open_lots": 15,
     "holdings": [
+      {
+        "ticker": "ROL",
+        "shares": 1224.0,
+        "value_usd": 45734.76,
+        "weight_pct": 9.21,
+        "price": 37.365,
+        "avg_cost": 36.7279,
+        "link": "https://finance.yahoo.com/quote/ROL"
+      },
+      {
+        "ticker": "WMT",
+        "shares": 432.0,
+        "value_usd": 45660.24,
+        "weight_pct": 9.19,
+        "price": 105.695,
+        "avg_cost": 103.892,
+        "link": "https://finance.yahoo.com/quote/WMT"
+      },
       {
         "ticker": "STLD",
         "shares": 133.0,
-        "value_usd": 30414.44,
-        "weight_pct": 6.11,
-        "price": 228.68,
+        "value_usd": 30379.86,
+        "weight_pct": 6.12,
+        "price": 228.42,
         "avg_cost": 224.825,
         "link": "https://finance.yahoo.com/quote/STLD"
       },
       {
-        "ticker": "ROL",
-        "shares": 823.0,
-        "value_usd": 30376.93,
-        "weight_pct": 6.11,
-        "price": 36.91,
-        "avg_cost": 36.415,
-        "link": "https://finance.yahoo.com/quote/ROL"
-      },
-      {
         "ticker": "LUV",
         "shares": 748.0,
-        "value_usd": 30204.24,
-        "weight_pct": 6.07,
-        "price": 40.38,
+        "value_usd": 30316.44,
+        "weight_pct": 6.1,
+        "price": 40.53,
         "avg_cost": 40.08,
         "link": "https://finance.yahoo.com/quote/LUV"
       },
       {
-        "ticker": "WMT",
-        "shares": 291.0,
-        "value_usd": 30176.7,
-        "weight_pct": 6.07,
-        "price": 103.7,
-        "avg_cost": 103.045,
-        "link": "https://finance.yahoo.com/quote/WMT"
+        "ticker": "CNP",
+        "shares": 771.0,
+        "value_usd": 29984.19,
+        "weight_pct": 6.04,
+        "price": 38.89,
+        "avg_cost": 38.885,
+        "link": "https://finance.yahoo.com/quote/CNP"
       },
       {
-        "ticker": "CDNS",
-        "shares": 94.0,
-        "value_usd": 29987.88,
-        "weight_pct": 6.03,
-        "price": 319.02,
-        "avg_cost": 318.89,
-        "link": "https://finance.yahoo.com/quote/CDNS"
+        "ticker": "PEG",
+        "shares": 409.0,
+        "value_usd": 29930.62,
+        "weight_pct": 6.02,
+        "price": 73.18,
+        "avg_cost": 73.15,
+        "link": "https://finance.yahoo.com/quote/PEG"
+      },
+      {
+        "ticker": "CMI",
+        "shares": 52.0,
+        "value_usd": 29662.88,
+        "weight_pct": 5.97,
+        "price": 570.44,
+        "avg_cost": 570.64,
+        "link": "https://finance.yahoo.com/quote/CMI"
       },
       {
         "ticker": "TJX",
         "shares": 212.0,
-        "value_usd": 29792.36,
-        "weight_pct": 5.99,
-        "price": 140.53,
+        "value_usd": 29651.38,
+        "weight_pct": 5.97,
+        "price": 139.865,
         "avg_cost": 141.48,
         "link": "https://finance.yahoo.com/quote/TJX"
       },
       {
         "ticker": "TTD",
         "shares": 2235.0,
-        "value_usd": 29457.3,
-        "weight_pct": 5.92,
-        "price": 13.18,
+        "value_usd": 29647.28,
+        "weight_pct": 5.97,
+        "price": 13.265,
         "avg_cost": 13.415,
         "link": "https://finance.yahoo.com/quote/TTD"
       },
       {
-        "ticker": "LII",
-        "shares": 73.0,
-        "value_usd": 29409.51,
-        "weight_pct": 5.91,
-        "price": 402.87,
-        "avg_cost": 410.565,
-        "link": "https://finance.yahoo.com/quote/LII"
-      },
-      {
-        "ticker": "DVA",
-        "shares": 169.0,
-        "value_usd": 29375.58,
-        "weight_pct": 5.9,
-        "price": 173.82,
-        "avg_cost": 177.64,
-        "link": "https://finance.yahoo.com/quote/DVA"
-      },
-      {
-        "ticker": "APP",
-        "shares": 96.0,
-        "value_usd": 29353.92,
-        "weight_pct": 5.9,
-        "price": 305.77,
-        "avg_cost": 309.32,
-        "link": "https://finance.yahoo.com/quote/APP"
+        "ticker": "CDNS",
+        "shares": 94.0,
+        "value_usd": 29418.24,
+        "weight_pct": 5.92,
+        "price": 312.96,
+        "avg_cost": 318.89,
+        "link": "https://finance.yahoo.com/quote/CDNS"
       },
       {
         "ticker": "CHRW",
         "shares": 207.0,
-        "value_usd": 29317.41,
-        "weight_pct": 5.89,
-        "price": 141.63,
+        "value_usd": 29412.63,
+        "weight_pct": 5.92,
+        "price": 142.09,
         "avg_cost": 144.45,
         "link": "https://finance.yahoo.com/quote/CHRW"
       },
       {
+        "ticker": "DVA",
+        "shares": 169.0,
+        "value_usd": 29154.19,
+        "weight_pct": 5.87,
+        "price": 172.51,
+        "avg_cost": 177.64,
+        "link": "https://finance.yahoo.com/quote/DVA"
+      },
+      {
         "ticker": "NI",
         "shares": 715.0,
-        "value_usd": 29043.3,
+        "value_usd": 29021.85,
         "weight_pct": 5.84,
-        "price": 40.62,
+        "price": 40.59,
         "avg_cost": 41.915,
         "link": "https://finance.yahoo.com/quote/NI"
+      },
+      {
+        "ticker": "LII",
+        "shares": 73.0,
+        "value_usd": 28948.51,
+        "weight_pct": 5.83,
+        "price": 396.555,
+        "avg_cost": 410.565,
+        "link": "https://finance.yahoo.com/quote/LII"
+      },
+      {
+        "ticker": "APP",
+        "shares": 96.0,
+        "value_usd": 28699.68,
+        "weight_pct": 5.78,
+        "price": 298.955,
+        "avg_cost": 309.32,
+        "link": "https://finance.yahoo.com/quote/APP"
       }
     ],
     "history": [
@@ -398,9 +436,69 @@
         "date": "2026-08-21",
         "nav": 497551.04,
         "bench": 493063.45
+      },
+      {
+        "date": "2026-08-24",
+        "nav": 496806.69,
+        "bench": 491595.56
       }
     ],
     "trades": [
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "PEG",
+        "shares": "409",
+        "price": "73.15",
+        "amount_usd": "29918.35",
+        "rule": "entry",
+        "lot_id": "PEG-2026-08-24-1",
+        "note": "RSI14=31.0 basis=live"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "CMI",
+        "shares": "52",
+        "price": "570.64",
+        "amount_usd": "29673.28",
+        "rule": "entry",
+        "lot_id": "CMI-2026-08-24-1",
+        "note": "RSI14=29.3 basis=live"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "CNP",
+        "shares": "771",
+        "price": "38.885",
+        "amount_usd": "29980.33",
+        "rule": "entry",
+        "lot_id": "CNP-2026-08-24-1",
+        "note": "RSI14=28.7 basis=live"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "WMT",
+        "shares": "141",
+        "price": "105.64",
+        "amount_usd": "14895.24",
+        "rule": "pyramid1",
+        "lot_id": "WMT-2026-08-21-1",
+        "note": ""
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "ROL",
+        "shares": "401",
+        "price": "37.37",
+        "amount_usd": "14985.37",
+        "rule": "pyramid1",
+        "lot_id": "ROL-2026-08-18-1",
+        "note": ""
+      },
       {
         "date": "2026-08-21",
         "action": "BUY",
@@ -537,8 +635,296 @@
     "monthly": [
       {
         "month": "2026-08",
-        "nav": 497551.04,
-        "bench": 493063.45,
+        "nav": 496806.69,
+        "bench": 491595.56,
+        "result": "win"
+      }
+    ]
+  },
+  "rsi_jp": {
+    "start_date": "2026-08-24",
+    "nav_jpy": 100000000.0,
+    "principal_jpy": 100000000.0,
+    "diff_jpy": 0.0,
+    "diff_pct": 0.0,
+    "cash_jpy": 64820610.0,
+    "open_lots": 13,
+    "holdings": [
+      {
+        "ticker": "7532",
+        "shares": 3700.0,
+        "value_jpy": 2999590.0,
+        "weight_pct": 3.0,
+        "price": 810.7,
+        "avg_cost": 810.7,
+        "link": "https://finance.yahoo.co.jp/quote/7532"
+      },
+      {
+        "ticker": "3905",
+        "shares": 1800.0,
+        "value_jpy": 2991600.0,
+        "weight_pct": 2.99,
+        "price": 1662.0,
+        "avg_cost": 1662.0,
+        "link": "https://finance.yahoo.co.jp/quote/3905"
+      },
+      {
+        "ticker": "3455",
+        "shares": 30.0,
+        "value_jpy": 2976000.0,
+        "weight_pct": 2.98,
+        "price": 99200.0,
+        "avg_cost": 99200.0,
+        "link": "https://finance.yahoo.co.jp/quote/3455"
+      },
+      {
+        "ticker": "6235",
+        "shares": 1100.0,
+        "value_jpy": 2920500.0,
+        "weight_pct": 2.92,
+        "price": 2655.0,
+        "avg_cost": 2655.0,
+        "link": "https://finance.yahoo.co.jp/quote/6235"
+      },
+      {
+        "ticker": "4980",
+        "shares": 1000.0,
+        "value_jpy": 2903500.0,
+        "weight_pct": 2.9,
+        "price": 2903.5,
+        "avg_cost": 2903.5,
+        "link": "https://finance.yahoo.co.jp/quote/4980"
+      },
+      {
+        "ticker": "268A",
+        "shares": 1700.0,
+        "value_jpy": 2840700.0,
+        "weight_pct": 2.84,
+        "price": 1671.0,
+        "avg_cost": 1671.0,
+        "link": "https://finance.yahoo.co.jp/quote/268A"
+      },
+      {
+        "ticker": "4047",
+        "shares": 1200.0,
+        "value_jpy": 2787600.0,
+        "weight_pct": 2.79,
+        "price": 2323.0,
+        "avg_cost": 2323.0,
+        "link": "https://finance.yahoo.co.jp/quote/4047"
+      },
+      {
+        "ticker": "6013",
+        "shares": 900.0,
+        "value_jpy": 2758500.0,
+        "weight_pct": 2.76,
+        "price": 3065.0,
+        "avg_cost": 3065.0,
+        "link": "https://finance.yahoo.co.jp/quote/6013"
+      },
+      {
+        "ticker": "7966",
+        "shares": 500.0,
+        "value_jpy": 2720000.0,
+        "weight_pct": 2.72,
+        "price": 5440.0,
+        "avg_cost": 5440.0,
+        "link": "https://finance.yahoo.co.jp/quote/7966"
+      },
+      {
+        "ticker": "6479",
+        "shares": 800.0,
+        "value_jpy": 2675200.0,
+        "weight_pct": 2.68,
+        "price": 3344.0,
+        "avg_cost": 3344.0,
+        "link": "https://finance.yahoo.co.jp/quote/6479"
+      },
+      {
+        "ticker": "5334",
+        "shares": 300.0,
+        "value_jpy": 2615700.0,
+        "weight_pct": 2.62,
+        "price": 8719.0,
+        "avg_cost": 8719.0,
+        "link": "https://finance.yahoo.co.jp/quote/5334"
+      },
+      {
+        "ticker": "6367",
+        "shares": 100.0,
+        "value_jpy": 2085500.0,
+        "weight_pct": 2.09,
+        "price": 20855.0,
+        "avg_cost": 20855.0,
+        "link": "https://finance.yahoo.co.jp/quote/6367"
+      },
+      {
+        "ticker": "4966",
+        "shares": 100.0,
+        "value_jpy": 1905000.0,
+        "weight_pct": 1.91,
+        "price": 19050.0,
+        "avg_cost": 19050.0,
+        "link": "https://finance.yahoo.co.jp/quote/4966"
+      }
+    ],
+    "history": [
+      {
+        "date": "2026-08-24",
+        "nav": 100000000.0,
+        "principal": 100000000.0
+      }
+    ],
+    "trades": [
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "7532",
+        "shares": "3700",
+        "price": "810.7",
+        "amount_jpy": "2999590.0",
+        "rule": "entry",
+        "lot_id": "7532-2026-08-24-1",
+        "note": "RSI14=35.0 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "4047",
+        "shares": "1200",
+        "price": "2323.0",
+        "amount_jpy": "2787600.0",
+        "rule": "entry",
+        "lot_id": "4047-2026-08-24-1",
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "4966",
+        "shares": "100",
+        "price": "19050.0",
+        "amount_jpy": "1905000.0",
+        "rule": "entry",
+        "lot_id": "4966-2026-08-24-1",
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "4980",
+        "shares": "1000",
+        "price": "2903.5",
+        "amount_jpy": "2903500.0",
+        "rule": "entry",
+        "lot_id": "4980-2026-08-24-1",
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "268A",
+        "shares": "1700",
+        "price": "1671.0",
+        "amount_jpy": "2840700.0",
+        "rule": "entry",
+        "lot_id": "268A-2026-08-24-1",
+        "note": "RSI14=34.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "7966",
+        "shares": "500",
+        "price": "5440.0",
+        "amount_jpy": "2720000.0",
+        "rule": "entry",
+        "lot_id": "7966-2026-08-24-1",
+        "note": "RSI14=33.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "3905",
+        "shares": "1800",
+        "price": "1662.0",
+        "amount_jpy": "2991600.0",
+        "rule": "entry",
+        "lot_id": "3905-2026-08-24-1",
+        "note": "RSI14=33.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "5334",
+        "shares": "300",
+        "price": "8719.0",
+        "amount_jpy": "2615700.0",
+        "rule": "entry",
+        "lot_id": "5334-2026-08-24-1",
+        "note": "RSI14=33.4 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "6479",
+        "shares": "800",
+        "price": "3344.0",
+        "amount_jpy": "2675200.0",
+        "rule": "entry",
+        "lot_id": "6479-2026-08-24-1",
+        "note": "RSI14=32.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "6235",
+        "shares": "1100",
+        "price": "2655.0",
+        "amount_jpy": "2920500.0",
+        "rule": "entry",
+        "lot_id": "6235-2026-08-24-1",
+        "note": "RSI14=32.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "6013",
+        "shares": "900",
+        "price": "3065.0",
+        "amount_jpy": "2758500.0",
+        "rule": "entry",
+        "lot_id": "6013-2026-08-24-1",
+        "note": "RSI14=31.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "6367",
+        "shares": "100",
+        "price": "20855.0",
+        "amount_jpy": "2085500.0",
+        "rule": "entry",
+        "lot_id": "6367-2026-08-24-1",
+        "note": "RSI14=28.1 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+      },
+      {
+        "date": "2026-08-24",
+        "action": "BUY",
+        "ticker": "3455",
+        "shares": "30",
+        "price": "99200.0",
+        "amount_jpy": "2976000.0",
+        "rule": "entry",
+        "lot_id": "3455-2026-08-24-1",
+        "note": "RSI14=27.9 lot_size=1・moomoo発注なし・台帳のみの仮想売買"
+      }
+    ],
+    "monthly": [
+      {
+        "month": "2026-08",
+        "nav": 100000000.0,
+        "principal": 100000000.0,
         "result": "win"
       }
     ]
