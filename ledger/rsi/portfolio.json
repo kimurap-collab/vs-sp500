@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 21183.945000000007,
+  "cash_usd": 6448.380000000005,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -250,13 +250,13 @@
       "initial_entry_date": "2026-08-21",
       "initial_entry_price": 318.89,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 94,
-      "total_invested_usd": 29975.66,
-      "avg_cost": 318.89,
+      "shares": 139,
+      "total_invested_usd": 44710.235,
+      "avg_cost": 321.65636690647483,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -337,6 +337,6 @@
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-08-24",
+  "last_processed_date": "2026-08-25",
   "pending_orders": []
 }

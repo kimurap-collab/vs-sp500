@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 64820610.0,
+  "cash_jpy": 56398110.0,
   "lots": [
     {
       "lot_id": "3455-2026-08-24-1",
@@ -19,8 +19,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -42,8 +42,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -65,8 +65,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -88,8 +88,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -111,8 +111,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -134,8 +134,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -157,8 +157,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -180,8 +180,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -203,8 +203,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -226,8 +226,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -249,8 +249,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -272,8 +272,8 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
-      "exception_active": false,
-      "exception_deadline_date": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
       "closed_date": null
@@ -295,6 +295,75 @@
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
+      "exception_active": true,
+      "exception_deadline_date": "2026-10-19",
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "1979-2026-08-25-1",
+      "ticker": "1979",
+      "initial_entry_date": "2026-08-25",
+      "initial_entry_price": 3900.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 700,
+      "lot_size": 100,
+      "total_invested_usd": 2730000.0,
+      "avg_cost": 3900.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6707-2026-08-25-1",
+      "ticker": "6707",
+      "initial_entry_date": "2026-08-25",
+      "initial_entry_price": 7398.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 400,
+      "lot_size": 100,
+      "total_invested_usd": 2959200.0,
+      "avg_cost": 7398.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6141-2026-08-25-1",
+      "ticker": "6141",
+      "initial_entry_date": "2026-08-25",
+      "initial_entry_price": 3037.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 900,
+      "lot_size": 100,
+      "total_invested_usd": 2733300.0,
+      "avg_cost": 3037.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
       "closed": false,
@@ -302,5 +371,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-08-24"
+  "last_processed_date": "2026-08-25"
 }
