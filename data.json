@@ -664,144 +664,108 @@
   },
   "rsi_jp": {
     "start_date": "2026-08-24",
-    "nav_jpy": NaN,
+    "nav_jpy": 100207310.0,
     "principal_jpy": 100000000.0,
-    "diff_jpy": NaN,
-    "diff_pct": NaN,
+    "diff_jpy": 207310.0,
+    "diff_pct": 0.21,
     "cash_jpy": 56398110.0,
     "open_lots": 16,
     "holdings": [
       {
+        "ticker": "4980",
+        "shares": 1000.0,
+        "value_jpy": 3021000.0,
+        "weight_pct": 3.01,
+        "price": 3021.0,
+        "avg_cost": 2903.5,
+        "link": "https://finance.yahoo.co.jp/quote/4980"
+      },
+      {
+        "ticker": "7532",
+        "shares": 3700.0,
+        "value_jpy": 3011800.0,
+        "weight_pct": 3.01,
+        "price": 814.0,
+        "avg_cost": 810.7,
+        "link": "https://finance.yahoo.co.jp/quote/7532"
+      },
+      {
+        "ticker": "6235",
+        "shares": 1100.0,
+        "value_jpy": 2996400.0,
+        "weight_pct": 2.99,
+        "price": 2724.0,
+        "avg_cost": 2655.0,
+        "link": "https://finance.yahoo.co.jp/quote/6235"
+      },
+      {
+        "ticker": "3455",
+        "shares": 30.0,
+        "value_jpy": 2985000.0,
+        "weight_pct": 2.98,
+        "price": 99500.0,
+        "avg_cost": 99200.0,
+        "link": "https://finance.yahoo.co.jp/quote/3455"
+      },
+      {
         "ticker": "6707",
         "shares": 400.0,
         "value_jpy": 2959200.0,
-        "weight_pct": NaN,
+        "weight_pct": 2.95,
         "price": 7398.0,
         "avg_cost": 7398.0,
         "link": "https://finance.yahoo.co.jp/quote/6707"
       },
       {
-        "ticker": "3455",
-        "shares": 30.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 99200.0,
-        "link": "https://finance.yahoo.co.jp/quote/3455"
-      },
-      {
-        "ticker": "6367",
-        "shares": 100.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 20855.0,
-        "link": "https://finance.yahoo.co.jp/quote/6367"
-      },
-      {
-        "ticker": "6013",
-        "shares": 900.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 3065.0,
-        "link": "https://finance.yahoo.co.jp/quote/6013"
-      },
-      {
-        "ticker": "6235",
-        "shares": 1100.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 2655.0,
-        "link": "https://finance.yahoo.co.jp/quote/6235"
-      },
-      {
-        "ticker": "6479",
-        "shares": 800.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 3344.0,
-        "link": "https://finance.yahoo.co.jp/quote/6479"
-      },
-      {
-        "ticker": "5334",
-        "shares": 300.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 8719.0,
-        "link": "https://finance.yahoo.co.jp/quote/5334"
-      },
-      {
         "ticker": "3905",
         "shares": 1800.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
+        "value_jpy": 2905200.0,
+        "weight_pct": 2.9,
+        "price": 1614.0,
         "avg_cost": 1662.0,
         "link": "https://finance.yahoo.co.jp/quote/3905"
       },
       {
-        "ticker": "7966",
-        "shares": 500.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 5440.0,
-        "link": "https://finance.yahoo.co.jp/quote/7966"
-      },
-      {
         "ticker": "268A",
         "shares": 1700.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
+        "value_jpy": 2852600.0,
+        "weight_pct": 2.85,
+        "price": 1678.0,
         "avg_cost": 1671.0,
         "link": "https://finance.yahoo.co.jp/quote/268A"
       },
       {
-        "ticker": "4980",
-        "shares": 1000.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 2903.5,
-        "link": "https://finance.yahoo.co.jp/quote/4980"
-      },
-      {
-        "ticker": "4966",
-        "shares": 100.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 19050.0,
-        "link": "https://finance.yahoo.co.jp/quote/4966"
-      },
-      {
         "ticker": "4047",
         "shares": 1200.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
+        "value_jpy": 2799600.0,
+        "weight_pct": 2.79,
+        "price": 2333.0,
         "avg_cost": 2323.0,
         "link": "https://finance.yahoo.co.jp/quote/4047"
       },
       {
-        "ticker": "7532",
-        "shares": 3700.0,
-        "value_jpy": NaN,
-        "weight_pct": NaN,
-        "price": NaN,
-        "avg_cost": 810.7,
-        "link": "https://finance.yahoo.co.jp/quote/7532"
+        "ticker": "6013",
+        "shares": 900.0,
+        "value_jpy": 2763000.0,
+        "weight_pct": 2.76,
+        "price": 3070.0,
+        "avg_cost": 3065.0,
+        "link": "https://finance.yahoo.co.jp/quote/6013"
+      },
+      {
+        "ticker": "7966",
+        "shares": 500.0,
+        "value_jpy": 2735000.0,
+        "weight_pct": 2.73,
+        "price": 5470.0,
+        "avg_cost": 5440.0,
+        "link": "https://finance.yahoo.co.jp/quote/7966"
       },
       {
         "ticker": "6141",
         "shares": 900.0,
         "value_jpy": 2733300.0,
-        "weight_pct": NaN,
+        "weight_pct": 2.73,
         "price": 3037.0,
         "avg_cost": 3037.0,
         "link": "https://finance.yahoo.co.jp/quote/6141"
@@ -810,10 +774,46 @@
         "ticker": "1979",
         "shares": 700.0,
         "value_jpy": 2730000.0,
-        "weight_pct": NaN,
+        "weight_pct": 2.72,
         "price": 3900.0,
         "avg_cost": 3900.0,
         "link": "https://finance.yahoo.co.jp/quote/1979"
+      },
+      {
+        "ticker": "6479",
+        "shares": 800.0,
+        "value_jpy": 2676800.0,
+        "weight_pct": 2.67,
+        "price": 3346.0,
+        "avg_cost": 3344.0,
+        "link": "https://finance.yahoo.co.jp/quote/6479"
+      },
+      {
+        "ticker": "5334",
+        "shares": 300.0,
+        "value_jpy": 2610300.0,
+        "weight_pct": 2.6,
+        "price": 8701.0,
+        "avg_cost": 8719.0,
+        "link": "https://finance.yahoo.co.jp/quote/5334"
+      },
+      {
+        "ticker": "6367",
+        "shares": 100.0,
+        "value_jpy": 2083000.0,
+        "weight_pct": 2.08,
+        "price": 20830.0,
+        "avg_cost": 20855.0,
+        "link": "https://finance.yahoo.co.jp/quote/6367"
+      },
+      {
+        "ticker": "4966",
+        "shares": 100.0,
+        "value_jpy": 1947000.0,
+        "weight_pct": 1.94,
+        "price": 19470.0,
+        "avg_cost": 19050.0,
+        "link": "https://finance.yahoo.co.jp/quote/4966"
       }
     ],
     "history": [
@@ -824,7 +824,7 @@
       },
       {
         "date": "2026-08-25",
-        "nav": NaN,
+        "nav": 100207310.0,
         "principal": 100000000.0
       }
     ],
@@ -1009,9 +1009,9 @@
     "monthly": [
       {
         "month": "2026-08",
-        "nav": NaN,
+        "nav": 100207310.0,
         "principal": 100000000.0,
-        "result": "lose"
+        "result": "win"
       }
     ]
   }

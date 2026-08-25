@@ -9,8 +9,12 @@ from __future__ import annotations
 
 import datetime as dt
 import unittest
+from unittest import mock
+
+import pandas as pd
 
 import config
+import jp_market
 import jp_rsi_daily
 import rsi_strategy as rs
 
@@ -169,6 +173,69 @@ class TestJpCashPriority(unittest.TestCase):
         available_cash = config.RSI_JP_ENTRY_AMOUNT_JPY
         selected = rs.select_entries_within_cash(candidates, available_cash, rules=rs.JP_RULES)
         self.assertEqual([c["ticker"] for c in selected], ["B"])  # RSI最小
+
+
+class TestGetSnapshotsNanCloseFallback(unittest.TestCase):
+    """診断: yfinanceのhistory(period='5d')は日本株(.T)について深夜、Yahooの複数日レンジ
+    エンドポイントの反映遅延により最新営業日の行をClose=NaNで返すことがある
+    （2026-08-26 02:00 JST実測）。同時刻のhistory(period='1d')では正常値が返ることを
+    確認済みのため、そのフォールバック挙動をyf.Tickerをモックして検証する。"""
+
+    @staticmethod
+    def _df(dates, closes):
+        index = pd.DatetimeIndex([pd.Timestamp(d) for d in dates])
+        return pd.DataFrame({"Close": closes}, index=index)
+
+    @staticmethod
+    def _empty_df():
+        return pd.DataFrame({"Close": pd.Series(dtype="float64")})
+
+    @staticmethod
+    def _fake_ticker_factory(hist_5d, hist_1d):
+        class _FakeTicker:
+            def __init__(self, ticker):
+                self.ticker = ticker
+
+            def history(self, period=None, auto_adjust=None):
+                if period == "5d":
+                    return hist_5d
+                if period == "1d":
+                    return hist_1d
+                raise AssertionError(f"unexpected period: {period!r}")
+
+        return _FakeTicker
+
+    def test_a_5d_latest_nan_1d_has_newer_valid_close(self):
+        # 5dの最終行(8/25)がNaN・1dに同日8/25の有効な終値がある → 1dの終値・日付を採用
+        hist_5d = self._df(["2026-08-24", "2026-08-25"], [100.0, float("nan")])
+        hist_1d = self._df(["2026-08-25"], [105.0])
+        with mock.patch.object(jp_market.yf, "Ticker", self._fake_ticker_factory(hist_5d, hist_1d)):
+            result = jp_market.get_snapshots(["6367"])
+
+        self.assertIn("6367", result)
+        self.assertEqual(result["6367"].close, 105.0)
+        self.assertEqual(result["6367"].date, "2026-08-25")
+
+    def test_b_5d_latest_nan_1d_empty_falls_back_to_5d_last_valid(self):
+        # 5dの最終行(8/25)がNaN・1dは空 → 5dの直近の有効な終値(8/24)を採用
+        hist_5d = self._df(["2026-08-24", "2026-08-25"], [100.0, float("nan")])
+        hist_1d = self._empty_df()
+        with mock.patch.object(jp_market.yf, "Ticker", self._fake_ticker_factory(hist_5d, hist_1d)):
+            result = jp_market.get_snapshots(["6367"])
+
+        self.assertIn("6367", result)
+        self.assertEqual(result["6367"].close, 100.0)
+        self.assertEqual(result["6367"].date, "2026-08-24")
+
+    def test_c_5d_all_nan_and_1d_empty_is_skipped(self):
+        # 5dが全行NaN・1dも空 → 有効な終値が無いのでこの銘柄は結果に含めない
+        hist_5d = self._df(["2026-08-24", "2026-08-25"], [float("nan"), float("nan")])
+        hist_1d = self._empty_df()
+        with mock.patch.object(jp_market.yf, "Ticker", self._fake_ticker_factory(hist_5d, hist_1d)):
+            result = jp_market.get_snapshots(["6367"])
+
+        self.assertNotIn("6367", result)
+        self.assertEqual(result, {})
 
 
 if __name__ == "__main__":
