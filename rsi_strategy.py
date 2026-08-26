@@ -15,7 +15,7 @@ brokerに触れずにルールだけを検証する。
 既存テストの挙動は一切変わらない。
 
 ロットのスキーマ:
-    lot_id, ticker, initial_entry_date, initial_entry_price,
+    lot_id, ticker, name（企業名。取得できない場合はNone）, initial_entry_date, initial_entry_price,
     pyramid_done (3要素のbool配列: +2.5%/+5.0%/+7.5%),
     shares, total_invested_usd, avg_cost, lot_size（単元株数。米国は1固定）,
     profit1_taken, profit2_taken, base_shares（利確1発動時点の株数）,
@@ -163,10 +163,13 @@ def filter_blocked_entries(
 
 def new_lot(
     ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_price: float, lot_size: int = 1,
+    name: str | None = None,
 ) -> dict[str, Any]:
     """RSIエントリー条件成立後の約定を受け、新しいロットを作る。
 
     lot_size: このロットの買い増しに使う単元株数（米国枠は既定の1のまま）。
+    name: moomooスクリーナーから取得した企業名（2026-08-26追加。管理画面・Telegram報告で
+    ティッカーだけでは判別できない銘柄を人間が識別できるようにするため。取得できなければNone）。
     フィールド名は"total_invested_usd"のままだが、日本株RSI枠では円建ての値を保持する
     （米国枠と完全に同じスキーマを共用するための既知の命名の名残。値の単位は通貨で変わる）。
     """
@@ -174,6 +177,7 @@ def new_lot(
     return {
         "lot_id": lot_id,
         "ticker": ticker,
+        "name": name,
         "initial_entry_date": entry_date,
         "initial_entry_price": fill_price,
         "pyramid_done": [False, False, False],

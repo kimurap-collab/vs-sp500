@@ -23,7 +23,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Healthcare & Medical Investment"
     },
     {
       "lot_id": "6367-2026-08-24-1",
@@ -46,7 +47,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Daikin Industries"
     },
     {
       "lot_id": "6013-2026-08-24-1",
@@ -69,7 +71,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Takuma"
     },
     {
       "lot_id": "6235-2026-08-24-1",
@@ -92,7 +95,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Optorun"
     },
     {
       "lot_id": "6479-2026-08-24-1",
@@ -115,7 +119,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Minebea Mitsumi"
     },
     {
       "lot_id": "5334-2026-08-24-1",
@@ -138,7 +143,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Niterra"
     },
     {
       "lot_id": "3905-2026-08-24-1",
@@ -161,7 +167,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Datasection"
     },
     {
       "lot_id": "7966-2026-08-24-1",
@@ -184,7 +191,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "LINTEC"
     },
     {
       "lot_id": "268A-2026-08-24-1",
@@ -207,7 +215,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Rigaku Holdings"
     },
     {
       "lot_id": "4980-2026-08-24-1",
@@ -230,7 +239,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Dexerials"
     },
     {
       "lot_id": "4966-2026-08-24-1",
@@ -253,7 +263,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "C. Uyemura"
     },
     {
       "lot_id": "4047-2026-08-24-1",
@@ -276,7 +287,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Kanto Denka Kogyo"
     },
     {
       "lot_id": "7532-2026-08-24-1",
@@ -299,7 +311,8 @@
       "exception_deadline_date": "2026-10-19",
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Pan Pacific International Holdings"
     },
     {
       "lot_id": "1979-2026-08-25-1",
@@ -322,7 +335,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Taikisha"
     },
     {
       "lot_id": "6707-2026-08-25-1",
@@ -345,7 +359,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Sanken Electric"
     },
     {
       "lot_id": "6141-2026-08-25-1",
@@ -368,7 +383,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Dmg Mori"
     }
   ],
   "last_processed_date": "2026-08-25"

@@ -622,6 +622,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         message = report.build_telegram_message(
             data, accepted_trades, now_jst, prev_month_line, alert_lines,
             resolved_pending_lines=pending_resolution_lines,
+            rsi_accepted_trades=rsi_accepted_trades, rsi_jp_accepted_trades=rsi_jp_accepted_trades,
         )
         if dry_run:
             log_and_report("[9] dry-runのためTelegram送信はスキップ。送信予定文面:\n" + message)

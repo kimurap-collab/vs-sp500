@@ -56,10 +56,10 @@ def build_rsi_block(
     principal_diff_usd = rsi_nav_usd - principal_usd
     principal_diff_pct = (principal_diff_usd / principal_usd * 100.0) if principal_usd else 0.0
 
-    by_ticker: dict[str, dict[str, float]] = {}
+    by_ticker: dict[str, dict[str, Any]] = {}
     for lot in rsi_ledger.open_lots(rsi_state):
         t = lot["ticker"]
-        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0})
+        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0, "name": lot.get("name")})
         agg["shares"] += lot["shares"]
         agg["invested"] += lot["shares"] * lot["avg_cost"]
 
@@ -72,6 +72,7 @@ def build_rsi_block(
         weight_pct = (value_usd / rsi_nav_usd * 100.0) if rsi_nav_usd else 0.0
         holdings.append({
             "ticker": ticker,
+            "name": agg.get("name"),
             "shares": round(agg["shares"], 4),
             "value_usd": round(value_usd, 2),
             "weight_pct": round(weight_pct, 2),
@@ -126,10 +127,10 @@ def build_rsi_jp_block(
     diff_jpy = jp_nav_jpy - principal_jpy
     diff_pct = (diff_jpy / principal_jpy * 100.0) if principal_jpy else 0.0
 
-    by_ticker: dict[str, dict[str, float]] = {}
+    by_ticker: dict[str, dict[str, Any]] = {}
     for lot in jp_rsi_ledger.open_lots(jp_state):
         t = lot["ticker"]
-        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0})
+        agg = by_ticker.setdefault(t, {"shares": 0.0, "invested": 0.0, "name": lot.get("name")})
         agg["shares"] += lot["shares"]
         agg["invested"] += lot["shares"] * lot["avg_cost"]
 
@@ -142,6 +143,7 @@ def build_rsi_jp_block(
         weight_pct = (value_jpy / jp_nav_jpy * 100.0) if jp_nav_jpy else 0.0
         holdings.append({
             "ticker": ticker,
+            "name": agg.get("name"),
             "shares": round(agg["shares"], 4),
             "value_jpy": round(value_jpy, 0),
             "weight_pct": round(weight_pct, 2),
@@ -241,6 +243,10 @@ def build_data_json(
     trade_rows = read_trade_rows()
     trades_recent = trade_rows[-config.DATA_JSON_TRADES_LIMIT:]
     trades_recent.reverse()
+    # 本体のtrades.csvには銘柄名を持たせていない（config.WHITELISTに既にあるため。2026-08-26）。
+    # 表示側でticker→nameを引くだけで済ませ、台帳スキーマは変更しない。
+    for t in trades_recent:
+        t["name"] = config.WHITELIST.get(t["ticker"], {}).get("name", "")
 
     monthly = _build_monthly_table(history_rows)
 
@@ -289,6 +295,16 @@ def save_data_json(data: dict[str, Any]) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def _trade_line(t: dict[str, Any], amount_key: str, symbol: str, decimals: int) -> str:
+    """1件の取引をTelegram表示用の1行にする（会社名が取れていれば銘柄コードの後に添える。
+    2026-08-26追加: 銘柄コードだけでは何を売買したか分からないという大将の指摘への対応）。
+    """
+    name = t.get("name")
+    name_part = f" {name}" if name else ""
+    amount = t[amount_key]
+    return f"・{t['action']} {t['ticker']}{name_part} {symbol}{amount:,.{decimals}f}（{t['rule']}）"
+
+
 def build_telegram_message(
     data: dict[str, Any],
     accepted_trades: list[dict[str, Any]],
@@ -296,6 +312,8 @@ def build_telegram_message(
     prev_month_result_line: str | None = None,
     alert_lines: list[str] | None = None,
     resolved_pending_lines: list[str] | None = None,
+    rsi_accepted_trades: list[dict[str, Any]] | None = None,
+    rsi_jp_accepted_trades: list[dict[str, Any]] | None = None,
 ) -> str:
     date_str = f"{now_jst.month}/{now_jst.day}"
     diff_usd = data["diff_usd"]
@@ -304,9 +322,9 @@ def build_telegram_message(
     sign = "+" if diff_usd >= 0 else ""
 
     if accepted_trades:
-        trade_lines = "\n".join(
-            f"・{t['action']} {t['ticker']} ${t['amount_usd']:,.2f}（{t['rule']}）" for t in accepted_trades
-        )
+        # 本体のtrades.csvには銘柄名を持たせていない（config.WHITELISTに既にあるため）ので、ここで引く
+        enriched = [{**t, "name": config.WHITELIST.get(t["ticker"], {}).get("name", "")} for t in accepted_trades]
+        trade_lines = "\n".join(_trade_line(t, "amount_usd", "$", 2) for t in enriched)
         trade_block = f"売買:\n{trade_lines}"
     else:
         trade_block = "売買: なし（ホールド）"
@@ -321,6 +339,10 @@ def build_telegram_message(
     lines.append(f"対S&P: {sign}${diff_usd:,.2f} ({sign}{diff_pct:.2f}%) {emoji}")
     lines.append(trade_block)
 
+    if rsi_accepted_trades:
+        rsi_trade_lines = "\n".join(_trade_line(t, "amount_usd", "$", 2) for t in rsi_accepted_trades)
+        lines.append(f"RSI-30枠 売買:\n{rsi_trade_lines}")
+
     rsi_jp = data.get("rsi_jp")
     if rsi_jp and rsi_jp.get("start_date"):
         jp_diff = rsi_jp["diff_jpy"]
@@ -330,6 +352,10 @@ def build_telegram_message(
             f"🇯🇵 日本株RSI枠: ¥{rsi_jp['nav_jpy']:,.0f}（元本比 {jp_sign}¥{jp_diff:,.0f} "
             f"{jp_sign}{rsi_jp['diff_pct']:.2f}%）{jp_emoji}"
         )
+
+    if rsi_jp_accepted_trades:
+        jp_trade_lines = "\n".join(_trade_line(t, "amount_jpy", "¥", 0) for t in rsi_jp_accepted_trades)
+        lines.append(f"日本株RSI枠 売買:\n{jp_trade_lines}")
 
     if resolved_pending_lines:
         # 滞留・行方不明の注文を自己解決した記録（行動を求める警告ではなくFYI。2026-08-18 修正2）

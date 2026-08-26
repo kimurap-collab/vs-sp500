@@ -157,6 +157,7 @@ def screen_jp_candidates() -> list[dict[str, Any]] | None:
             "rsi14": float(rsi_val),
             "price": float(price),
             "market_cap": float(market_cap) if market_cap is not None else None,
+            "name": d.get("stock_name"),
         })
     screened.sort(key=lambda c: c["rsi14"])
     return screened
@@ -359,6 +360,7 @@ def run_jp(
                     "shares": qty, "price": round(price, 2), "amount_jpy": round(qty * price, 0),
                     "rule": intent["kind"], "lot_id": intent["lot_id"],
                     "note": "moomoo発注なし・台帳のみの仮想売買",
+                    "name": state["lots"][idx].get("name"),
                 }
                 jp_rsi_ledger.append_trade_row(trade_row)
                 accepted_trades.append(trade_row)
@@ -390,6 +392,7 @@ def run_jp(
                     "shares": qty, "price": round(price, 2), "amount_jpy": round(cost, 0),
                     "rule": intent["kind"], "lot_id": intent["lot_id"],
                     "note": "moomoo発注なし・台帳のみの仮想売買",
+                    "name": state["lots"][idx].get("name"),
                 }
                 jp_rsi_ledger.append_trade_row(trade_row)
                 accepted_trades.append(trade_row)
@@ -400,6 +403,7 @@ def run_jp(
             lot_id = _new_lot_id_jp(cand["ticker"], trading_date, state["lots"])
             new_lot = rsi_strategy.new_lot(
                 cand["ticker"], lot_id, trading_date, cand["qty"], cand["price"], cand["lot_size"],
+                name=cand.get("name"),
             )
             state["lots"].append(new_lot)
             cost = cand["qty"] * cand["price"]
@@ -409,6 +413,7 @@ def run_jp(
                 "shares": cand["qty"], "price": round(cand["price"], 2), "amount_jpy": round(cost, 0),
                 "rule": "entry", "lot_id": lot_id,
                 "note": f"RSI14={cand['rsi14']:.1f} lot_size={cand['lot_size']}・moomoo発注なし・台帳のみの仮想売買",
+                "name": cand.get("name"),
             }
             jp_rsi_ledger.append_trade_row(trade_row)
             accepted_trades.append(trade_row)

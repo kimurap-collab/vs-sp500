@@ -176,7 +176,7 @@ def screen_rsi_candidates() -> list[dict[str, Any]] | None:
         rsi_val = row.__dict__.get(("rsi", "14", "k_day"))
         if rsi_val is None:
             continue
-        screened.append({"ticker": ticker, "rsi14": float(rsi_val)})
+        screened.append({"ticker": ticker, "rsi14": float(rsi_val), "name": row.stock_name})
 
     if not screened:
         return []
@@ -188,7 +188,7 @@ def screen_rsi_candidates() -> list[dict[str, Any]] | None:
 
     candidates = [
         {
-            "ticker": c["ticker"], "rsi14": c["rsi14"],
+            "ticker": c["ticker"], "rsi14": c["rsi14"], "name": c.get("name"),
             "price": prices[c["ticker"]]["close"], "date": prices[c["ticker"]]["date"],
         }
         for c in screened
@@ -394,8 +394,9 @@ def settle_pending_orders(
             lot_id = order.get("lot_id", "")
 
             applied_ok = True
+            lot_name = order.get("name")
             if rule == "entry":
-                new_lot = rsi_strategy.new_lot(ticker, lot_id, fill_date, new_fill_qty, incremental_price)
+                new_lot = rsi_strategy.new_lot(ticker, lot_id, fill_date, new_fill_qty, incremental_price, name=lot_name)
                 state["lots"].append(new_lot)
             else:
                 idx = next((i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot_id), None)
@@ -409,12 +410,15 @@ def settle_pending_orders(
                     state["lots"][idx] = rsi_strategy.apply_pyramid_fill(
                         state["lots"][idx], order["stage_index"], new_fill_qty, incremental_price,
                     )
+                    lot_name = state["lots"][idx].get("name")
                 elif rule == "profit1":
                     state["lots"][idx] = rsi_strategy.apply_profit1_fill(
                         state["lots"][idx], new_fill_qty, order["base_shares"],
                     )
+                    lot_name = state["lots"][idx].get("name")
                 elif rule == "profit2":
                     state["lots"][idx] = rsi_strategy.apply_profit2_fill(state["lots"][idx], new_fill_qty)
+                    lot_name = state["lots"][idx].get("name")
                 else:
                     warnings.append(f"pending決済: 未知のrule={rule}（lot_id={lot_id}）。反映をスキップした")
                     remaining.append(order)
@@ -435,6 +439,7 @@ def settle_pending_orders(
                 "amount_usd": round(new_fill_qty * incremental_price, 2),
                 "rule": rule, "lot_id": lot_id,
                 "note": f"pending決済(order_id={order['order_id']})・手数料不明のため未計上",
+                "name": lot_name,
             }
             applied_trades.append(trade_row)
             warnings.append(
@@ -560,7 +565,7 @@ def run(
     # 新規エントリー候補から、保有中・利確前の銘柄を抑止する（2026-08-19改修1。大将「１だな」）。
     # dry-runでも現金が余った理由が追えるよう、実行判断（do_trade）とは独立に必ず計算・ログする。
     raw_entry_candidates = [
-        {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"]}
+        {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"], "name": c.get("name")}
         for c in rsi_candidates
         if c["ticker"] in market
     ]
@@ -622,6 +627,7 @@ def run(
                         "shares": filled_qty, "price": round(avg_price, 4),
                         "amount_usd": round(filled_qty * avg_price, 2),
                         "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
+                        "name": state["lots"][idx].get("name"),
                     }
                     rsi_ledger.append_trade_row(trade_row)
                     accepted_trades.append(trade_row)
@@ -689,6 +695,7 @@ def run(
                         "shares": filled_qty, "price": round(avg_price, 4),
                         "amount_usd": round(filled_qty * avg_price, 2),
                         "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
+                        "name": state["lots"][idx].get("name"),
                     }
                     rsi_ledger.append_trade_row(trade_row)
                     accepted_trades.append(trade_row)
@@ -729,13 +736,14 @@ def run(
 
             if filled_qty > 0:
                 state["cash_usd"] += cash_delta
-                new_lot = rsi_strategy.new_lot(cand["ticker"], lot_id, trade_date, filled_qty, avg_price)
+                new_lot = rsi_strategy.new_lot(cand["ticker"], lot_id, trade_date, filled_qty, avg_price, name=cand.get("name"))
                 state["lots"].append(new_lot)
                 trade_row = {
                     "date": trade_date, "action": "BUY", "ticker": cand["ticker"],
                     "shares": filled_qty, "price": round(avg_price, 4),
                     "amount_usd": round(filled_qty * avg_price, 2),
                     "rule": "entry", "lot_id": lot_id, "note": f"RSI14={cand['rsi14']:.1f} basis={rsi_basis}",
+                    "name": cand.get("name"),
                 }
                 rsi_ledger.append_trade_row(trade_row)
                 accepted_trades.append(trade_row)
@@ -747,7 +755,7 @@ def run(
                     "order_id": fill["order_id"], "ticker": cand["ticker"], "side": "BUY",
                     "qty": cand["qty"], "submitted_date": trade_date,
                     "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
-                    "rule": "entry", "lot_id": lot_id, "est_price": cand["price"],
+                    "rule": "entry", "lot_id": lot_id, "est_price": cand["price"], "name": cand.get("name"),
                 })
             elif outcome == "PARTIAL_TERMINAL":
                 logger.warning(

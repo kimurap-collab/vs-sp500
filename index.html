@@ -424,7 +424,7 @@ async function load() {
     trades.forEach(t => {
       const tr = document.createElement("tr");
       const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
+      tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
         `<td class="num">$${amt}</td><td>${t.rule}</td>`;
       tradesBody.appendChild(tr);
     });
@@ -508,7 +508,9 @@ async function load() {
         }
         const tr = document.createElement("tr");
         tr.innerHTML =
-          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a></td>` +
+          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
+          (h.name ? `<span class="sub">${h.name}</span>` : "") +
+          `</td>` +
           `<td class="num">${h.shares}</td>` +
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
@@ -527,7 +529,7 @@ async function load() {
       rsiTrades.forEach(t => {
         const tr = document.createElement("tr");
         const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
+        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
           `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${t.rule}</td>`;
         rsiTradesBody.appendChild(tr);
       });
@@ -607,7 +609,9 @@ async function load() {
         }
         const tr = document.createElement("tr");
         tr.innerHTML =
-          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a></td>` +
+          `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
+          (h.name ? `<span class="sub">${h.name}</span>` : "") +
+          `</td>` +
           `<td class="num">${h.shares}</td>` +
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
@@ -626,7 +630,7 @@ async function load() {
       jpTrades.forEach(t => {
         const tr = document.createElement("tr");
         const amt = Number(t.amount_jpy || 0).toLocaleString();
-        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}</td>` +
+        tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
           `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${t.rule}</td>`;
         jpTradesBody.appendChild(tr);
       });

@@ -22,7 +22,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "DaVita"
     },
     {
       "lot_id": "APP-2026-08-18-1",
@@ -44,7 +45,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Applovin"
     },
     {
       "lot_id": "LII-2026-08-18-1",
@@ -66,7 +68,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Lennox International"
     },
     {
       "lot_id": "ROL-2026-08-18-1",
@@ -88,7 +91,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Rollins"
     },
     {
       "lot_id": "TTD-2026-08-18-1",
@@ -110,7 +114,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "The Trade Desk"
     },
     {
       "lot_id": "TJX-2026-08-20-1",
@@ -132,7 +137,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "TJX Companies"
     },
     {
       "lot_id": "NI-2026-08-20-1",
@@ -154,7 +160,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "NiSource"
     },
     {
       "lot_id": "CHRW-2026-08-20-1",
@@ -176,7 +183,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "C.H. Robinson Worldwide"
     },
     {
       "lot_id": "LUV-2026-08-21-1",
@@ -198,7 +206,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Southwest Airlines"
     },
     {
       "lot_id": "STLD-2026-08-21-1",
@@ -220,7 +229,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Steel Dynamics"
     },
     {
       "lot_id": "WMT-2026-08-21-1",
@@ -242,7 +252,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Walmart"
     },
     {
       "lot_id": "CDNS-2026-08-21-1",
@@ -264,7 +275,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Cadence Design Systems"
     },
     {
       "lot_id": "CNP-2026-08-24-1",
@@ -287,7 +299,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "CenterPoint Energy"
     },
     {
       "lot_id": "CMI-2026-08-24-1",
@@ -310,7 +323,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Cummins"
     },
     {
       "lot_id": "PEG-2026-08-24-1",
@@ -333,7 +347,8 @@
       "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null
+      "closed_date": null,
+      "name": "Public Service Enterprise Group"
     }
   ],
   "bench_units_rsi": 700.6628414170427,
