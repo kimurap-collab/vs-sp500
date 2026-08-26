@@ -1,22 +1,22 @@
 {
-  "updated_at": "2026-08-26 03:00 JST",
+  "updated_at": "2026-08-26 10:11 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64052.12,
-  "bench_usd": 62953.86,
-  "diff_usd": 1098.26,
-  "diff_pct": 1.74,
+  "nav_usd": 64152.49,
+  "bench_usd": 63022.79,
+  "diff_usd": 1129.7,
+  "diff_pct": 1.79,
   "principal_usd": 63343.06,
-  "principal_diff_usd": 709.06,
-  "principal_diff_pct": 1.12,
+  "principal_diff_usd": 809.43,
+  "principal_diff_pct": 1.28,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 14900.13,
-      "weight_pct": 23.26,
-      "price": 709.53,
+      "value_usd": 14925.12,
+      "weight_pct": 23.27,
+      "price": 710.72,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -27,9 +27,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3162.6,
-      "weight_pct": 4.94,
-      "price": 175.7,
+      "value_usd": 3155.22,
+      "weight_pct": 4.92,
+      "price": 175.29,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -40,9 +40,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 23.0,
-      "value_usd": 9805.13,
-      "weight_pct": 15.31,
-      "price": 426.31,
+      "value_usd": 9845.61,
+      "weight_pct": 15.35,
+      "price": 428.07,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -53,9 +53,9 @@
       "ticker": "IEF",
       "name": "米国中期債 ETF",
       "shares": 33.0,
-      "value_usd": 3082.7,
+      "value_usd": 3085.83,
       "weight_pct": 4.81,
-      "price": 93.415,
+      "price": 93.51,
       "avg_cost": 93.31,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/IEF",
@@ -66,9 +66,9 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 31.0,
-      "value_usd": 21800.75,
-      "weight_pct": 34.04,
-      "price": 703.25,
+      "value_usd": 21824.62,
+      "weight_pct": 34.02,
+      "price": 704.02,
       "avg_cost": 707.6,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -79,9 +79,9 @@
       "ticker": "EWJ",
       "name": "MSCI日本株 ETF",
       "shares": 65.0,
-      "value_usd": 6200.68,
-      "weight_pct": 9.68,
-      "price": 95.395,
+      "value_usd": 6215.95,
+      "weight_pct": 9.69,
+      "price": 95.63,
       "avg_cost": 96.49,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/EWJ",
@@ -168,7 +168,8 @@
       "amount_usd": "6271.85",
       "fee_usd": "0.0",
       "rule": "rebalance",
-      "note": "pending決済(order_id=3145613)・手数料不明のため未計上"
+      "note": "pending決済(order_id=3145613)・手数料不明のため未計上",
+      "name": "MSCI日本株 ETF"
     },
     {
       "date": "2026-08-14",
@@ -180,7 +181,8 @@
       "amount_usd": "6479.57",
       "fee_usd": "0.0",
       "rule": "usd_migration",
-      "note": "ドル建て移行に伴う円建てポジションの帳簿上の清算（moomooはJP市場非対応のため実発注ではない）。売却分はEWJを買わずcash_usdに残す。EWJは次回daily_run.pyのリバランス（EWJ 0% vs 目標10%＝乖離10pt>5pt）で自然に買われる想定。また台帳の保有株数をmoomoo実保有（整数）に合わせて再構築し、旧台帳の端株分の差額もcash_usdに算入した"
+      "note": "ドル建て移行に伴う円建てポジションの帳簿上の清算（moomooはJP市場非対応のため実発注ではない）。売却分はEWJを買わずcash_usdに残す。EWJは次回daily_run.pyのリバランス（EWJ 0% vs 目標10%＝乖離10pt>5pt）で自然に買われる想定。また台帳の保有株数をmoomoo実保有（整数）に合わせて再構築し、旧台帳の端株分の差額もcash_usdに算入した",
+      "name": ""
     },
     {
       "date": "2026-08-05",
@@ -192,7 +194,8 @@
       "amount_usd": "6334.33",
       "fee_usd": "0.0",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": ""
     },
     {
       "date": "2026-08-05",
@@ -204,7 +207,8 @@
       "amount_usd": "3167.16",
       "fee_usd": "15.68",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": "米国ヘルスケアセクター ETF"
     },
     {
       "date": "2026-08-05",
@@ -216,7 +220,8 @@
       "amount_usd": "3167.16",
       "fee_usd": "15.68",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": "米国中期債 ETF"
     },
     {
       "date": "2026-08-05",
@@ -228,7 +233,8 @@
       "amount_usd": "9501.49",
       "fee_usd": "22.0",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": "金 ETF"
     },
     {
       "date": "2026-08-05",
@@ -240,7 +246,8 @@
       "amount_usd": "15835.81",
       "fee_usd": "22.0",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": "ナスダック100 ETF"
     },
     {
       "date": "2026-08-05",
@@ -252,7 +259,8 @@
       "amount_usd": "22170.14",
       "fee_usd": "22.0",
       "rule": "initial_build",
-      "note": ""
+      "note": "",
+      "name": "S&P500 ETF"
     }
   ],
   "monthly": [
@@ -265,148 +273,163 @@
   ],
   "rsi": {
     "start_date": "2026-08-14",
-    "nav_usd": 498132.36,
-    "bench_usd": 492741.14,
-    "diff_usd": 5391.21,
-    "diff_pct": 1.09,
+    "nav_usd": 499890.97,
+    "bench_usd": 493280.65,
+    "diff_usd": 6610.32,
+    "diff_pct": 1.34,
     "principal_usd": 500000.0,
-    "principal_diff_usd": -1867.64,
-    "principal_diff_pct": -0.37,
+    "principal_diff_usd": -109.03,
+    "principal_diff_pct": -0.02,
     "cash_usd": 6448.38,
     "open_lots": 15,
     "holdings": [
       {
-        "ticker": "WMT",
-        "shares": 432.0,
-        "value_usd": 45541.44,
-        "weight_pct": 9.14,
-        "price": 105.42,
-        "avg_cost": 103.892,
-        "link": "https://finance.yahoo.com/quote/WMT"
-      },
-      {
         "ticker": "CDNS",
+        "name": "Cadence Design Systems",
         "shares": 139.0,
-        "value_usd": 45512.77,
-        "weight_pct": 9.14,
-        "price": 327.43,
+        "value_usd": 46134.1,
+        "weight_pct": 9.23,
+        "price": 331.9,
         "avg_cost": 321.6564,
         "link": "https://finance.yahoo.com/quote/CDNS"
       },
       {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "shares": 432.0,
+        "value_usd": 45524.16,
+        "weight_pct": 9.11,
+        "price": 105.38,
+        "avg_cost": 103.892,
+        "link": "https://finance.yahoo.com/quote/WMT"
+      },
+      {
         "ticker": "ROL",
+        "name": "Rollins",
         "shares": 1224.0,
-        "value_usd": 44449.56,
-        "weight_pct": 8.92,
-        "price": 36.315,
+        "value_usd": 44504.64,
+        "weight_pct": 8.9,
+        "price": 36.36,
         "avg_cost": 36.7279,
         "link": "https://finance.yahoo.com/quote/ROL"
       },
       {
         "ticker": "STLD",
+        "name": "Steel Dynamics",
         "shares": 133.0,
-        "value_usd": 30625.91,
+        "value_usd": 30733.64,
         "weight_pct": 6.15,
-        "price": 230.27,
+        "price": 231.08,
         "avg_cost": 224.825,
         "link": "https://finance.yahoo.com/quote/STLD"
       },
       {
         "ticker": "LUV",
+        "name": "Southwest Airlines",
         "shares": 748.0,
-        "value_usd": 30391.24,
-        "weight_pct": 6.1,
-        "price": 40.63,
+        "value_usd": 30533.36,
+        "weight_pct": 6.11,
+        "price": 40.82,
         "avg_cost": 40.08,
         "link": "https://finance.yahoo.com/quote/LUV"
       },
       {
+        "ticker": "DVA",
+        "name": "DaVita",
+        "shares": 169.0,
+        "value_usd": 30048.2,
+        "weight_pct": 6.01,
+        "price": 177.8,
+        "avg_cost": 177.64,
+        "link": "https://finance.yahoo.com/quote/DVA"
+      },
+      {
         "ticker": "CNP",
+        "name": "CenterPoint Energy",
         "shares": 771.0,
-        "value_usd": 30138.39,
-        "weight_pct": 6.05,
-        "price": 39.09,
+        "value_usd": 30015.03,
+        "weight_pct": 6.0,
+        "price": 38.93,
         "avg_cost": 38.885,
         "link": "https://finance.yahoo.com/quote/CNP"
       },
       {
         "ticker": "PEG",
+        "name": "Public Service Enterprise Group",
         "shares": 409.0,
-        "value_usd": 30065.59,
-        "weight_pct": 6.04,
-        "price": 73.51,
+        "value_usd": 29971.52,
+        "weight_pct": 6.0,
+        "price": 73.28,
         "avg_cost": 73.15,
         "link": "https://finance.yahoo.com/quote/PEG"
       },
       {
-        "ticker": "DVA",
-        "shares": 169.0,
-        "value_usd": 29836.95,
-        "weight_pct": 5.99,
-        "price": 176.55,
-        "avg_cost": 177.64,
-        "link": "https://finance.yahoo.com/quote/DVA"
-      },
-      {
-        "ticker": "TJX",
-        "shares": 212.0,
-        "value_usd": 29717.1,
-        "weight_pct": 5.97,
-        "price": 140.175,
-        "avg_cost": 141.48,
-        "link": "https://finance.yahoo.com/quote/TJX"
+        "ticker": "APP",
+        "name": "Applovin",
+        "shares": 96.0,
+        "value_usd": 29811.84,
+        "weight_pct": 5.96,
+        "price": 310.54,
+        "avg_cost": 309.32,
+        "link": "https://finance.yahoo.com/quote/APP"
       },
       {
         "ticker": "CMI",
+        "name": "Cummins",
         "shares": 52.0,
-        "value_usd": 29683.16,
+        "value_usd": 29778.84,
         "weight_pct": 5.96,
-        "price": 570.83,
+        "price": 572.67,
         "avg_cost": 570.64,
         "link": "https://finance.yahoo.com/quote/CMI"
       },
       {
         "ticker": "CHRW",
+        "name": "C.H. Robinson Worldwide",
         "shares": 207.0,
-        "value_usd": 29548.22,
-        "weight_pct": 5.93,
-        "price": 142.745,
+        "value_usd": 29737.62,
+        "weight_pct": 5.95,
+        "price": 143.66,
         "avg_cost": 144.45,
         "link": "https://finance.yahoo.com/quote/CHRW"
       },
       {
         "ticker": "TTD",
+        "name": "The Trade Desk",
         "shares": 2235.0,
-        "value_usd": 29403.44,
-        "weight_pct": 5.9,
-        "price": 13.1559,
+        "value_usd": 29613.75,
+        "weight_pct": 5.92,
+        "price": 13.25,
         "avg_cost": 13.415,
         "link": "https://finance.yahoo.com/quote/TTD"
       },
       {
-        "ticker": "APP",
-        "shares": 96.0,
-        "value_usd": 29244.96,
-        "weight_pct": 5.87,
-        "price": 304.635,
-        "avg_cost": 309.32,
-        "link": "https://finance.yahoo.com/quote/APP"
+        "ticker": "TJX",
+        "name": "TJX Companies",
+        "shares": 212.0,
+        "value_usd": 29569.76,
+        "weight_pct": 5.92,
+        "price": 139.48,
+        "avg_cost": 141.48,
+        "link": "https://finance.yahoo.com/quote/TJX"
       },
       {
         "ticker": "NI",
+        "name": "NiSource",
         "shares": 715.0,
-        "value_usd": 29204.17,
-        "weight_pct": 5.86,
-        "price": 40.845,
+        "value_usd": 29064.75,
+        "weight_pct": 5.81,
+        "price": 40.65,
         "avg_cost": 41.915,
         "link": "https://finance.yahoo.com/quote/NI"
       },
       {
         "ticker": "LII",
+        "name": "Lennox International",
         "shares": 73.0,
-        "value_usd": 28321.08,
-        "weight_pct": 5.69,
-        "price": 387.96,
+        "value_usd": 28401.38,
+        "weight_pct": 5.68,
+        "price": 389.06,
         "avg_cost": 410.565,
         "link": "https://finance.yahoo.com/quote/LII"
       }
@@ -463,7 +486,8 @@
         "amount_usd": "14734.58",
         "rule": "pyramid1",
         "lot_id": "CDNS-2026-08-21-1",
-        "note": ""
+        "note": "",
+        "name": "Cadence Design Systems"
       },
       {
         "date": "2026-08-24",
@@ -474,7 +498,8 @@
         "amount_usd": "29918.35",
         "rule": "entry",
         "lot_id": "PEG-2026-08-24-1",
-        "note": "RSI14=31.0 basis=live"
+        "note": "RSI14=31.0 basis=live",
+        "name": "Public Service Enterprise Group"
       },
       {
         "date": "2026-08-24",
@@ -485,7 +510,8 @@
         "amount_usd": "29673.28",
         "rule": "entry",
         "lot_id": "CMI-2026-08-24-1",
-        "note": "RSI14=29.3 basis=live"
+        "note": "RSI14=29.3 basis=live",
+        "name": "Cummins"
       },
       {
         "date": "2026-08-24",
@@ -496,7 +522,8 @@
         "amount_usd": "29980.33",
         "rule": "entry",
         "lot_id": "CNP-2026-08-24-1",
-        "note": "RSI14=28.7 basis=live"
+        "note": "RSI14=28.7 basis=live",
+        "name": "CenterPoint Energy"
       },
       {
         "date": "2026-08-24",
@@ -507,7 +534,8 @@
         "amount_usd": "14895.24",
         "rule": "pyramid1",
         "lot_id": "WMT-2026-08-21-1",
-        "note": ""
+        "note": "",
+        "name": "Walmart"
       },
       {
         "date": "2026-08-24",
@@ -518,7 +546,8 @@
         "amount_usd": "14985.37",
         "rule": "pyramid1",
         "lot_id": "ROL-2026-08-18-1",
-        "note": ""
+        "note": "",
+        "name": "Rollins"
       },
       {
         "date": "2026-08-21",
@@ -529,7 +558,8 @@
         "amount_usd": "29975.66",
         "rule": "entry",
         "lot_id": "CDNS-2026-08-21-1",
-        "note": "RSI14=31.4 basis=prev_close"
+        "note": "RSI14=31.4 basis=prev_close",
+        "name": "Cadence Design Systems"
       },
       {
         "date": "2026-08-21",
@@ -540,7 +570,8 @@
         "amount_usd": "29986.1",
         "rule": "entry",
         "lot_id": "WMT-2026-08-21-1",
-        "note": "RSI14=29.8 basis=prev_close"
+        "note": "RSI14=29.8 basis=prev_close",
+        "name": "Walmart"
       },
       {
         "date": "2026-08-21",
@@ -551,7 +582,8 @@
         "amount_usd": "29901.72",
         "rule": "entry",
         "lot_id": "STLD-2026-08-21-1",
-        "note": "RSI14=29.6 basis=prev_close"
+        "note": "RSI14=29.6 basis=prev_close",
+        "name": "Steel Dynamics"
       },
       {
         "date": "2026-08-21",
@@ -562,7 +594,8 @@
         "amount_usd": "29979.84",
         "rule": "entry",
         "lot_id": "LUV-2026-08-21-1",
-        "note": "RSI14=28.9 basis=prev_close"
+        "note": "RSI14=28.9 basis=prev_close",
+        "name": "Southwest Airlines"
       },
       {
         "date": "2026-08-20",
@@ -573,7 +606,8 @@
         "amount_usd": "29901.15",
         "rule": "entry",
         "lot_id": "CHRW-2026-08-20-1",
-        "note": "RSI14=32.0 basis=prev_close"
+        "note": "RSI14=32.0 basis=prev_close",
+        "name": "C.H. Robinson Worldwide"
       },
       {
         "date": "2026-08-20",
@@ -584,7 +618,8 @@
         "amount_usd": "29969.22",
         "rule": "entry",
         "lot_id": "NI-2026-08-20-1",
-        "note": "RSI14=30.4 basis=prev_close"
+        "note": "RSI14=30.4 basis=prev_close",
+        "name": "NiSource"
       },
       {
         "date": "2026-08-20",
@@ -595,7 +630,8 @@
         "amount_usd": "29993.76",
         "rule": "entry",
         "lot_id": "TJX-2026-08-20-1",
-        "note": "RSI14=30.3 basis=prev_close"
+        "note": "RSI14=30.3 basis=prev_close",
+        "name": "TJX Companies"
       },
       {
         "date": "2026-08-18",
@@ -606,7 +642,8 @@
         "amount_usd": "29982.52",
         "rule": "entry",
         "lot_id": "TTD-2026-08-18-1",
-        "note": "RSI14=32.0"
+        "note": "RSI14=32.0",
+        "name": "The Trade Desk"
       },
       {
         "date": "2026-08-18",
@@ -617,7 +654,8 @@
         "amount_usd": "29969.54",
         "rule": "entry",
         "lot_id": "ROL-2026-08-18-1",
-        "note": "RSI14=30.2"
+        "note": "RSI14=30.2",
+        "name": "Rollins"
       },
       {
         "date": "2026-08-18",
@@ -628,7 +666,8 @@
         "amount_usd": "29971.24",
         "rule": "entry",
         "lot_id": "LII-2026-08-18-1",
-        "note": "RSI14=30.1"
+        "note": "RSI14=30.1",
+        "name": "Lennox International"
       },
       {
         "date": "2026-08-18",
@@ -639,7 +678,8 @@
         "amount_usd": "29694.72",
         "rule": "entry",
         "lot_id": "APP-2026-08-18-1",
-        "note": "RSI14=29.5"
+        "note": "RSI14=29.5",
+        "name": "Applovin"
       },
       {
         "date": "2026-08-18",
@@ -650,7 +690,8 @@
         "amount_usd": "30021.16",
         "rule": "entry",
         "lot_id": "DVA-2026-08-18-1",
-        "note": "RSI14=25.7"
+        "note": "RSI14=25.7",
+        "name": "DaVita"
       }
     ],
     "monthly": [
@@ -664,154 +705,170 @@
   },
   "rsi_jp": {
     "start_date": "2026-08-24",
-    "nav_jpy": 100207310.0,
+    "nav_jpy": 99763630.0,
     "principal_jpy": 100000000.0,
-    "diff_jpy": 207310.0,
-    "diff_pct": 0.21,
+    "diff_jpy": -236370.0,
+    "diff_pct": -0.24,
     "cash_jpy": 56398110.0,
     "open_lots": 16,
     "holdings": [
       {
-        "ticker": "4980",
-        "shares": 1000.0,
-        "value_jpy": 3021000.0,
-        "weight_pct": 3.01,
-        "price": 3021.0,
-        "avg_cost": 2903.5,
-        "link": "https://finance.yahoo.co.jp/quote/4980"
-      },
-      {
         "ticker": "7532",
+        "name": "Pan Pacific International Holdings",
         "shares": 3700.0,
-        "value_jpy": 3011800.0,
-        "weight_pct": 3.01,
-        "price": 814.0,
+        "value_jpy": 3062120.0,
+        "weight_pct": 3.07,
+        "price": 827.6,
         "avg_cost": 810.7,
         "link": "https://finance.yahoo.co.jp/quote/7532"
       },
       {
-        "ticker": "6235",
-        "shares": 1100.0,
-        "value_jpy": 2996400.0,
-        "weight_pct": 2.99,
-        "price": 2724.0,
-        "avg_cost": 2655.0,
-        "link": "https://finance.yahoo.co.jp/quote/6235"
+        "ticker": "4980",
+        "name": "Dexerials",
+        "shares": 1000.0,
+        "value_jpy": 2995500.0,
+        "weight_pct": 3.0,
+        "price": 2995.5,
+        "avg_cost": 2903.5,
+        "link": "https://finance.yahoo.co.jp/quote/4980"
       },
       {
         "ticker": "3455",
+        "name": "Healthcare & Medical Investment",
         "shares": 30.0,
-        "value_jpy": 2985000.0,
-        "weight_pct": 2.98,
-        "price": 99500.0,
+        "value_jpy": 2991000.0,
+        "weight_pct": 3.0,
+        "price": 99700.0,
         "avg_cost": 99200.0,
         "link": "https://finance.yahoo.co.jp/quote/3455"
       },
       {
         "ticker": "6707",
+        "name": "Sanken Electric",
         "shares": 400.0,
-        "value_jpy": 2959200.0,
-        "weight_pct": 2.95,
-        "price": 7398.0,
+        "value_jpy": 2928000.0,
+        "weight_pct": 2.93,
+        "price": 7320.0,
         "avg_cost": 7398.0,
         "link": "https://finance.yahoo.co.jp/quote/6707"
       },
       {
+        "ticker": "6235",
+        "name": "Optorun",
+        "shares": 1100.0,
+        "value_jpy": 2874300.0,
+        "weight_pct": 2.88,
+        "price": 2613.0,
+        "avg_cost": 2655.0,
+        "link": "https://finance.yahoo.co.jp/quote/6235"
+      },
+      {
         "ticker": "3905",
+        "name": "Datasection",
         "shares": 1800.0,
-        "value_jpy": 2905200.0,
-        "weight_pct": 2.9,
-        "price": 1614.0,
+        "value_jpy": 2775600.0,
+        "weight_pct": 2.78,
+        "price": 1542.0,
         "avg_cost": 1662.0,
         "link": "https://finance.yahoo.co.jp/quote/3905"
       },
       {
         "ticker": "268A",
+        "name": "Rigaku Holdings",
         "shares": 1700.0,
-        "value_jpy": 2852600.0,
-        "weight_pct": 2.85,
-        "price": 1678.0,
+        "value_jpy": 2769300.0,
+        "weight_pct": 2.78,
+        "price": 1629.0,
         "avg_cost": 1671.0,
         "link": "https://finance.yahoo.co.jp/quote/268A"
       },
       {
-        "ticker": "4047",
-        "shares": 1200.0,
-        "value_jpy": 2799600.0,
-        "weight_pct": 2.79,
-        "price": 2333.0,
-        "avg_cost": 2323.0,
-        "link": "https://finance.yahoo.co.jp/quote/4047"
-      },
-      {
         "ticker": "6013",
+        "name": "Takuma",
         "shares": 900.0,
-        "value_jpy": 2763000.0,
+        "value_jpy": 2754000.0,
         "weight_pct": 2.76,
-        "price": 3070.0,
+        "price": 3060.0,
         "avg_cost": 3065.0,
         "link": "https://finance.yahoo.co.jp/quote/6013"
       },
       {
         "ticker": "7966",
+        "name": "LINTEC",
         "shares": 500.0,
-        "value_jpy": 2735000.0,
-        "weight_pct": 2.73,
-        "price": 5470.0,
+        "value_jpy": 2750000.0,
+        "weight_pct": 2.76,
+        "price": 5500.0,
         "avg_cost": 5440.0,
         "link": "https://finance.yahoo.co.jp/quote/7966"
       },
       {
-        "ticker": "6141",
-        "shares": 900.0,
-        "value_jpy": 2733300.0,
-        "weight_pct": 2.73,
-        "price": 3037.0,
-        "avg_cost": 3037.0,
-        "link": "https://finance.yahoo.co.jp/quote/6141"
-      },
-      {
         "ticker": "1979",
+        "name": "Taikisha",
         "shares": 700.0,
-        "value_jpy": 2730000.0,
-        "weight_pct": 2.72,
-        "price": 3900.0,
+        "value_jpy": 2744000.0,
+        "weight_pct": 2.75,
+        "price": 3920.0,
         "avg_cost": 3900.0,
         "link": "https://finance.yahoo.co.jp/quote/1979"
       },
       {
+        "ticker": "4047",
+        "name": "Kanto Denka Kogyo",
+        "shares": 1200.0,
+        "value_jpy": 2743200.0,
+        "weight_pct": 2.75,
+        "price": 2286.0,
+        "avg_cost": 2323.0,
+        "link": "https://finance.yahoo.co.jp/quote/4047"
+      },
+      {
+        "ticker": "6141",
+        "name": "Dmg Mori",
+        "shares": 900.0,
+        "value_jpy": 2730600.0,
+        "weight_pct": 2.74,
+        "price": 3034.0,
+        "avg_cost": 3037.0,
+        "link": "https://finance.yahoo.co.jp/quote/6141"
+      },
+      {
         "ticker": "6479",
+        "name": "Minebea Mitsumi",
         "shares": 800.0,
-        "value_jpy": 2676800.0,
-        "weight_pct": 2.67,
-        "price": 3346.0,
+        "value_jpy": 2656000.0,
+        "weight_pct": 2.66,
+        "price": 3320.0,
         "avg_cost": 3344.0,
         "link": "https://finance.yahoo.co.jp/quote/6479"
       },
       {
         "ticker": "5334",
+        "name": "Niterra",
         "shares": 300.0,
-        "value_jpy": 2610300.0,
-        "weight_pct": 2.6,
-        "price": 8701.0,
+        "value_jpy": 2576400.0,
+        "weight_pct": 2.58,
+        "price": 8588.0,
         "avg_cost": 8719.0,
         "link": "https://finance.yahoo.co.jp/quote/5334"
       },
       {
         "ticker": "6367",
+        "name": "Daikin Industries",
         "shares": 100.0,
-        "value_jpy": 2083000.0,
-        "weight_pct": 2.08,
-        "price": 20830.0,
+        "value_jpy": 2106500.0,
+        "weight_pct": 2.11,
+        "price": 21065.0,
         "avg_cost": 20855.0,
         "link": "https://finance.yahoo.co.jp/quote/6367"
       },
       {
         "ticker": "4966",
+        "name": "C. Uyemura",
         "shares": 100.0,
-        "value_jpy": 1947000.0,
-        "weight_pct": 1.94,
-        "price": 19470.0,
+        "value_jpy": 1909000.0,
+        "weight_pct": 1.91,
+        "price": 19090.0,
         "avg_cost": 19050.0,
         "link": "https://finance.yahoo.co.jp/quote/4966"
       }
@@ -838,7 +895,8 @@
         "amount_jpy": "2733300.0",
         "rule": "entry",
         "lot_id": "6141-2026-08-25-1",
-        "note": "RSI14=34.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Dmg Mori"
       },
       {
         "date": "2026-08-25",
@@ -849,7 +907,8 @@
         "amount_jpy": "2959200.0",
         "rule": "entry",
         "lot_id": "6707-2026-08-25-1",
-        "note": "RSI14=34.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Sanken Electric"
       },
       {
         "date": "2026-08-25",
@@ -860,7 +919,8 @@
         "amount_jpy": "2730000.0",
         "rule": "entry",
         "lot_id": "1979-2026-08-25-1",
-        "note": "RSI14=33.5 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=33.5 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Taikisha"
       },
       {
         "date": "2026-08-24",
@@ -871,7 +931,8 @@
         "amount_jpy": "2999590.0",
         "rule": "entry",
         "lot_id": "7532-2026-08-24-1",
-        "note": "RSI14=35.0 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=35.0 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Pan Pacific International Holdings"
       },
       {
         "date": "2026-08-24",
@@ -882,7 +943,8 @@
         "amount_jpy": "2787600.0",
         "rule": "entry",
         "lot_id": "4047-2026-08-24-1",
-        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Kanto Denka Kogyo"
       },
       {
         "date": "2026-08-24",
@@ -893,7 +955,8 @@
         "amount_jpy": "1905000.0",
         "rule": "entry",
         "lot_id": "4966-2026-08-24-1",
-        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "C. Uyemura"
       },
       {
         "date": "2026-08-24",
@@ -904,7 +967,8 @@
         "amount_jpy": "2903500.0",
         "rule": "entry",
         "lot_id": "4980-2026-08-24-1",
-        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Dexerials"
       },
       {
         "date": "2026-08-24",
@@ -915,7 +979,8 @@
         "amount_jpy": "2840700.0",
         "rule": "entry",
         "lot_id": "268A-2026-08-24-1",
-        "note": "RSI14=34.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=34.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Rigaku Holdings"
       },
       {
         "date": "2026-08-24",
@@ -926,7 +991,8 @@
         "amount_jpy": "2720000.0",
         "rule": "entry",
         "lot_id": "7966-2026-08-24-1",
-        "note": "RSI14=33.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=33.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "LINTEC"
       },
       {
         "date": "2026-08-24",
@@ -937,7 +1003,8 @@
         "amount_jpy": "2991600.0",
         "rule": "entry",
         "lot_id": "3905-2026-08-24-1",
-        "note": "RSI14=33.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=33.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Datasection"
       },
       {
         "date": "2026-08-24",
@@ -948,7 +1015,8 @@
         "amount_jpy": "2615700.0",
         "rule": "entry",
         "lot_id": "5334-2026-08-24-1",
-        "note": "RSI14=33.4 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=33.4 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Niterra"
       },
       {
         "date": "2026-08-24",
@@ -959,7 +1027,8 @@
         "amount_jpy": "2675200.0",
         "rule": "entry",
         "lot_id": "6479-2026-08-24-1",
-        "note": "RSI14=32.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=32.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Minebea Mitsumi"
       },
       {
         "date": "2026-08-24",
@@ -970,7 +1039,8 @@
         "amount_jpy": "2920500.0",
         "rule": "entry",
         "lot_id": "6235-2026-08-24-1",
-        "note": "RSI14=32.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=32.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Optorun"
       },
       {
         "date": "2026-08-24",
@@ -981,7 +1051,8 @@
         "amount_jpy": "2758500.0",
         "rule": "entry",
         "lot_id": "6013-2026-08-24-1",
-        "note": "RSI14=31.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=31.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Takuma"
       },
       {
         "date": "2026-08-24",
@@ -992,7 +1063,8 @@
         "amount_jpy": "2085500.0",
         "rule": "entry",
         "lot_id": "6367-2026-08-24-1",
-        "note": "RSI14=28.1 lot_size=100・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=28.1 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Daikin Industries"
       },
       {
         "date": "2026-08-24",
@@ -1003,7 +1075,8 @@
         "amount_jpy": "2976000.0",
         "rule": "entry",
         "lot_id": "3455-2026-08-24-1",
-        "note": "RSI14=27.9 lot_size=1・moomoo発注なし・台帳のみの仮想売買"
+        "note": "RSI14=27.9 lot_size=1・moomoo発注なし・台帳のみの仮想売買",
+        "name": "Healthcare & Medical Investment"
       }
     ],
     "monthly": [
