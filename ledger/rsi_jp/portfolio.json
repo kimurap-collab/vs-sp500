@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 56398110.0,
+  "cash_jpy": 51099110.0,
   "lots": [
     {
       "lot_id": "3455-2026-08-24-1",
@@ -176,14 +176,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 5440.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 500,
+      "shares": 700,
       "lot_size": 100,
-      "total_invested_usd": 2720000.0,
-      "avg_cost": 5440.0,
+      "total_invested_usd": 3836000.0,
+      "avg_cost": 5480.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -224,14 +224,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 2903.5,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1000,
+      "shares": 1400,
       "lot_size": 100,
-      "total_invested_usd": 2903500.0,
-      "avg_cost": 2903.5,
+      "total_invested_usd": 4111100.0,
+      "avg_cost": 2936.5,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -385,7 +385,31 @@
       "closed_reason": null,
       "closed_date": null,
       "name": "Dmg Mori"
+    },
+    {
+      "lot_id": "2979-2026-08-26-1",
+      "ticker": "2979",
+      "name": "SOSiLA Logistics REIT",
+      "initial_entry_date": "2026-08-26",
+      "initial_entry_price": 102600.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 29,
+      "lot_size": 1,
+      "total_invested_usd": 2975400.0,
+      "avg_cost": 102600.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
-  "last_processed_date": "2026-08-25"
+  "last_processed_date": "2026-08-26"
 }

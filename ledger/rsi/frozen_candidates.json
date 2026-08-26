@@ -1,54 +1,55 @@
 {
-  "generated_at": "2026-08-25T12:00:02.236970+00:00",
+  "generated_at": "2026-08-26T12:00:03.470235+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "TJX",
-      "rsi14": 26.733,
-      "price": 140.71,
-      "date": "2026-08-25"
+      "rsi14": 25.418,
+      "name": "TJX Companies",
+      "price": 139.48,
+      "date": "2026-08-26"
     },
     {
       "ticker": "NI",
-      "rsi14": 28.098,
-      "price": 40.83,
-      "date": "2026-08-25"
-    },
-    {
-      "ticker": "APP",
-      "rsi14": 28.255,
-      "price": 298.59,
-      "date": "2026-08-25"
-    },
-    {
-      "ticker": "DVA",
-      "rsi14": 28.28,
-      "price": 176.5,
-      "date": "2026-08-25"
+      "rsi14": 27.204,
+      "name": "NiSource",
+      "price": 40.65,
+      "date": "2026-08-26"
     },
     {
       "ticker": "LII",
-      "rsi14": 29.515,
-      "price": 399.1,
-      "date": "2026-08-25"
+      "rsi14": 27.269,
+      "name": "Lennox International",
+      "price": 389.06,
+      "date": "2026-08-26"
+    },
+    {
+      "ticker": "CARR",
+      "rsi14": 29.715,
+      "name": "Carrier Global",
+      "price": 58.52,
+      "date": "2026-08-26"
     },
     {
       "ticker": "CMI",
-      "rsi14": 29.526,
-      "price": 571.62,
-      "date": "2026-08-25"
+      "rsi14": 30.051,
+      "name": "Cummins",
+      "price": 572.67,
+      "date": "2026-08-26"
+    },
+    {
+      "ticker": "DVA",
+      "rsi14": 30.228,
+      "name": "DaVita",
+      "price": 177.8,
+      "date": "2026-08-26"
     },
     {
       "ticker": "CNP",
-      "rsi14": 31.316,
-      "price": 39.1,
-      "date": "2026-08-25"
-    },
-    {
-      "ticker": "CHRW",
-      "rsi14": 31.94,
-      "price": 142.86,
-      "date": "2026-08-25"
+      "rsi14": 30.305,
+      "name": "CenterPoint Energy",
+      "price": 38.93,
+      "date": "2026-08-26"
     }
   ]
 }

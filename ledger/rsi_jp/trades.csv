@@ -15,3 +15,6 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name
 2026-08-25,BUY,1979,700,3900.0,2730000.0,entry,1979-2026-08-25-1,RSI14=33.5 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Taikisha
 2026-08-25,BUY,6707,400,7398.0,2959200.0,entry,6707-2026-08-25-1,RSI14=34.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Sanken Electric
 2026-08-25,BUY,6141,900,3037.0,2733300.0,entry,6141-2026-08-25-1,RSI14=34.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Dmg Mori
+2026-08-26,BUY,4980,400,3019.0,1207600.0,pyramid1,4980-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Dexerials
+2026-08-26,BUY,7966,200,5580.0,1116000.0,pyramid1,7966-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,LINTEC
+2026-08-26,BUY,2979,29,102600.0,2975400.0,entry,2979-2026-08-26-1,RSI14=34.8 lot_size=1・moomoo発注なし・台帳のみの仮想売買,SOSiLA Logistics REIT
