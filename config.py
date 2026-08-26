@@ -38,6 +38,24 @@ WHITELIST: dict[str, dict[str, str]] = {
 }
 
 
+def validate_whitelist(whitelist: dict[str, dict[str, str]]) -> None:
+    """WHITELISTの全エントリにtype（'etf'か'stock'）が明示されとることを起動時に強制する。
+
+    typeの省略・誤記はis_stock()がFalseを返し、個別株ガードレール
+    （5%上限・合計20%・損切り-20%）が黙って外れるため、ここで止める。
+    """
+    for ticker, info in whitelist.items():
+        entry_type = info.get("type")
+        if entry_type not in ("etf", "stock"):
+            raise ValueError(
+                f"WHITELIST[{ticker!r}] の type が不正: {entry_type!r}"
+                "（'etf' か 'stock' を明示せよ）"
+            )
+
+
+validate_whitelist(WHITELIST)
+
+
 def is_stock(ticker: str) -> bool:
     """個別株か（ETFでないか）。憲章の個別株ルール適用判定に使う。"""
     return WHITELIST.get(ticker, {}).get("type") == "stock"
