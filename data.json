@@ -705,10 +705,10 @@
   },
   "rsi_jp": {
     "start_date": "2026-08-24",
-    "nav_jpy": 99763630.0,
+    "nav_jpy": 99787590.0,
     "principal_jpy": 100000000.0,
-    "diff_jpy": -236370.0,
-    "diff_pct": -0.24,
+    "diff_jpy": -212410.0,
+    "diff_pct": -0.21,
     "cash_jpy": 56398110.0,
     "open_lots": 16,
     "holdings": [
@@ -716,9 +716,9 @@
         "ticker": "7532",
         "name": "Pan Pacific International Holdings",
         "shares": 3700.0,
-        "value_jpy": 3062120.0,
+        "value_jpy": 3061380.0,
         "weight_pct": 3.07,
-        "price": 827.6,
+        "price": 827.4,
         "avg_cost": 810.7,
         "link": "https://finance.yahoo.co.jp/quote/7532"
       },
@@ -726,9 +726,9 @@
         "ticker": "4980",
         "name": "Dexerials",
         "shares": 1000.0,
-        "value_jpy": 2995500.0,
+        "value_jpy": 2997000.0,
         "weight_pct": 3.0,
-        "price": 2995.5,
+        "price": 2997.0,
         "avg_cost": 2903.5,
         "link": "https://finance.yahoo.co.jp/quote/4980"
       },
@@ -756,9 +756,9 @@
         "ticker": "6235",
         "name": "Optorun",
         "shares": 1100.0,
-        "value_jpy": 2874300.0,
+        "value_jpy": 2877600.0,
         "weight_pct": 2.88,
-        "price": 2613.0,
+        "price": 2616.0,
         "avg_cost": 2655.0,
         "link": "https://finance.yahoo.co.jp/quote/6235"
       },
@@ -766,9 +766,9 @@
         "ticker": "3905",
         "name": "Datasection",
         "shares": 1800.0,
-        "value_jpy": 2775600.0,
-        "weight_pct": 2.78,
-        "price": 1542.0,
+        "value_jpy": 2784600.0,
+        "weight_pct": 2.79,
+        "price": 1547.0,
         "avg_cost": 1662.0,
         "link": "https://finance.yahoo.co.jp/quote/3905"
       },
@@ -776,9 +776,9 @@
         "ticker": "268A",
         "name": "Rigaku Holdings",
         "shares": 1700.0,
-        "value_jpy": 2769300.0,
+        "value_jpy": 2771000.0,
         "weight_pct": 2.78,
-        "price": 1629.0,
+        "price": 1630.0,
         "avg_cost": 1671.0,
         "link": "https://finance.yahoo.co.jp/quote/268A"
       },
@@ -803,6 +803,16 @@
         "link": "https://finance.yahoo.co.jp/quote/7966"
       },
       {
+        "ticker": "4047",
+        "name": "Kanto Denka Kogyo",
+        "shares": 1200.0,
+        "value_jpy": 2746800.0,
+        "weight_pct": 2.75,
+        "price": 2289.0,
+        "avg_cost": 2323.0,
+        "link": "https://finance.yahoo.co.jp/quote/4047"
+      },
+      {
         "ticker": "1979",
         "name": "Taikisha",
         "shares": 700.0,
@@ -813,22 +823,12 @@
         "link": "https://finance.yahoo.co.jp/quote/1979"
       },
       {
-        "ticker": "4047",
-        "name": "Kanto Denka Kogyo",
-        "shares": 1200.0,
-        "value_jpy": 2743200.0,
-        "weight_pct": 2.75,
-        "price": 2286.0,
-        "avg_cost": 2323.0,
-        "link": "https://finance.yahoo.co.jp/quote/4047"
-      },
-      {
         "ticker": "6141",
         "name": "Dmg Mori",
         "shares": 900.0,
-        "value_jpy": 2730600.0,
+        "value_jpy": 2731500.0,
         "weight_pct": 2.74,
-        "price": 3034.0,
+        "price": 3035.0,
         "avg_cost": 3037.0,
         "link": "https://finance.yahoo.co.jp/quote/6141"
       },
@@ -836,9 +836,9 @@
         "ticker": "6479",
         "name": "Minebea Mitsumi",
         "shares": 800.0,
-        "value_jpy": 2656000.0,
+        "value_jpy": 2657600.0,
         "weight_pct": 2.66,
-        "price": 3320.0,
+        "price": 3322.0,
         "avg_cost": 3344.0,
         "link": "https://finance.yahoo.co.jp/quote/6479"
       },
@@ -846,9 +846,9 @@
         "ticker": "5334",
         "name": "Niterra",
         "shares": 300.0,
-        "value_jpy": 2576400.0,
+        "value_jpy": 2578500.0,
         "weight_pct": 2.58,
-        "price": 8588.0,
+        "price": 8595.0,
         "avg_cost": 8719.0,
         "link": "https://finance.yahoo.co.jp/quote/5334"
       },
@@ -856,9 +856,9 @@
         "ticker": "6367",
         "name": "Daikin Industries",
         "shares": 100.0,
-        "value_jpy": 2106500.0,
+        "value_jpy": 2107500.0,
         "weight_pct": 2.11,
-        "price": 21065.0,
+        "price": 21075.0,
         "avg_cost": 20855.0,
         "link": "https://finance.yahoo.co.jp/quote/6367"
       },
