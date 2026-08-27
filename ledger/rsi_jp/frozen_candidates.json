@@ -1,89 +1,33 @@
 {
-  "generated_at": "2026-08-26T12:00:03.982462+00:00",
+  "generated_at": "2026-08-27T12:00:03.110182+00:00",
   "candidates": [
     {
-      "ticker": "3455",
-      "rsi14": 25.632,
-      "price": 97600.0,
-      "market_cap": 35087200000.0,
-      "name": "Healthcare & Medical Investment"
-    },
-    {
-      "ticker": "3905",
-      "rsi14": 30.745,
-      "price": 1527.0,
-      "market_cap": 48890036877.0,
-      "name": "Datasection"
-    },
-    {
       "ticker": "6367",
-      "rsi14": 31.215,
-      "price": 20985.0,
-      "market_cap": 6150996723405.0,
+      "rsi14": 29.849,
+      "price": 20840.0,
+      "market_cap": 6108495197320.0,
       "name": "Daikin Industries"
     },
     {
-      "ticker": "6013",
-      "rsi14": 31.532,
-      "price": 3065.0,
-      "market_cap": 231987091500.0,
-      "name": "Takuma"
-    },
-    {
-      "ticker": "9983",
-      "rsi14": 32.02,
-      "price": 72120.0,
-      "market_cap": 22950096212160.0,
-      "name": "Fast Retailing"
-    },
-    {
       "ticker": "5334",
-      "rsi14": 32.503,
-      "price": 8658.0,
-      "market_cap": 1725086759760.0,
+      "rsi14": 29.94,
+      "price": 8474.0,
+      "market_cap": 1688425179280.0,
       "name": "Niterra"
     },
     {
-      "ticker": "6479",
-      "rsi14": 33.327,
-      "price": 3356.0,
-      "market_cap": 1433282513736.0,
-      "name": "Minebea Mitsumi"
+      "ticker": "9983",
+      "rsi14": 30.668,
+      "price": 71540.0,
+      "market_cap": 22765528050720.0,
+      "name": "Fast Retailing"
     },
     {
-      "ticker": "268A",
-      "rsi14": 33.726,
-      "price": 1648.0,
-      "market_cap": 373298532800.0,
-      "name": "Rigaku Holdings"
-    },
-    {
-      "ticker": "6707",
-      "rsi14": 33.917,
-      "price": 7327.0,
-      "market_cap": 153320112720.0,
-      "name": "Sanken Electric"
-    },
-    {
-      "ticker": "6235",
-      "rsi14": 34.118,
-      "price": 2669.0,
-      "market_cap": 118391502000.0,
-      "name": "Optorun"
-    },
-    {
-      "ticker": "6141",
-      "rsi14": 34.667,
-      "price": 3030.0,
-      "market_cap": 476697580020.0,
-      "name": "Dmg Mori"
-    },
-    {
-      "ticker": "2979",
-      "rsi14": 34.831,
-      "price": 102600.0,
-      "market_cap": 74641500000.0,
-      "name": "SOSiLA Logistics REIT"
+      "ticker": "1979",
+      "rsi14": 34.413,
+      "price": 3895.0,
+      "market_cap": 247192350110.0,
+      "name": "Taikisha"
     }
   ]
 }

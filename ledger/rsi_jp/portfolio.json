@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 57050510.0,
+  "cash_jpy": 46481610.0,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -56,14 +56,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 2655.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1100,
+      "shares": 1600,
       "lot_size": 100,
-      "total_invested_usd": 2920500.0,
-      "avg_cost": 2655.0,
+      "total_invested_usd": 4284000.0,
+      "avg_cost": 2677.5,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -201,13 +201,13 @@
       "initial_entry_price": 2903.5,
       "pyramid_done": [
         true,
-        false,
+        true,
         false
       ],
-      "shares": 1400,
+      "shares": 1600,
       "lot_size": 100,
-      "total_invested_usd": 4111100.0,
-      "avg_cost": 2936.5,
+      "total_invested_usd": 4726700.0,
+      "avg_cost": 2954.1875,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -248,14 +248,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 2323.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1200,
+      "shares": 1800,
       "lot_size": 100,
-      "total_invested_usd": 2787600.0,
-      "avg_cost": 2323.0,
+      "total_invested_usd": 4223400.0,
+      "avg_cost": 2346.3333333333335,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -361,7 +361,31 @@
       "closed_reason": null,
       "closed_date": null,
       "name": "Dmg Mori"
+    },
+    {
+      "lot_id": "9983-2026-08-27-1",
+      "ticker": "9983",
+      "name": "Fast Retailing",
+      "initial_entry_date": "2026-08-27",
+      "initial_entry_price": 71540.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 100,
+      "lot_size": 100,
+      "total_invested_usd": 7154000.0,
+      "avg_cost": 71540.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
-  "last_processed_date": "2026-08-26"
+  "last_processed_date": "2026-08-27"
 }
