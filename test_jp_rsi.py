@@ -20,31 +20,41 @@ import rsi_strategy as rs
 
 
 class TestJpEntryCandidateFiltering(unittest.TestCase):
-    """検証2a/2b: 1単元が予算(300万円)を超える銘柄はスキップ・ログに残る対象になること。
+    """検証4: 1単元が予算(300万円)を超える値がさ株は見送らず1単元だけ買うこと（2026-08-27改訂）。
     lot_sizeが100以外の銘柄（例: 1）でも正しく候補に含まれること。"""
 
-    def test_a_unit_price_over_budget_is_skipped(self):
-        # ファストリテイリング 9983 実例: 72,840円×100株=728万円 > 300万円
+    def test_a_unit_price_over_budget_buys_one_lot_only(self):
+        # ファストリテイリング 9983 実例: 72,840円×100株=728万円 > 300万円 → 1単元(100株)だけ買う
         candidates = [{"ticker": "9983", "rsi14": 33.7, "price": 72840.0, "market_cap": 2.3e13}]
         lot_sizes = {"9983": 100}
 
-        allowed, too_expensive, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
+        allowed, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
 
-        self.assertEqual(allowed, [])
-        self.assertEqual([c["ticker"] for c in too_expensive], ["9983"])
-        self.assertEqual(too_expensive[0]["unit_cost"], 7284000.0)
+        self.assertEqual([c["ticker"] for c in allowed], ["9983"])
+        self.assertEqual(allowed[0]["lot_size"], 100)
         self.assertEqual(no_lotsize, [])
 
+        selected = rs.select_entries_within_cash(allowed, available_cash=10_000_000.0, rules=rs.JP_RULES)
+        self.assertEqual(selected[0]["qty"], 100)  # 1単元(100株)のみ。728.4万円 > 300万円だが最低1単元は買う
+
+    def test_a2_unit_price_over_budget_and_cash_insufficient_is_not_bought(self):
+        # 同じくファストリ。現金が1単元(728.4万円)に満たない場合は見送ること。
+        candidates = [{"ticker": "9983", "rsi14": 33.7, "price": 72840.0, "market_cap": 2.3e13}]
+        lot_sizes = {"9983": 100}
+        allowed, _ = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
+
+        selected = rs.select_entries_within_cash(allowed, available_cash=5_000_000.0, rules=rs.JP_RULES)
+        self.assertEqual(selected, [])
+
     def test_b_lot_size_other_than_100_is_used_correctly(self):
-        # J-REIT実例: 3455 lot_size=1（moomoo実機確認値）
-        candidates = [{"ticker": "3455", "rsi14": 27.9, "price": 99200.0, "market_cap": 3.5e10}]
-        lot_sizes = {"3455": 1}
+        # lot_size=1の会社銘柄例（額面が小さくlot_size=1の銘柄はJ-REIT以外にも存在しうる）
+        candidates = [{"ticker": "1234", "rsi14": 27.9, "price": 99200.0, "market_cap": 3.5e10}]
+        lot_sizes = {"1234": 1}
 
-        allowed, too_expensive, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
+        allowed, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
 
-        self.assertEqual([c["ticker"] for c in allowed], ["3455"])
+        self.assertEqual([c["ticker"] for c in allowed], ["1234"])
         self.assertEqual(allowed[0]["lot_size"], 1)
-        self.assertEqual(too_expensive, [])
         self.assertEqual(no_lotsize, [])
 
         # select_entries_within_cashで単元(1株)単位に切り捨てて計算されること
@@ -54,19 +64,58 @@ class TestJpEntryCandidateFiltering(unittest.TestCase):
     def test_unknown_lot_size_is_skipped_and_not_guessed(self):
         candidates = [{"ticker": "9999", "rsi14": 30.0, "price": 1000.0, "market_cap": 5e10}]
 
-        allowed, too_expensive, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, {})
+        allowed, no_lotsize = jp_rsi_daily.build_entry_candidates(candidates, {})
 
         self.assertEqual(allowed, [])
-        self.assertEqual(too_expensive, [])
         self.assertEqual(no_lotsize, ["9999"])
 
     def test_lot_size_100_rounds_down_to_unit_multiple(self):
         # 6367 実例: lot_size=100、3,000,000円で 20855円 → floor(3000000/20855)=143 → 100株単位に切り捨てで100株
         candidates = [{"ticker": "6367", "rsi14": 28.1, "price": 20855.0, "market_cap": 6.1e12}]
         lot_sizes = {"6367": 100}
-        allowed, _, _ = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
+        allowed, _ = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
         selected = rs.select_entries_within_cash(allowed, available_cash=10_000_000.0, rules=rs.JP_RULES)
         self.assertEqual(selected[0]["qty"], 100)
+
+    def test_cheap_stock_buys_ten_units(self):
+        # 検証4: 1単元が30万円の銘柄（lot_size=100・株価3,000円）で10単元(1000株)買われること
+        candidates = [{"ticker": "5555", "rsi14": 29.0, "price": 3000.0, "market_cap": 5e10}]
+        lot_sizes = {"5555": 100}
+        allowed, _ = jp_rsi_daily.build_entry_candidates(candidates, lot_sizes)
+        selected = rs.select_entries_within_cash(allowed, available_cash=10_000_000.0, rules=rs.JP_RULES)
+        self.assertEqual(selected[0]["qty"], 1000)  # floor(3,000,000 / 3000) = 1000株 = 10単元
+
+
+class TestJpCompanyOnlyFiltering(unittest.TestCase):
+    """検証2: 「会社の株のみ」ルール（REIT除外）。moomoo実機確認値に基づく。"""
+
+    def test_reit_tickers_are_excluded(self):
+        # 3455(ヘルスケア&メディカル投資法人)・2979(SOSiLA物流リート)はSTOCK区分に無い実機確認済み
+        candidates = [
+            {"ticker": "3455", "rsi14": 27.9, "price": 99200.0},
+            {"ticker": "2979", "rsi14": 30.0, "price": 102600.0},
+        ]
+        company_tickers = {"6367", "9983", "7532", "3905"}
+
+        allowed, excluded = jp_rsi_daily.filter_non_company_entries(candidates, company_tickers)
+
+        self.assertEqual(allowed, [])
+        self.assertEqual(sorted(excluded), ["2979", "3455"])
+
+    def test_company_tickers_are_allowed(self):
+        # 6367(ダイキン)・9983(ファストリ)・7532(パンパシ)・3905(データセクション)はSTOCK区分にある実機確認済み
+        candidates = [
+            {"ticker": "6367", "rsi14": 28.1, "price": 20855.0},
+            {"ticker": "9983", "rsi14": 33.7, "price": 72840.0},
+            {"ticker": "7532", "rsi14": 35.0, "price": 810.7},
+            {"ticker": "3905", "rsi14": 33.6, "price": 1662.0},
+        ]
+        company_tickers = {"6367", "9983", "7532", "3905"}
+
+        allowed, excluded = jp_rsi_daily.filter_non_company_entries(candidates, company_tickers)
+
+        self.assertEqual([c["ticker"] for c in allowed], ["6367", "9983", "7532", "3905"])
+        self.assertEqual(excluded, [])
 
 
 class TestJpRulesShareUsBehaviorRatios(unittest.TestCase):

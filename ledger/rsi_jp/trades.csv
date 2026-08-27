@@ -1,5 +1,4 @@
 date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name
-2026-08-24,BUY,3455,30,99200.0,2976000.0,entry,3455-2026-08-24-1,RSI14=27.9 lot_size=1・moomoo発注なし・台帳のみの仮想売買,Healthcare & Medical Investment
 2026-08-24,BUY,6367,100,20855.0,2085500.0,entry,6367-2026-08-24-1,RSI14=28.1 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Daikin Industries
 2026-08-24,BUY,6013,900,3065.0,2758500.0,entry,6013-2026-08-24-1,RSI14=31.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Takuma
 2026-08-24,BUY,6235,1100,2655.0,2920500.0,entry,6235-2026-08-24-1,RSI14=32.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Optorun
@@ -17,4 +16,3 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name
 2026-08-25,BUY,6141,900,3037.0,2733300.0,entry,6141-2026-08-25-1,RSI14=34.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Dmg Mori
 2026-08-26,BUY,4980,400,3019.0,1207600.0,pyramid1,4980-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Dexerials
 2026-08-26,BUY,7966,200,5580.0,1116000.0,pyramid1,7966-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,LINTEC
-2026-08-26,BUY,2979,29,102600.0,2975400.0,entry,2979-2026-08-26-1,RSI14=34.8 lot_size=1・moomoo発注なし・台帳のみの仮想売買,SOSiLA Logistics REIT

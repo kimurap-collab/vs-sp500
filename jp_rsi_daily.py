@@ -16,7 +16,11 @@
 - 保有銘柄の日々の価格はyfinance（スクリーナーはRSI<=35に該当する銘柄しか返さないため、
   保有中にRSIが35を超えて外れた銘柄の価格が取れなくなるのを避けるため）。
 - 単元株数(lot_size)はget_stock_basicinfo(Market.JP)でキャッシュ取得し、月初のみ更新。
-  1単元の金額が予算(300万円)を超える銘柄・lot_sizeが取得できない銘柄はスキップしログに残す。
+  lot_sizeが取得できない銘柄はスキップしログに残す。1単元の金額が予算(300万円)を超える
+  値がさ株は2026-08-27改訂で「買える最大単元数（最低1単元）を買う」に変更（見送りはしない）。
+- 「会社の株のみ」ルール（2026-08-27・大将「reitは除外せよ」）: get_stock_basicinfoの
+  SecurityType.STOCKに載っている銘柄のみ新規エントリー対象とする。載っていない銘柄
+  （J-REIT等はETF区分でのみ返る）は「会社の株ではない」として除外しログに残す。
 
 売買ルールそのもの（エントリー・買い増し・利確・伸ばす玉・15営業日/56日例外・
 同一銘柄1ロット制限・資金不足時の優先順位）はrsi_strategy.pyを共用する
@@ -235,33 +239,44 @@ def get_jp_candidates() -> list[dict[str, Any]]:
     return frozen["candidates"]
 
 
+def filter_non_company_entries(
+    candidates: list[dict[str, Any]], company_tickers: set[str],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """新規エントリー候補から「会社の株」でない銘柄（J-REIT等）を除外する（純粋関数。ログはしない）。
+
+    大将「会社しか買うなと言ってるだろ。1000億円で足切りできたのは結果であってルールとは
+    違っている。reitは除外せよ」（2026-08-27）。company_tickersはjp_lotsize.get_company_tickers()
+    （moomoo get_stock_basicinfo(SecurityType.STOCK)の実機確認に基づく「会社の株」一覧）。
+
+    戻り値: (会社の株のみの候補リスト, 除外したticker一覧)
+    """
+    allowed = [c for c in candidates if c["ticker"] in company_tickers]
+    excluded = [c["ticker"] for c in candidates if c["ticker"] not in company_tickers]
+    return allowed, excluded
+
+
 def build_entry_candidates(
     candidates: list[dict[str, Any]],
     lot_sizes: dict[str, int],
-    entry_amount: float = config.RSI_JP_ENTRY_AMOUNT_JPY,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
-    """frozen候補にlot_sizeを付与し、買えない銘柄を分ける（純粋関数。ログはしない）。
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """frozen候補にlot_sizeを付与する（純粋関数。ログはしない）。
 
-    「1単元の金額が予算を超える銘柄は買えない。スキップしてログに残すこと」
     「lot_sizeが取得できない銘柄は買わずにログに残す（推測で買わない）」（SPEC）。
+    1単元の金額が予算(300万円)を超える銘柄は、2026-08-27改訂により
+    「買える最大単元数（最低1単元）を買う」に変更されたためここではスキップしない
+    （実際のサイジングはrsi_strategy.select_entries_within_cashが行う）。
 
-    戻り値: (買える候補にlot_sizeを付加したリスト, 1単元が予算超過でスキップした候補,
-             lot_size不明でスキップしたticker一覧)
+    戻り値: (lot_sizeを付加した候補リスト, lot_size不明でスキップしたticker一覧)
     """
     allowed: list[dict[str, Any]] = []
-    too_expensive: list[dict[str, Any]] = []
     no_lotsize: list[str] = []
     for c in candidates:
         lot_size = lot_sizes.get(c["ticker"])
         if lot_size is None:
             no_lotsize.append(c["ticker"])
             continue
-        unit_cost = lot_size * c["price"]
-        if unit_cost > entry_amount:
-            too_expensive.append({**c, "lot_size": lot_size, "unit_cost": unit_cost})
-            continue
         allowed.append({**c, "lot_size": lot_size})
-    return allowed, too_expensive, no_lotsize
+    return allowed, no_lotsize
 
 
 def _new_lot_id_jp(ticker: str, entry_date: str, existing_lots: list[dict[str, Any]]) -> str:
@@ -312,17 +327,16 @@ def run_jp(
     )
 
     lot_sizes = jp_lotsize.get_lot_sizes()
+    company_tickers = jp_lotsize.get_company_tickers()
 
     raw_entry_candidates = [c for c in raw_candidates if c["ticker"] in market_prices]
     entry_candidates0, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(raw_entry_candidates, state["lots"])
-    entry_candidates, too_expensive, no_lotsize = build_entry_candidates(entry_candidates0, lot_sizes)
+    company_candidates, non_company_tickers = filter_non_company_entries(entry_candidates0, company_tickers)
+    entry_candidates, no_lotsize = build_entry_candidates(company_candidates, lot_sizes)
     for ticker in blocked_entry_tickers:
         log_lines.append(f"[JP-1] 新規エントリー見送り(保有中のため): {ticker}")
-    for c in too_expensive:
-        log_lines.append(
-            f"[JP-1] 新規エントリー見送り(1単元が予算超過): {c['ticker']} lot_size={c['lot_size']} "
-            f"単元金額={c['unit_cost']:,.0f}円 > {config.RSI_JP_ENTRY_AMOUNT_JPY:,.0f}円"
-        )
+    for ticker in non_company_tickers:
+        log_lines.append(f"[JP-1] {ticker} は会社の株ではないため対象外（REIT等）")
     for ticker in no_lotsize:
         log_lines.append(f"[JP-1] 新規エントリー見送り(lot_size不明): {ticker}")
 

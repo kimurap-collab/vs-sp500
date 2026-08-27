@@ -45,6 +45,9 @@ class StrategyRules:
     profit2_sell_fraction: float
     exception_window_trading_days: int
     exception_hold_calendar_days: int
+    # 新規エントリーで「1単元の金額が予算超過でも最低1単元は買う」を有効にするか
+    # （2026-08-27・日本株RSI枠のみ。米国枠は従来どおり予算を超えたら見送り＝False）。
+    min_one_lot_entry: bool = False
 
 
 # RSI-32枠（米国・ドル建て）。SPEC_RSI30.md準拠、従来のconfig定数をそのまま束ねただけ。
@@ -73,6 +76,7 @@ JP_RULES = StrategyRules(
     profit2_sell_fraction=config.RSI_JP_PROFIT2_SELL_FRACTION,
     exception_window_trading_days=config.RSI_JP_EXCEPTION_WINDOW_TRADING_DAYS,
     exception_hold_calendar_days=config.RSI_JP_EXCEPTION_HOLD_CALENDAR_DAYS,
+    min_one_lot_entry=True,  # 2026-08-27改訂: 値がさ株は300万円を超えても1単元だけ買う
 )
 
 
@@ -123,12 +127,20 @@ def select_entries_within_cash(
 
     candidates: [{"ticker": str, "rsi14": float, "price": float, "lot_size": int(省略可・既定1)}, ...]
     lot_sizeを省略した候補（米国枠）は1株単位のまま従来どおり計算する。
+
+    rules.min_one_lot_entry=Trueの場合（日本株RSI枠）、1単元の金額が予算を超えて
+    通常計算では0単元になる銘柄でも、最低1単元は買う（2026-08-27改訂。値がさ株対応。
+    現金が1単元分に満たなければ従来どおり見送る＝下のcostチェックで弾かれる）。
+
     戻り値: 選ばれた候補に "qty" を付加したリスト（RSI昇順）。
     """
     remaining = available_cash
     selected: list[dict[str, Any]] = []
     for c in sorted(candidates, key=lambda x: x["rsi14"]):
-        qty = qty_for_amount(rules.entry_amount, c["price"], c.get("lot_size", 1))
+        lot_size = c.get("lot_size", 1)
+        qty = qty_for_amount(rules.entry_amount, c["price"], lot_size)
+        if qty <= 0 and rules.min_one_lot_entry:
+            qty = lot_size
         if qty <= 0:
             continue
         cost = qty * c["price"]
