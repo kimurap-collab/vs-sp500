@@ -296,6 +296,109 @@
     <div class="empty" id="rsiJpTradesEmpty" style="display:none;">取引履歴なし</div>
   </section>
   </div>
+
+  <header style="margin-top:32px;">
+    <h1>AI裁量枠</h1>
+    <div class="updated" id="ai-updated"></div>
+  </header>
+
+  <div id="ai-panel">
+  <div class="diff-card">
+    <div class="label">対S&P500（AI裁量枠）</div>
+    <div class="amount" id="ai-diff-amount">-</div>
+    <div class="pct" id="ai-diff-pct">-</div>
+  </div>
+
+  <div class="nav-row">
+    <div class="nav-box">
+      <div class="label">AI裁量枠の評価額</div>
+      <div class="value" id="ai-nav-usd">-</div>
+    </div>
+    <div class="nav-box">
+      <div class="label">ベンチマーク(VOO)</div>
+      <div class="value" id="ai-bench-usd">-</div>
+    </div>
+    <div class="nav-box">
+      <div class="label">元本比</div>
+      <div class="value" id="ai-principal-diff-usd">-</div>
+    </div>
+  </div>
+  <div class="note">
+    ※<strong>売買ルールを持たない枠</strong>。何を買うか・いくら買うか・いつ売るかを毎日AIが判断する。
+    3役のチーム（探索役＝絞り込み条件も自分で決める／検証役＝候補を潰しにかかる／執行役＝発注量を決めて理由を記録）で、
+    判断は1日1回・数日〜数週間のスイング。moomoo仮想口座で実約定し、手数料も実費。
+    初期資金 $100,000。ベンチマークは同額をVOOに一括投資して放置したもの。
+    コード側のガードレール: 仮想口座のみ・他の枠の玉には触れない・空売り/レバレッジ禁止・
+    現金超過の発注不可・1日の発注は最大5件。<strong>理由は後から書き換えない。</strong>
+  </div>
+
+  <section>
+    <h2>資産推移</h2>
+    <canvas id="aiHistoryChart" height="180"></canvas>
+  </section>
+
+  <section>
+    <h2>月次勝敗</h2>
+    <table id="aiMonthlyTable">
+      <thead><tr><th>月</th><th class="num">評価額</th><th class="num">ベンチマーク</th><th>結果</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="aiMonthlyEmpty" style="display:none;">まだデータがありません</div>
+  </section>
+
+  <section>
+    <h2>保有一覧（買った理由つき）</h2>
+    <div class="table-scroll">
+    <table id="aiHoldingsTable">
+      <thead><tr>
+        <th>銘柄</th><th class="num">株数</th><th class="num">平均取得単価</th>
+        <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th><th>買った理由</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="aiHoldingsEmpty" style="display:none;">保有なし（全額現金）</div>
+  </section>
+
+  <section>
+    <h2>取引記録（判断理由つき）</h2>
+    <div class="table-scroll">
+    <table id="aiTradesTable">
+      <thead><tr>
+        <th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th><th>そのとき何を見て何を考えたか</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="aiTradesEmpty" style="display:none;">取引履歴なし</div>
+  </section>
+
+  <section>
+    <h2>毎日の判断（動かなかった日も残す）</h2>
+    <div class="table-scroll">
+    <table id="aiDecisionsTable">
+      <thead><tr>
+        <th>日付</th><th class="num">注文</th><th>今日どう絞ったか</th><th>市況の読み</th><th>検証役が潰した候補</th><th>動かなかった理由</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="aiDecisionsEmpty" style="display:none;">判断記録なし</div>
+  </section>
+
+  <section>
+    <h2>決着した取引の振り返り</h2>
+    <div class="table-scroll">
+    <table id="aiReviewsTable">
+      <thead><tr>
+        <th>決済日</th><th>銘柄</th><th class="num">保有日数</th><th class="num">損益</th><th class="num">騰落率</th><th>買った理由</th><th>売った理由</th><th>判断は正しかったか</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="aiReviewsEmpty" style="display:none;">まだ決着した取引はありません</div>
+  </section>
+  </div>
 </div>
 
 <script>
@@ -639,6 +742,150 @@ async function load() {
   } else {
     document.getElementById("rsi-jp-updated").textContent = "まだ開始していません";
     document.getElementById("rsi-jp-panel").style.display = "none";
+  }
+
+  // --- AI裁量枠（data.aiがまだ無い/未開始なら非表示） ---
+  // この枠だけAIが書いた自由文（理由）を表示するので、必ずエスケープしてから流し込む
+  const esc = (s) => String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  const ai = data.ai;
+  if (ai && ai.start_date) {
+    document.getElementById("ai-updated").textContent =
+      "開始日: " + ai.start_date + "（保有銘柄数: " + (ai.positions || 0) + "・現金 $" +
+      Number(ai.cash_usd).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + "）";
+
+    const aiDiff = ai.diff_usd;
+    const aiWin = aiDiff >= 0;
+    const aiSign = aiWin ? "+" : "";
+    const aiAmountEl = document.getElementById("ai-diff-amount");
+    aiAmountEl.textContent = aiSign + "$" + aiDiff.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    aiAmountEl.className = "amount " + (aiWin ? "win" : "lose");
+    const aiPctEl = document.getElementById("ai-diff-pct");
+    aiPctEl.textContent = aiSign + ai.diff_pct.toFixed(2) + "%";
+    aiPctEl.className = "pct " + (aiWin ? "win" : "lose");
+
+    document.getElementById("ai-nav-usd").textContent = "$" + ai.nav_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("ai-bench-usd").textContent = "$" + ai.bench_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const aiPrincipalWin = ai.principal_diff_usd >= 0;
+    const aiPrincipalSign = aiPrincipalWin ? "+" : "";
+    const aiPrincipalEl = document.getElementById("ai-principal-diff-usd");
+    aiPrincipalEl.textContent = aiPrincipalSign + "$" + ai.principal_diff_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+      " (" + aiPrincipalSign + ai.principal_diff_pct.toFixed(2) + "%)";
+    aiPrincipalEl.className = "value " + (aiPrincipalWin ? "win" : "lose");
+
+    const aiHist = ai.history || [];
+    new Chart(document.getElementById("aiHistoryChart"), {
+      type: "line",
+      data: {
+        labels: aiHist.map(h => h.date),
+        datasets: [
+          { label: "AI裁量枠", data: aiHist.map(h => h.nav), borderColor: "#3ddc84", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+          { label: "S&P500(VOO)", data: aiHist.map(h => h.bench), borderColor: "#8b93a3", backgroundColor: "transparent", tension: 0.15, pointRadius: 0 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: "#e6e8ec" } } },
+        scales: {
+          x: { ticks: { color: "#8b93a3", maxTicksLimit: 6 }, grid: { color: "#262b36" } },
+          y: { ticks: { color: "#8b93a3" }, grid: { color: "#262b36" } },
+        },
+      },
+    });
+
+    const aiMonthlyBody = document.querySelector("#aiMonthlyTable tbody");
+    const aiMonthly = (ai.monthly || []).slice().reverse();
+    if (aiMonthly.length === 0) {
+      document.getElementById("aiMonthlyEmpty").style.display = "block";
+    } else {
+      aiMonthly.forEach(m => {
+        const tr = document.createElement("tr");
+        const cls = m.result === "win" ? "win" : "lose";
+        tr.innerHTML = `<td>${esc(m.month)}</td><td class="num">$${m.nav.toLocaleString()}</td>` +
+          `<td class="num">$${m.bench.toLocaleString()}</td><td class="${cls}">${m.result === "win" ? "勝ち" : "負け"}</td>`;
+        aiMonthlyBody.appendChild(tr);
+      });
+    }
+
+    const aiHoldingsBody = document.querySelector("#aiHoldingsTable tbody");
+    const aiHoldings = ai.holdings || [];
+    if (aiHoldings.length === 0) {
+      document.getElementById("aiHoldingsEmpty").style.display = "block";
+    } else {
+      aiHoldings.forEach(h => {
+        let pnlStr = "-", pnlCls = "";
+        if (h.avg_cost > 0 && h.price != null) {
+          const pnl = (h.price / h.avg_cost - 1) * 100;
+          pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
+          pnlCls = pnl >= 0 ? "win" : "lose";
+        }
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td><a class="ticker-link" href="${esc(h.link)}" target="_blank" rel="noopener">${esc(h.ticker)}</a>` +
+          (h.name ? `<span class="sub">${esc(h.name)}</span>` : "") + `</td>` +
+          `<td class="num">${h.shares}</td>` +
+          `<td class="num">${fmtPrice(h.avg_cost, "USD")}</td>` +
+          `<td class="num">${fmtPrice(h.price, "USD")}</td>` +
+          `<td class="num ${pnlCls}">${pnlStr}</td>` +
+          `<td class="num">$${h.value_usd.toLocaleString()}</td>` +
+          `<td class="num">${h.weight_pct}%</td>` +
+          `<td>${esc(h.reason)}</td>`;
+        aiHoldingsBody.appendChild(tr);
+      });
+    }
+
+    const aiTradesBody = document.querySelector("#aiTradesTable tbody");
+    const aiTrades = ai.trades || [];
+    if (aiTrades.length === 0) {
+      document.getElementById("aiTradesEmpty").style.display = "block";
+    } else {
+      aiTrades.forEach(t => {
+        const tr = document.createElement("tr");
+        const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        tr.innerHTML = `<td>${esc(t.date)}</td><td>${esc(t.action)}</td>` +
+          `<td>${esc(t.ticker)}${t.name ? "<span class=\"sub\">" + esc(t.name) + "</span>" : ""}</td>` +
+          `<td class="num">${esc(t.shares)}</td><td class="num">$${amt}</td><td>${esc(t.rule)}</td>` +
+          `<td>${esc(t.reason)}</td>`;
+        aiTradesBody.appendChild(tr);
+      });
+    }
+
+    const aiDecisionsBody = document.querySelector("#aiDecisionsTable tbody");
+    const aiDecisions = ai.decisions || [];
+    if (aiDecisions.length === 0) {
+      document.getElementById("aiDecisionsEmpty").style.display = "block";
+    } else {
+      aiDecisions.forEach(d => {
+        const killed = (d.killed || []).map(k => esc(k.ticker) + ": " + esc(k.attack)).join("<br>");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(d.date)}</td><td class="num">${d.orders}</td>` +
+          `<td>${esc(d.screen_rationale)}</td><td>${esc(d.market_read)}</td>` +
+          `<td>${killed}</td><td>${esc(d.no_action_reason)}</td>`;
+        aiDecisionsBody.appendChild(tr);
+      });
+    }
+
+    const aiReviewsBody = document.querySelector("#aiReviewsTable tbody");
+    const aiReviews = ai.reviews || [];
+    if (aiReviews.length === 0) {
+      document.getElementById("aiReviewsEmpty").style.display = "block";
+    } else {
+      aiReviews.forEach(r => {
+        const win = Number(r.realized_pnl_usd) >= 0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${esc(r.date)}</td>` +
+          `<td>${esc(r.ticker)}${r.name ? "<span class=\"sub\">" + esc(r.name) + "</span>" : ""}</td>` +
+          `<td class="num">${esc(r.holding_days)}</td>` +
+          `<td class="num ${win ? "win" : "lose"}">${win ? "+" : ""}$${Number(r.realized_pnl_usd).toLocaleString()}</td>` +
+          `<td class="num ${win ? "win" : "lose"}">${win ? "+" : ""}${r.return_pct}%</td>` +
+          `<td>${esc(r.entry_reason)}</td><td>${esc(r.exit_reason)}</td><td>${esc(r.review)}</td>`;
+        aiReviewsBody.appendChild(tr);
+      });
+    }
+  } else {
+    document.getElementById("ai-updated").textContent = "まだ開始していません";
+    document.getElementById("ai-panel").style.display = "none";
   }
 }
 

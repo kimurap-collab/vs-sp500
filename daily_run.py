@@ -11,6 +11,8 @@ import sys
 import yfinance as yf
 
 import account_state
+import ai_daily
+import ai_ledger
 import broker
 import config
 import jp_market
@@ -217,9 +219,11 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         state = portfolio.load_portfolio()
         rsi_state = rsi_ledger.load_portfolio()
         jp_state = jp_rsi_ledger.load_portfolio()
+        ai_state = ai_ledger.load_portfolio()
         log_and_report(
             f"[1] 台帳読み込み完了。mode={state['mode']} start_date={state['start_date']} "
-            f"RSI枠start_date={rsi_state['start_date']} JP RSI枠start_date={jp_state['start_date']}"
+            f"RSI枠start_date={rsi_state['start_date']} JP RSI枠start_date={jp_state['start_date']} "
+            f"AI裁量枠start_date={ai_state['start_date']}"
         )
 
         tickers_to_fetch = sorted(set(list(config.WHITELIST.keys()) + list(state["holdings"].keys())))
@@ -243,8 +247,15 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 logger.exception("JP RSI枠: --report-onlyのスナップショット計算に失敗した")
                 rsi_jp_nav, rsi_jp_market = 0.0, {}
             rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, [])
+            try:
+                ai_nav, ai_bench, ai_market = ai_daily.compute_snapshot_only(ai_state, voo_snap)
+            except Exception:
+                logger.exception("AI裁量枠: --report-onlyのスナップショット計算に失敗した")
+                ai_nav, ai_bench, ai_market = 0.0, 0.0, {}
+            ai_block = report.build_ai_block(ai_state, ai_market, ai_nav, ai_bench)
             data = report.build_data_json(
                 state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
+                ai_block=ai_block,
             )
             report.save_data_json(data)
             log_and_report("[4] data.json更新完了（--report-onlyのためhistory.csv追記・portfolio.json保存はスキップ）")
@@ -313,8 +324,28 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 rsi_jp_nav, rsi_jp_market = 0.0, {}
             rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, [])
 
+            # AI裁量枠も異常停止時は売買せず評価のみ（他の3枠と同じ縮退方針）
+            try:
+                ai_nav, ai_bench, ai_market = ai_daily.compute_snapshot_only(ai_state, voo_snap)
+                if not dry_run and ai_state.get("start_date"):
+                    ai_diff = ai_nav - ai_bench
+                    ai_ledger.append_history_row({
+                        "date": voo_snap.date,
+                        "nav_usd": round(ai_nav, 2),
+                        "bench_usd": round(ai_bench, 2),
+                        "diff_usd": round(ai_diff, 2),
+                        "diff_pct": round(ai_diff / ai_bench * 100, 4) if ai_bench else 0.0,
+                        "cash_ratio": round(ai_ledger.compute_cash_ratio(ai_state, ai_nav), 4) if ai_nav else 0.0,
+                        "positions": len(ai_ledger.open_positions(ai_state)),
+                    })
+            except Exception:
+                logger.exception("AI裁量枠: 異常停止時のスナップショット計算に失敗した")
+                ai_nav, ai_bench, ai_market = 0.0, 0.0, {}
+            ai_block = report.build_ai_block(ai_state, ai_market, ai_nav, ai_bench)
+
             data = report.build_data_json(
                 state, snapshots, nav_usd, bench_usd, [], now_jst, rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
+                ai_block=ai_block,
             )
             if not dry_run:
                 report.save_data_json(data)
@@ -422,17 +453,35 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             rsi_settled_trades, rsi_settle_resolved = [], []
             log_and_report("[3d] moomoo未接続のためRSI枠pending決済スキップ")
 
+        # 3d-2. 未決注文の決済（AI裁量枠）。RSI枠と同じ扱い（手数料逆算に含めるため判断より前に済ませる）
+        if moomoo_available:
+            ai_state, ai_settled_trades, ai_settle_warnings, ai_settle_resolved = ai_daily.settle_pending_orders(
+                ai_state, voo_snap.date, dry_run=dry_run,
+            )
+            for t in ai_settled_trades:
+                if not dry_run:
+                    ai_ledger.append_trade_row(t)
+            for w in ai_settle_warnings:
+                logger.warning(w)
+            log_and_report(
+                f"[3d-2] AI裁量枠pending決済: 確定{len(ai_settled_trades)}件 警告{len(ai_settle_warnings)}件"
+            )
+        else:
+            ai_settled_trades, ai_settle_resolved = [], []
+            log_and_report("[3d-2] moomoo未接続のためAI裁量枠pending決済スキップ")
+
         # 3e. 手数料逆算（moomoo APIに手数料そのものを返す経路が無いため、口座全体の現金増減から
-        #      逆算する。両枠合算・額面比で按分してcash_usdから差し引く。2026-08-18 修正3）
-        pending_resolution_lines = settle_resolved + rsi_settle_resolved
+        #      逆算する。全枠合算・額面比で按分してcash_usdから差し引く。2026-08-18 修正3）
+        pending_resolution_lines = settle_resolved + rsi_settle_resolved + ai_settle_resolved
         if moomoo_available and account_cash_snapshot is not None:
             prev_account_cash = account_state.load_account_cash()
             fees_by_book, fee_logs = account_state.reconcile_fees(
                 prev_account_cash, account_cash_snapshot,
-                {"main": settled_trades, "rsi": rsi_settled_trades},
+                {"main": settled_trades, "rsi": rsi_settled_trades, "ai": ai_settled_trades},
             )
             state["cash_usd"] -= fees_by_book.get("main", 0.0)
             rsi_state["cash_usd"] -= fees_by_book.get("rsi", 0.0)
+            ai_state["cash_usd"] -= fees_by_book.get("ai", 0.0)
             for line in fee_logs:
                 log_and_report(f"[3e] {line}")
         else:
@@ -573,6 +622,34 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             log_and_report(line)
         rsi_jp_block = report.build_rsi_jp_block(jp_state, rsi_jp_market, rsi_jp_nav, rsi_jp_accepted_trades)
 
+        # 7e. AI裁量枠（4本目の戦略枠。2026-08-28新設。売買ルールを持たず毎回AIが判断する）。
+        #     この枠の障害で他の3枠の報告まで止めないよう個別にtry/exceptで包む（JP枠と同じ方針）。
+        ai_already_processed = ai_state["last_processed_date"] == voo_snap.date
+        try:
+            ai_state, ai_accepted_trades, ai_log_lines, ai_nav, ai_bench, ai_market = ai_daily.run(
+                ai_state, voo_snap, voo_technicals, can_trade, ai_already_processed, dry_run,
+                voo_snap.date, market_us_state,
+            )
+        except Exception as e:  # noqa: BLE001 - AI裁量枠の障害で他の枠の報告まで止めないため
+            logger.exception("AI裁量枠の実行中に例外が発生した")
+            ai_accepted_trades, ai_log_lines = [], [f"[AI] 実行エラーのため売買スキップ: {e}"]
+            # 3d-2で決済済みの分はtrades.csvに書き終わっているので、台帳だけ保存して整合を保つ
+            # （保存しないと次回もう一度同じ約定を反映して二重計上になる）
+            if not dry_run:
+                try:
+                    ai_ledger.save_portfolio(ai_state)
+                except Exception:
+                    logger.exception("AI裁量枠: 例外後の台帳保存にも失敗した")
+            try:
+                ai_nav, ai_bench, ai_market = ai_daily.compute_snapshot_only(ai_state, voo_snap)
+            except Exception:
+                logger.exception("AI裁量枠: スナップショット計算にも失敗した")
+                ai_nav, ai_bench, ai_market = 0.0, 0.0, {}
+        ai_accepted_trades = ai_settled_trades + ai_accepted_trades
+        for line in ai_log_lines:
+            log_and_report(line)
+        ai_block = report.build_ai_block(ai_state, ai_market, ai_nav, ai_bench)
+
         # 3f. 口座全体の現金残高を記録（次回の手数料逆算の基準値。本日の全取引が終わった後に記録する。
         #     dry-runでは記録しない（触ってはいけない実運用のチェックポイントを汚さないため）
         if not dry_run and moomoo_available:
@@ -594,7 +671,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
         # 8. data.json再生成
         data = report.build_data_json(
             state, snapshots, nav_usd, bench_usd, accepted_trades, now_jst,
-            rsi_block=rsi_block, rsi_jp_block=rsi_jp_block,
+            rsi_block=rsi_block, rsi_jp_block=rsi_jp_block, ai_block=ai_block,
         )
         if not dry_run:
             report.save_data_json(data)
@@ -623,6 +700,7 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
             data, accepted_trades, now_jst, prev_month_line, alert_lines,
             resolved_pending_lines=pending_resolution_lines,
             rsi_accepted_trades=rsi_accepted_trades, rsi_jp_accepted_trades=rsi_jp_accepted_trades,
+            ai_accepted_trades=ai_accepted_trades,
         )
         if dry_run:
             log_and_report("[9] dry-runのためTelegram送信はスキップ。送信予定文面:\n" + message)

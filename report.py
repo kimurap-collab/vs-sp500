@@ -192,6 +192,99 @@ def build_rsi_jp_block(
     }
 
 
+def build_ai_block(
+    ai_state: dict[str, Any],
+    ai_market: dict[str, TickerSnapshot],
+    ai_nav_usd: float,
+    ai_bench_usd: float,
+) -> dict[str, Any]:
+    """AI裁量枠のdata.json用ブロック（4本目の枠。2026-08-28）。
+
+    この枠の主眼は**理由**なので、取引記録・保有・判断日誌に理由をそのまま載せる
+    （大将「buyとかsellとか書いてるところに理由書いてな」）。理由は台帳の値をそのまま出し、
+    表示側で丸めたり言い換えたりしない。
+    """
+    import ai_ledger
+
+    # 初日は差額がほぼ0で、丸めた結果の -0.0 が「+$-0.00」と表示されるため負のゼロを潰す
+    diff_usd = round(ai_nav_usd - ai_bench_usd, 2) or 0.0
+    diff_pct = (diff_usd / ai_bench_usd * 100.0) if ai_bench_usd else 0.0
+    principal_usd = config.AI_INITIAL_CAPITAL_USD
+    principal_diff_usd = round(ai_nav_usd - principal_usd, 2) or 0.0
+    principal_diff_pct = (principal_diff_usd / principal_usd * 100.0) if principal_usd else 0.0
+
+    # 銘柄ごとの最新の買い理由（保有一覧に添えるため）
+    latest_buy_reason: dict[str, str] = {}
+    trade_rows = ai_ledger.read_trade_rows()
+    for row in trade_rows:
+        if row.get("action") == "BUY" and row.get("reason"):
+            latest_buy_reason[row["ticker"]] = row["reason"]
+
+    holdings = []
+    for ticker, pos in ai_ledger.open_positions(ai_state).items():
+        snap = ai_market.get(ticker)
+        if snap is None or pos["shares"] <= 0:
+            continue
+        value_usd = pos["shares"] * snap.close
+        holdings.append({
+            "ticker": ticker,
+            "name": pos.get("name"),
+            "shares": round(pos["shares"], 4),
+            "value_usd": round(value_usd, 2),
+            "weight_pct": round(value_usd / ai_nav_usd * 100.0, 2) if ai_nav_usd else 0.0,
+            "price": round(snap.close, 4),
+            "avg_cost": round(pos["avg_cost"], 4),
+            "first_entry_date": pos.get("first_entry_date"),
+            "reason": latest_buy_reason.get(ticker, ""),
+            "link": _ticker_link(ticker, "USD"),
+        })
+    holdings.sort(key=lambda h: -h["value_usd"])
+
+    history_rows = ai_ledger.read_history_rows()
+    history = [{"date": r["date"], "nav": round(float(r["nav_usd"]), 2), "bench": round(float(r["bench_usd"]), 2)}
+               for r in history_rows]
+
+    trades_recent = trade_rows[-config.DATA_JSON_TRADES_LIMIT:]
+    trades_recent.reverse()
+
+    # 何もしなかった日も含む判断の記録（大将「何もしなかった日も理由を残す」）
+    decisions = ai_ledger.read_decisions()[-config.DATA_JSON_TRADES_LIMIT:]
+    decision_log = [
+        {
+            "date": d.get("date"),
+            "screen_rationale": (d.get("screen_plan") or {}).get("rationale", ""),
+            "market_read": (d.get("scout") or {}).get("market_read", ""),
+            "killed": [
+                {"ticker": v.get("ticker"), "attack": v.get("attack")}
+                for v in (d.get("challenger") or []) if v.get("verdict") == "kill"
+            ],
+            "orders": len(d.get("executed") or []),
+            "no_action_reason": d.get("no_action_reason", ""),
+        }
+        for d in reversed(decisions)
+    ]
+    reviews = list(reversed(ai_ledger.read_reviews()[-config.DATA_JSON_TRADES_LIMIT:]))
+
+    return {
+        "start_date": ai_state.get("start_date"),
+        "nav_usd": round(ai_nav_usd, 2),
+        "bench_usd": round(ai_bench_usd, 2),
+        "diff_usd": round(diff_usd, 2),
+        "diff_pct": round(diff_pct, 2),
+        "principal_usd": round(principal_usd, 2),
+        "principal_diff_usd": round(principal_diff_usd, 2),
+        "principal_diff_pct": round(principal_diff_pct, 2),
+        "cash_usd": round(ai_state.get("cash_usd", 0.0), 2),
+        "positions": len(ai_ledger.open_positions(ai_state)),
+        "holdings": holdings,
+        "history": history,
+        "trades": trades_recent,
+        "monthly": _build_monthly_table(history_rows),
+        "decisions": decision_log,
+        "reviews": reviews,
+    }
+
+
 def build_data_json(
     state: dict[str, Any],
     market: dict[str, TickerSnapshot],
@@ -201,6 +294,7 @@ def build_data_json(
     now_jst: dt.datetime,
     rsi_block: dict[str, Any] | None = None,
     rsi_jp_block: dict[str, Any] | None = None,
+    ai_block: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     diff_usd = nav_usd - bench_usd
     diff_pct = (diff_usd / bench_usd * 100.0) if bench_usd else 0.0
@@ -268,6 +362,7 @@ def build_data_json(
         "monthly": monthly,
         "rsi": rsi_block,
         "rsi_jp": rsi_jp_block,
+        "ai": ai_block,
     }
 
 
@@ -314,6 +409,7 @@ def build_telegram_message(
     resolved_pending_lines: list[str] | None = None,
     rsi_accepted_trades: list[dict[str, Any]] | None = None,
     rsi_jp_accepted_trades: list[dict[str, Any]] | None = None,
+    ai_accepted_trades: list[dict[str, Any]] | None = None,
 ) -> str:
     date_str = f"{now_jst.month}/{now_jst.day}"
     diff_usd = data["diff_usd"]
@@ -356,6 +452,26 @@ def build_telegram_message(
     if rsi_jp_accepted_trades:
         jp_trade_lines = "\n".join(_trade_line(t, "amount_jpy", "¥", 0) for t in rsi_jp_accepted_trades)
         lines.append(f"日本株RSI枠 売買:\n{jp_trade_lines}")
+
+    ai = data.get("ai")
+    if ai and ai.get("start_date"):
+        ai_diff = ai["diff_usd"]
+        ai_emoji = "🟢" if ai_diff >= 0 else "🔴"
+        ai_sign = "+" if ai_diff >= 0 else ""
+        lines.append(
+            f"🤖 AI裁量枠: ${ai['nav_usd']:,.2f}（対VOO {ai_sign}${ai_diff:,.2f} "
+            f"{ai_sign}{ai['diff_pct']:.2f}%）{ai_emoji}"
+        )
+
+    if ai_accepted_trades:
+        # この枠は理由が主眼なので、Telegramにも理由を1行添える（大将「理由書いてな」）
+        ai_lines = []
+        for t in ai_accepted_trades:
+            ai_lines.append(_trade_line(t, "amount_usd", "$", 2))
+            reason = str(t.get("reason") or "").strip()
+            if reason:
+                ai_lines.append(f"  └ {reason}")
+        lines.append("AI裁量枠 売買:\n" + "\n".join(ai_lines))
 
     if resolved_pending_lines:
         # 滞留・行方不明の注文を自己解決した記録（行動を求める警告ではなくFYI。2026-08-18 修正2）
