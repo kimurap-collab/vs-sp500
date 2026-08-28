@@ -20,3 +20,7 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name
 2026-08-27,BUY,4980,200,3078.0,615600.0,pyramid2,4980-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Dexerials
 2026-08-27,BUY,6235,500,2727.0,1363500.0,pyramid1,6235-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Optorun
 2026-08-27,BUY,9983,100,71540.0,7154000.0,entry,9983-2026-08-27-1,RSI14=30.7 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Fast Retailing
+2026-08-28,BUY,3905,800,1727.0,1381600.0,pyramid1,3905-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Datasection
+2026-08-28,BUY,6361,600,4688.0,2812800.0,entry,6361-2026-08-28-1,RSI14=33.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Ebara
+2026-08-28,BUY,7944,700,3775.0,2642500.0,entry,7944-2026-08-28-1,RSI14=34.2 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Roland
+2026-08-28,BUY,4368,1000,2971.0,2971000.0,entry,4368-2026-08-28-1,RSI14=34.7 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Fuso Chemical

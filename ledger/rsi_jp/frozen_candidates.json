@@ -1,33 +1,96 @@
 {
-  "generated_at": "2026-08-27T12:00:03.110182+00:00",
+  "generated_at": "2026-08-28T12:00:07.315117+00:00",
   "candidates": [
     {
-      "ticker": "6367",
-      "rsi14": 29.849,
-      "price": 20840.0,
-      "market_cap": 6108495197320.0,
-      "name": "Daikin Industries"
-    },
-    {
       "ticker": "5334",
-      "rsi14": 29.94,
-      "price": 8474.0,
-      "market_cap": 1688425179280.0,
+      "rsi14": 27.271,
+      "price": 8262.0,
+      "market_cap": 1646184662640.0,
       "name": "Niterra"
     },
     {
       "ticker": "9983",
-      "rsi14": 30.668,
-      "price": 71540.0,
-      "market_cap": 22765528050720.0,
+      "rsi14": 30.009,
+      "price": 71260.0,
+      "market_cap": 22676426179680.0,
       "name": "Fast Retailing"
     },
     {
+      "ticker": "3481",
+      "rsi14": 30.576,
+      "price": 115500.0,
+      "market_cap": 171518770500.0,
+      "name": "Mitsubishi Estate Logistics REIT Investment"
+    },
+    {
+      "ticker": "6367",
+      "rsi14": 31.081,
+      "price": 20895.0,
+      "market_cap": 6124616465835.0,
+      "name": "Daikin Industries"
+    },
+    {
+      "ticker": "3466",
+      "rsi14": 32.403,
+      "price": 143800.0,
+      "market_cap": 249752559000.0,
+      "name": "LaSalle LOGIPORT REIT"
+    },
+    {
+      "ticker": "6013",
+      "rsi14": 33.005,
+      "price": 3055.0,
+      "market_cap": 231230200500.0,
+      "name": "Takuma"
+    },
+    {
       "ticker": "1979",
-      "rsi14": 34.413,
-      "price": 3895.0,
-      "market_cap": 247192350110.0,
+      "rsi14": 33.595,
+      "price": 3875.0,
+      "market_cap": 245923069750.0,
       "name": "Taikisha"
+    },
+    {
+      "ticker": "6361",
+      "rsi14": 33.776,
+      "price": 4688.0,
+      "market_cap": 2144488963280.0,
+      "name": "Ebara"
+    },
+    {
+      "ticker": "8964",
+      "rsi14": 34.009,
+      "price": 77700.0,
+      "market_cap": 210178500000.0,
+      "name": "Mitsui Fudosan Retail Fund Investment"
+    },
+    {
+      "ticker": "7944",
+      "rsi14": 34.166,
+      "price": 3775.0,
+      "market_cap": 100341987725.0,
+      "name": "Roland"
+    },
+    {
+      "ticker": "3295",
+      "rsi14": 34.316,
+      "price": 150400.0,
+      "market_cap": 216576000000.0,
+      "name": "Hulic Reit"
+    },
+    {
+      "ticker": "3281",
+      "rsi14": 34.386,
+      "price": 134600.0,
+      "market_cap": 645774592600.0,
+      "name": "GLP J-REIT"
+    },
+    {
+      "ticker": "4368",
+      "rsi14": 34.746,
+      "price": 2971.0,
+      "market_cap": 316509543000.0,
+      "name": "Fuso Chemical"
     }
   ]
 }

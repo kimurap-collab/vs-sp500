@@ -1,41 +1,83 @@
 {
-  "generated_at": "2026-08-27T12:00:02.901016+00:00",
+  "generated_at": "2026-08-28T12:00:06.845879+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "TJX",
-      "rsi14": 22.814,
+      "rsi14": 20.578,
       "name": "TJX Companies",
-      "price": 136.83,
-      "date": "2026-08-27"
+      "price": 134.22,
+      "date": "2026-08-28"
     },
     {
-      "ticker": "LII",
-      "rsi14": 29.934,
-      "name": "Lennox International",
-      "price": 393.72,
-      "date": "2026-08-27"
+      "ticker": "HRL",
+      "rsi14": 21.63,
+      "name": "Hormel Foods",
+      "price": 21.28,
+      "date": "2026-08-28"
     },
     {
       "ticker": "FER",
-      "rsi14": 30.619,
+      "rsi14": 27.623,
       "name": "Ferrovial SE",
-      "price": 59.94,
-      "date": "2026-08-27"
+      "price": 58.77,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "LII",
+      "rsi14": 29.297,
+      "name": "Lennox International",
+      "price": 391.15,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "TPR",
+      "rsi14": 30.244,
+      "name": "Tapestry",
+      "price": 123.24,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "RL",
+      "rsi14": 30.56,
+      "name": "Ralph Lauren",
+      "price": 351.9,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "LUV",
+      "rsi14": 30.778,
+      "name": "Southwest Airlines",
+      "price": 39.76,
+      "date": "2026-08-28"
     },
     {
       "ticker": "CARR",
-      "rsi14": 31.002,
+      "rsi14": 31.615,
       "name": "Carrier Global",
-      "price": 58.74,
-      "date": "2026-08-27"
+      "price": 58.84,
+      "date": "2026-08-28"
     },
     {
-      "ticker": "TTD",
-      "rsi14": 31.139,
-      "name": "The Trade Desk",
-      "price": 13.03,
-      "date": "2026-08-27"
+      "ticker": "CMI",
+      "rsi14": 31.787,
+      "name": "Cummins",
+      "price": 573.87,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "APTV",
+      "rsi14": 31.822,
+      "name": "Aptiv PLC",
+      "price": 45.44,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "WYNN",
+      "rsi14": 31.931,
+      "name": "Wynn Resorts",
+      "price": 93.61,
+      "date": "2026-08-28"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 46481610.0,
+  "cash_jpy": 36673710.0,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -128,14 +128,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 1662.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1800,
+      "shares": 2600,
       "lot_size": 100,
-      "total_invested_usd": 2991600.0,
-      "avg_cost": 1662.0,
+      "total_invested_usd": 4373200.0,
+      "avg_cost": 1682.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -385,7 +385,79 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "6361-2026-08-28-1",
+      "ticker": "6361",
+      "name": "Ebara",
+      "initial_entry_date": "2026-08-28",
+      "initial_entry_price": 4688.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 600,
+      "lot_size": 100,
+      "total_invested_usd": 2812800.0,
+      "avg_cost": 4688.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "7944-2026-08-28-1",
+      "ticker": "7944",
+      "name": "Roland",
+      "initial_entry_date": "2026-08-28",
+      "initial_entry_price": 3775.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 700,
+      "lot_size": 100,
+      "total_invested_usd": 2642500.0,
+      "avg_cost": 3775.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "4368-2026-08-28-1",
+      "ticker": "4368",
+      "name": "Fuso Chemical",
+      "initial_entry_date": "2026-08-28",
+      "initial_entry_price": 2971.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1000,
+      "lot_size": 100,
+      "total_invested_usd": 2971000.0,
+      "avg_cost": 2971.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
-  "last_processed_date": "2026-08-27"
+  "last_processed_date": "2026-08-28"
 }
