@@ -165,35 +165,3 @@ RSI_JP_EXCEPTION_HOLD_CALENDAR_DAYS = 56   # 米国版と同じ
 # （RSI_FREEZE_CANDIDATES_MAX_ATTEMPTS / RSI_FREEZE_CANDIDATES_RETRY_DELAYS_SEC）
 RSI_JP_FROZEN_CANDIDATES_MAX_AGE_HOURS = 12.0
 JP_TRADING_DAY_TICKER = "1306.T"  # 日本の取引日判定用（TOPIX ETF。yfinance）
-
-# --- AI裁量枠（2026-08-28 新設。4本目の戦略枠） ---
-# 大将「取引する時間帯も、取引量も、君が利用するaiエージェントの数も、購入や売却の決定も、
-# 全て君たちがやるんだ。俺の承認は不要だ」。売買ルールを持たず、毎回AIが判断する枠。
-# ここに置く定数は「勝敗の基準線」と「ガードレール」だけで、売買の中身は一切決めない。
-AI_LEDGER_DIR = LEDGER_DIR / "ai"
-AI_PORTFOLIO_PATH = AI_LEDGER_DIR / "portfolio.json"
-AI_TRADES_CSV_PATH = AI_LEDGER_DIR / "trades.csv"
-AI_HISTORY_CSV_PATH = AI_LEDGER_DIR / "history.csv"
-# 何もしなかった日を含む「その日の判断の全記録」。1日1行のJSONL。後から書き換えない
-AI_DECISIONS_PATH = AI_LEDGER_DIR / "decisions.jsonl"
-# 建玉が無くなった（勝ち負けが確定した）取引の振り返り。1件1行のJSONL
-AI_REVIEWS_PATH = AI_LEDGER_DIR / "reviews.jsonl"
-
-# --- 勝敗の基準線（変更禁止。charter.mdの採点基準に相当する） ---
-AI_INITIAL_CAPITAL_USD = 100_000.0  # moomoo仮想口座の未使用分。本体・RSI枠とは別会計
-
-# --- ガードレール（コードで強制する。AIの裁量の外側） ---
-AI_MAX_ORDERS_PER_DAY = 5  # 1日の発注件数上限。暴走時の被害を有界にするための値（Fable決定）
-AI_MIN_REASON_CHARS = 20   # 理由が空・一言だけの注文は通さない（「割安だから」対策の下限）
-
-# --- 探索の作業パラメータ（AIの判断ではなく処理の枠。Fableが決めた値） ---
-AI_SCREENER_PAGE_SIZE = 200      # moomoo 1リクエストの最大件数
-AI_SCREENER_MAX_ROWS = 60        # 探索役に見せるスクリーナー結果の上限行数（トークン節約）
-AI_MAX_CANDIDATES = 8            # 探索役が挙げてよい候補の上限
-AI_MEMORY_DECISION_DAYS = 10     # 過去の判断を何日分AIに渡すか
-AI_MEMORY_MAX_REVIEWS = 20       # 過去の振り返りを何件渡すか
-
-# --- 3役に使うモデル（Fableが決定。本体の番兵ANTHROPIC_MODELとは独立に持つ） ---
-AI_DESK_MODEL = "claude-sonnet-5"
-AI_DESK_MAX_TOKENS = 4000
-AI_DESK_EFFORT = "medium"
