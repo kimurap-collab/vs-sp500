@@ -1,82 +1,89 @@
 {
-  "generated_at": "2026-08-28T12:00:06.845879+00:00",
+  "generated_at": "2026-08-29T12:00:09.189686+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "TJX",
-      "rsi14": 20.578,
+      "rsi14": 23.367,
       "name": "TJX Companies",
-      "price": 134.22,
+      "price": 135.12,
       "date": "2026-08-28"
     },
     {
       "ticker": "HRL",
-      "rsi14": 21.63,
+      "rsi14": 25.768,
       "name": "Hormel Foods",
-      "price": 21.28,
+      "price": 21.57,
       "date": "2026-08-28"
     },
     {
       "ticker": "FER",
-      "rsi14": 27.623,
+      "rsi14": 27.523,
       "name": "Ferrovial SE",
-      "price": 58.77,
+      "price": 58.73,
       "date": "2026-08-28"
     },
     {
-      "ticker": "LII",
-      "rsi14": 29.297,
-      "name": "Lennox International",
-      "price": 391.15,
-      "date": "2026-08-28"
-    },
-    {
-      "ticker": "TPR",
-      "rsi14": 30.244,
-      "name": "Tapestry",
-      "price": 123.24,
-      "date": "2026-08-28"
-    },
-    {
-      "ticker": "RL",
-      "rsi14": 30.56,
-      "name": "Ralph Lauren",
-      "price": 351.9,
-      "date": "2026-08-28"
-    },
-    {
-      "ticker": "LUV",
-      "rsi14": 30.778,
-      "name": "Southwest Airlines",
-      "price": 39.76,
-      "date": "2026-08-28"
-    },
-    {
-      "ticker": "CARR",
-      "rsi14": 31.615,
-      "name": "Carrier Global",
-      "price": 58.84,
+      "ticker": "NEE",
+      "rsi14": 28.607,
+      "name": "NextEra Energy",
+      "price": 81.84,
       "date": "2026-08-28"
     },
     {
       "ticker": "CMI",
-      "rsi14": 31.787,
+      "rsi14": 29.589,
       "name": "Cummins",
-      "price": 573.87,
+      "price": 564.85,
       "date": "2026-08-28"
     },
     {
-      "ticker": "APTV",
-      "rsi14": 31.822,
-      "name": "Aptiv PLC",
-      "price": 45.44,
+      "ticker": "NI",
+      "rsi14": 29.975,
+      "name": "NiSource",
+      "price": 40.57,
       "date": "2026-08-28"
     },
     {
-      "ticker": "WYNN",
-      "rsi14": 31.931,
-      "name": "Wynn Resorts",
-      "price": 93.61,
+      "ticker": "LUV",
+      "rsi14": 30.423,
+      "name": "Southwest Airlines",
+      "price": 39.64,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "LII",
+      "rsi14": 30.682,
+      "name": "Lennox International",
+      "price": 393.39,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "GNRC",
+      "rsi14": 31.139,
+      "name": "Generac",
+      "price": 183.8,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "D",
+      "rsi14": 31.272,
+      "name": "Dominion Resources",
+      "price": 65.55,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "CARR",
+      "rsi14": 31.464,
+      "name": "Carrier Global",
+      "price": 58.79,
+      "date": "2026-08-28"
+    },
+    {
+      "ticker": "SO",
+      "rsi14": 31.622,
+      "name": "Southern",
+      "price": 88.25,
       "date": "2026-08-28"
     }
   ]
