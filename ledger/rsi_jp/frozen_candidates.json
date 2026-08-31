@@ -1,96 +1,96 @@
 {
-  "generated_at": "2026-08-30T12:00:03.241945+00:00",
+  "generated_at": "2026-08-31T12:00:02.977802+00:00",
   "candidates": [
     {
-      "ticker": "5334",
-      "rsi14": 27.271,
-      "price": 8262.0,
-      "market_cap": 1646184662640.0,
-      "name": "Niterra"
-    },
-    {
-      "ticker": "9983",
-      "rsi14": 30.009,
-      "price": 71260.0,
-      "market_cap": 22676426179680.0,
-      "name": "Fast Retailing"
-    },
-    {
       "ticker": "3481",
-      "rsi14": 30.576,
-      "price": 115500.0,
-      "market_cap": 171518770500.0,
+      "rsi14": 25.902,
+      "price": 113300.0,
+      "market_cap": 168251746300.0,
       "name": "Mitsubishi Estate Logistics REIT Investment"
     },
     {
-      "ticker": "6367",
-      "rsi14": 31.081,
-      "price": 20895.0,
-      "market_cap": 6124616465835.0,
-      "name": "Daikin Industries"
-    },
-    {
       "ticker": "3466",
-      "rsi14": 32.403,
-      "price": 143800.0,
-      "market_cap": 249752559000.0,
+      "rsi14": 29.561,
+      "price": 142400.0,
+      "market_cap": 247321032000.0,
       "name": "LaSalle LOGIPORT REIT"
     },
     {
+      "ticker": "5334",
+      "rsi14": 30.028,
+      "price": 8349.0,
+      "market_cap": 1663519214280.0,
+      "name": "Niterra"
+    },
+    {
       "ticker": "6013",
-      "rsi14": 33.005,
-      "price": 3055.0,
-      "market_cap": 231230200500.0,
+      "rsi14": 30.878,
+      "price": 3020.0,
+      "market_cap": 228581082000.0,
       "name": "Takuma"
     },
     {
-      "ticker": "1979",
-      "rsi14": 33.595,
-      "price": 3875.0,
-      "market_cap": 245923069750.0,
-      "name": "Taikisha"
-    },
-    {
-      "ticker": "6361",
-      "rsi14": 33.776,
-      "price": 4688.0,
-      "market_cap": 2144488963280.0,
-      "name": "Ebara"
-    },
-    {
-      "ticker": "8964",
-      "rsi14": 34.009,
-      "price": 77700.0,
-      "market_cap": 210178500000.0,
-      "name": "Mitsui Fudosan Retail Fund Investment"
-    },
-    {
-      "ticker": "7944",
-      "rsi14": 34.166,
-      "price": 3775.0,
-      "market_cap": 100341987725.0,
-      "name": "Roland"
-    },
-    {
-      "ticker": "3295",
-      "rsi14": 34.316,
-      "price": 150400.0,
-      "market_cap": 216576000000.0,
-      "name": "Hulic Reit"
-    },
-    {
       "ticker": "3281",
-      "rsi14": 34.386,
-      "price": 134600.0,
-      "market_cap": 645774592600.0,
+      "rsi14": 32.983,
+      "price": 133900.0,
+      "market_cap": 642416180900.0,
       "name": "GLP J-REIT"
     },
     {
-      "ticker": "4368",
-      "rsi14": 34.746,
-      "price": 2971.0,
-      "market_cap": 316509543000.0,
-      "name": "Fuso Chemical"
+      "ticker": "3295",
+      "rsi14": 33.426,
+      "price": 150000.0,
+      "market_cap": 216000000000.0,
+      "name": "Hulic Reit"
+    },
+    {
+      "ticker": "8961",
+      "rsi14": 33.448,
+      "price": 72300.0,
+      "market_cap": 257388000000.0,
+      "name": "Mori Trust Reit"
+    },
+    {
+      "ticker": "6141",
+      "rsi14": 33.603,
+      "price": 2990.0,
+      "market_cap": 470404542660.0,
+      "name": "Dmg Mori"
+    },
+    {
+      "ticker": "6361",
+      "rsi14": 33.657,
+      "price": 4681.0,
+      "market_cap": 2141286867985.0,
+      "name": "Ebara"
+    },
+    {
+      "ticker": "268A",
+      "rsi14": 34.132,
+      "price": 1626.0,
+      "market_cap": 368315178600.0,
+      "name": "Rigaku Holdings"
+    },
+    {
+      "ticker": "8984",
+      "rsi14": 34.69,
+      "price": 116800.0,
+      "market_cap": 530253896000.0,
+      "name": "Daiwa House REIT Investment"
+    },
+    {
+      "ticker": "6235",
+      "rsi14": 34.791,
+      "price": 2649.0,
+      "market_cap": 117504342000.0,
+      "name": "Optorun"
+    },
+    {
+      "ticker": "3471",
+      "rsi14": 34.838,
+      "price": 104000.0,
+      "market_cap": 334848696000.0,
+      "name": "Mitsui Fudosan Logistics Park"
     }
   ]
 }
