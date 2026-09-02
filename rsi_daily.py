@@ -14,6 +14,7 @@ import argparse
 import datetime as dt
 import json
 import logging
+import os
 import threading
 import time
 from typing import Any, Callable
@@ -820,6 +821,31 @@ def _setup_freeze_logging() -> None:
         jp_rsi_daily.logger.setLevel(logging.INFO)
 
 
+def _send_freeze_failure_alert(us_failed: bool, jp_failed: bool) -> None:
+    """20:00の候補確定が最終的に失敗した時、保留を待たず即時Telegramで知らせる
+    （2026-09-02実測: moomoo未接続で3回失敗してもログに残すだけで誰にも通知されなかった）。"""
+    import report
+
+    if us_failed and jp_failed:
+        waku = "米国枠・JP枠"
+    elif us_failed:
+        waku = "米国枠"
+    else:
+        waku = "JP枠"
+    message = (
+        f"⚠️ vs-sp500: 20:00の候補確定がmoomoo未接続で失敗した（{waku}）。OpenDが落ちとる。"
+        "今夜02:00のdaily_runまでにmoomooデスクトップでOpenDを起動・ログインしてくれ。"
+    )
+    prev = os.environ.pop("VS_SP500_DEFER_TELEGRAM", None)
+    try:
+        report.send_telegram_message(message)
+    except Exception:
+        logger.error("freeze失敗の即時Telegramアラート送信に失敗した", exc_info=True)
+    finally:
+        if prev is not None:
+            os.environ["VS_SP500_DEFER_TELEGRAM"] = prev
+
+
 def main() -> None:
     """単独起動エントリポイント（2026-08-19改修1-a）。現状は--freeze-candidatesのみ。
 
@@ -856,6 +882,7 @@ def main() -> None:
         print(f"JP候補確定完了: {len(jp_result['candidates'])}件 generated_at={jp_result['generated_at']}")
 
     if result is None or jp_result is None:
+        _send_freeze_failure_alert(us_failed=result is None, jp_failed=jp_result is None)
         raise SystemExit(1)
 
 

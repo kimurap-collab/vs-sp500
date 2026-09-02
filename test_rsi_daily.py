@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import tempfile
 import time
 import unittest
@@ -338,6 +339,57 @@ class TestRunFallsBackToLiveWhenFrozenMissing(unittest.TestCase):
             self.assertEqual(entry["ticker"], "MSFT")
             self.assertIn("basis=live", entry["note"])
             self.assertTrue(any("basis=live" in line for line in log_lines))
+
+
+class TestSendFreezeFailureAlert(unittest.TestCase):
+    """_send_freeze_failure_alert: 20:00の候補確定が最終失敗した時の即時Telegramアラート
+    （2026-09-02実測: moomoo未接続で3回失敗してもログに残すだけで誰にも通知されなかった）。"""
+
+    def setUp(self):
+        self._orig_defer = os.environ.get("VS_SP500_DEFER_TELEGRAM")
+        os.environ["VS_SP500_DEFER_TELEGRAM"] = "1"
+
+    def tearDown(self):
+        if self._orig_defer is None:
+            os.environ.pop("VS_SP500_DEFER_TELEGRAM", None)
+        else:
+            os.environ["VS_SP500_DEFER_TELEGRAM"] = self._orig_defer
+
+    def test_sends_immediately_and_restores_env_for_both_failed(self):
+        seen_defer_during_call = {}
+
+        def fake_send(text):
+            seen_defer_during_call["value"] = os.environ.get("VS_SP500_DEFER_TELEGRAM")
+            seen_defer_during_call["text"] = text
+            return True
+
+        with patch("report.send_telegram_message", side_effect=fake_send) as mock_send:
+            rsi_daily._send_freeze_failure_alert(us_failed=True, jp_failed=True)
+
+        mock_send.assert_called_once()
+        # 送信時点ではVS_SP500_DEFER_TELEGRAMが外れており、即時送信されたこと
+        self.assertIsNone(seen_defer_during_call["value"])
+        self.assertIn("米国枠・JP枠", seen_defer_during_call["text"])
+        # 呼び出し後は環境変数が元通り復元されていること
+        self.assertEqual(os.environ.get("VS_SP500_DEFER_TELEGRAM"), "1")
+
+    def test_us_only_failure_mentions_only_us_waku(self):
+        with patch("report.send_telegram_message", return_value=True) as mock_send:
+            rsi_daily._send_freeze_failure_alert(us_failed=True, jp_failed=False)
+
+        sent_text = mock_send.call_args[0][0]
+        self.assertIn("米国枠", sent_text)
+        self.assertNotIn("JP枠", sent_text)
+        self.assertEqual(os.environ.get("VS_SP500_DEFER_TELEGRAM"), "1")
+
+    def test_send_exception_is_swallowed_and_env_restored(self):
+        with patch("report.send_telegram_message", side_effect=RuntimeError("boom")):
+            try:
+                rsi_daily._send_freeze_failure_alert(us_failed=False, jp_failed=True)
+            except Exception as e:  # noqa: BLE001
+                self.fail(f"_send_freeze_failure_alert が例外を漏らした: {e}")
+
+        self.assertEqual(os.environ.get("VS_SP500_DEFER_TELEGRAM"), "1")
 
 
 if __name__ == "__main__":

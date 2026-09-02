@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import logging
+import os
 import subprocess
 import sys
 
@@ -691,6 +692,12 @@ def main() -> None:
     # 執行の後に必ず自律ループを回す（executionが例外で落ちた日も観測は行う）
     if not (args.dry_run or args.report_only or args.no_loop):
         launch_autonomous_loop()
+
+    # moomoo SDKの非デーモンスレッドが生き残ってもプロセスを確実に終了させる
+    # （2026-09-02実測: OpenD停止時に永久再接続スレッドが残り、翌日のlaunchd起動がスキップされた）
+    sys.stdout.flush()
+    logging.shutdown()
+    os._exit(0)
 
 
 if __name__ == "__main__":
