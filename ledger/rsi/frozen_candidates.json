@@ -1,90 +1,188 @@
 {
-  "generated_at": "2026-08-31T12:00:02.508539+00:00",
+  "generated_at": "2026-09-03T12:00:01.971141+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "TJX",
-      "rsi14": 23.367,
+      "rsi14": 19.882,
       "name": "TJX Companies",
-      "price": 135.12,
-      "date": "2026-08-31"
+      "price": 131.31,
+      "date": "2026-09-03"
     },
     {
-      "ticker": "HRL",
-      "rsi14": 25.768,
-      "name": "Hormel Foods",
-      "price": 21.57,
-      "date": "2026-08-31"
-    },
-    {
-      "ticker": "FER",
-      "rsi14": 27.523,
-      "name": "Ferrovial SE",
-      "price": 58.73,
-      "date": "2026-08-31"
-    },
-    {
-      "ticker": "NEE",
-      "rsi14": 28.607,
-      "name": "NextEra Energy",
-      "price": 81.84,
-      "date": "2026-08-31"
-    },
-    {
-      "ticker": "CMI",
-      "rsi14": 29.589,
-      "name": "Cummins",
-      "price": 564.85,
-      "date": "2026-08-31"
-    },
-    {
-      "ticker": "NI",
-      "rsi14": 29.975,
-      "name": "NiSource",
-      "price": 40.57,
-      "date": "2026-08-31"
-    },
-    {
-      "ticker": "LUV",
-      "rsi14": 30.423,
-      "name": "Southwest Airlines",
-      "price": 39.64,
-      "date": "2026-08-31"
+      "ticker": "RL",
+      "rsi14": 25.345,
+      "name": "Ralph Lauren",
+      "price": 336.5,
+      "date": "2026-09-03"
     },
     {
       "ticker": "LII",
-      "rsi14": 30.682,
+      "rsi14": 25.751,
       "name": "Lennox International",
-      "price": 393.39,
-      "date": "2026-08-31"
+      "price": 374.0,
+      "date": "2026-09-03"
     },
     {
-      "ticker": "GNRC",
-      "rsi14": 31.139,
-      "name": "Generac",
-      "price": 183.8,
-      "date": "2026-08-31"
+      "ticker": "RCL",
+      "rsi14": 25.813,
+      "name": "Royal Caribbean",
+      "price": 265.6,
+      "date": "2026-09-03"
     },
     {
-      "ticker": "D",
-      "rsi14": 31.272,
-      "name": "Dominion Resources",
-      "price": 65.55,
-      "date": "2026-08-31"
+      "ticker": "FER",
+      "rsi14": 25.939,
+      "name": "Ferrovial SE",
+      "price": 57.84,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "CMI",
+      "rsi14": 26.327,
+      "name": "Cummins",
+      "price": 550.9,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "PCG",
+      "rsi14": 27.111,
+      "name": "PG&E Corp",
+      "price": 13.33,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "ODFL",
+      "rsi14": 28.512,
+      "name": "Old Dominion Freight Line",
+      "price": 187.61,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "DOV",
+      "rsi14": 28.633,
+      "name": "Dover",
+      "price": 188.9,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "HON",
+      "rsi14": 29.186,
+      "name": "Honeywell",
+      "price": 206.07,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "EIX",
+      "rsi14": 29.318,
+      "name": "Edison International",
+      "price": 55.19,
+      "date": "2026-09-03"
     },
     {
       "ticker": "CARR",
-      "rsi14": 31.464,
+      "rsi14": 29.373,
       "name": "Carrier Global",
-      "price": 58.79,
-      "date": "2026-08-31"
+      "price": 57.58,
+      "date": "2026-09-03"
     },
     {
-      "ticker": "SO",
-      "rsi14": 31.622,
-      "name": "Southern",
-      "price": 88.25,
-      "date": "2026-08-31"
+      "ticker": "MAR",
+      "rsi14": 29.591,
+      "name": "Marriott International",
+      "price": 333.14,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "XYL",
+      "rsi14": 29.84,
+      "name": "Xylem",
+      "price": 106.74,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "NCLH",
+      "rsi14": 29.998,
+      "name": "Norwegian Cruise",
+      "price": 15.57,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "EXR",
+      "rsi14": 30.037,
+      "name": "Extra Space Storage Inc",
+      "price": 139.93,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "PSA",
+      "rsi14": 30.174,
+      "name": "Public Storage",
+      "price": 301.33,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "URI",
+      "rsi14": 30.238,
+      "name": "United Rentals",
+      "price": 979.82,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "GNRC",
+      "rsi14": 30.527,
+      "name": "Generac",
+      "price": 180.76,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "TXT",
+      "rsi14": 30.701,
+      "name": "Textron",
+      "price": 79.24,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "TDY",
+      "rsi14": 30.975,
+      "name": "Teledyne Technologies",
+      "price": 606.36,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "IRM",
+      "rsi14": 31.003,
+      "name": "Iron Mountain",
+      "price": 111.84,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "SNA",
+      "rsi14": 31.133,
+      "name": "Snap-on",
+      "price": 380.59,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "SPG",
+      "rsi14": 31.262,
+      "name": "Simon Property",
+      "price": 210.2,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "LUV",
+      "rsi14": 31.474,
+      "name": "Southwest Airlines",
+      "price": 38.61,
+      "date": "2026-09-03"
+    },
+    {
+      "ticker": "TTWO",
+      "rsi14": 31.686,
+      "name": "Take-Two Interactive Software",
+      "price": 216.14,
+      "date": "2026-09-03"
     }
   ]
 }

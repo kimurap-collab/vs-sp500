@@ -48,7 +48,6 @@
     "ARM",
     "ASML",
     "ATO",
-    "AVB",
     "AVGO",
     "AVY",
     "AWK",
@@ -170,7 +169,6 @@
     "EMR",
     "EOG",
     "EQIX",
-    "EQR",
     "EQT",
     "ERIE",
     "ES",
@@ -398,6 +396,7 @@
     "Q",
     "QCOM",
     "RCL",
+    "RDDT",
     "REG",
     "REGN",
     "RF",
@@ -485,6 +484,7 @@
     "VLO",
     "VLTO",
     "VMC",
+    "VMRK",
     "VRSK",
     "VRSN",
     "VRT",
@@ -520,5 +520,5 @@
     "ZTS"
   ],
   "source": "Wikipedia (S&P500 503銘柄 + NASDAQ100 102銘柄 → 重複排除518銘柄)",
-  "fetched_date": "2026-08-17"
+  "fetched_date": "2026-09-03"
 }
