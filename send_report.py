@@ -16,6 +16,7 @@ import os
 import subprocess
 import sys
 
+import broker
 import config
 import report
 
@@ -43,6 +44,27 @@ def read_pending() -> str | None:
         return None
     text = path.read_text(encoding="utf-8").strip()
     return text or None
+
+
+def build_no_pending_message(moomoo_available: bool) -> str:
+    """夜間実行の記録が見つからなかった時の警告文を組む。
+
+    moomooに繋がるかどうかで原因が別のため対処を区別する（2026-09-03大将指摘:
+    OpenD停止が原因と分かるまで何往復も要した。「動いてないことが見えて俺はどうするん？」
+    に対する対処付き通知）。broker.is_available()はTCPソケットの生死確認のみ
+    （3秒タイムアウト）で、moomoo SDK本体は呼ばないためここが固まる心配はない。
+    """
+    if not moomoo_available:
+        return (
+            "⚠️ vs-sp500: moomooに繋がっていない。\n"
+            "~/Applications/OpenD/OpenD.app を起動してログインしてくれ。\n"
+            f"（{config.PENDING_REPORT_PATH.name} も見つからない・空・{STALE_HOURS}時間以上古い）"
+        )
+    return (
+        "⚠️ vs-sp500: moomooには接続できているが、夜間実行の記録が見つからん。\n"
+        f"（{config.PENDING_REPORT_PATH.name} が無い・空・{STALE_HOURS}時間以上古い）\n"
+        "夜23:00のジョブが失敗しとる可能性がある。logs/launchd.err を確認してくれ。"
+    )
 
 
 def loop_journal_missing(logger: logging.Logger) -> bool:
@@ -94,13 +116,13 @@ def main() -> None:
 
     text = read_pending()
     if text is None:
-        msg = (
-            "⚠️ vs-sp500: 夜間実行の記録が見つからん。\n"
-            f"（{config.PENDING_REPORT_PATH.name} が無い・空・{STALE_HOURS}時間以上古い）\n"
-            "夜23:00のジョブが失敗しとる可能性がある。logs/launchd.err を確認してくれ。"
-        )
+        moomoo_available = broker.is_available()
+        msg = build_no_pending_message(moomoo_available)
         ok = report.send_telegram_message(msg)
-        logger.warning("保留報告なし → 警告を送信: %s", "成功" if ok else "失敗")
+        logger.warning(
+            "保留報告なし（moomoo=%s） → 警告を送信: %s",
+            "接続OK" if moomoo_available else "未接続", "成功" if ok else "失敗",
+        )
         print(msg)
         restart_loop_if_missing(logger)
         sys.exit(0)

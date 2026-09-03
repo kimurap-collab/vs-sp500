@@ -97,5 +97,49 @@ class TestLoopAlreadyRunning(unittest.TestCase):
             self.assertFalse(send_report.loop_already_running())
 
 
+class TestNoPendingMessage(unittest.TestCase):
+    """2026-09-03修正: moomoo未接続時に原因(OpenD停止)と対処を報告文に書く。"""
+
+    def test_moomoo_unavailable_gives_actionable_fix(self):
+        msg = send_report.build_no_pending_message(moomoo_available=False)
+        self.assertIn("OpenD", msg)
+        self.assertIn("繋がっていない", msg)
+
+    def test_moomoo_available_blames_the_night_job_instead(self):
+        msg = send_report.build_no_pending_message(moomoo_available=True)
+        self.assertIn("接続できている", msg)
+        self.assertNotIn("OpenD.app を起動", msg)
+
+
+class TestMainChecksMoomooBeforeWarning(unittest.TestCase):
+    """main()が読み取り不能時にbroker.is_availableを呼び、結果で文面を分けることの確認。
+
+    実際のmoomoo・Telegram送信・自律ループ起動には一切触れない（全てモック）。
+    """
+
+    def test_no_pending_and_moomoo_down_sends_opend_instruction(self):
+        with patch("send_report.setup_logging", return_value=logging.getLogger("t")), \
+             patch("send_report.read_pending", return_value=None), \
+             patch("send_report.broker.is_available", return_value=False), \
+             patch("send_report.report.send_telegram_message", return_value=True) as mock_send, \
+             patch("send_report.restart_loop_if_missing"):
+            with self.assertRaises(SystemExit):
+                send_report.main()
+        sent_text = mock_send.call_args[0][0]
+        self.assertIn("OpenD", sent_text)
+
+    def test_no_pending_and_moomoo_up_sends_generic_warning(self):
+        with patch("send_report.setup_logging", return_value=logging.getLogger("t")), \
+             patch("send_report.read_pending", return_value=None), \
+             patch("send_report.broker.is_available", return_value=True), \
+             patch("send_report.report.send_telegram_message", return_value=True) as mock_send, \
+             patch("send_report.restart_loop_if_missing"):
+            with self.assertRaises(SystemExit):
+                send_report.main()
+        sent_text = mock_send.call_args[0][0]
+        self.assertIn("接続できている", sent_text)
+        self.assertNotIn("OpenD.app を起動", sent_text)
+
+
 if __name__ == "__main__":
     unittest.main()
