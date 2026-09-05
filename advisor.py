@@ -113,7 +113,9 @@ def get_trade_decision(
 ) -> dict[str, Any]:
     """Sonnetに売買判断を問い合わせる。失敗時は1回リトライし、それでも失敗ならホールド扱い。"""
     user_prompt = _build_user_prompt(charter_text, portfolio_state, market_snapshot, voo_technicals)
-    client = Anthropic(api_key=config.CLAUDE_API_KEY)
+    # timeout必須（2026-09-05実測: 未指定のままネットワーク不調に当たり[5]で4.6時間ハング、
+    # launchdの翌日スキップを誘発しかけた）。SDK内リトライ込みで最悪でも十数分で諦めてホールドに落ちる
+    client = Anthropic(api_key=config.CLAUDE_API_KEY, timeout=120.0)
 
     last_error: Exception | None = None
     for attempt in range(2):

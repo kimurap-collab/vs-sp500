@@ -869,6 +869,9 @@ def main() -> None:
     result = freeze_candidates()
     if result is None:
         print("候補確定に失敗した（moomoo未接続）")
+        # 2026-09-05: アラートは枠ごとに最終失敗の直後に送る。9/4実測でJP側の再試行が6時間ハングし、
+        # 末尾でまとめて送る旧設計では「即時」アラートが02:17になった
+        _send_freeze_failure_alert(us_failed=True, jp_failed=False)
     else:
         print(
             f"候補確定完了: {len(result['candidates'])}件 rsi_basis={result['rsi_basis']} "
@@ -878,11 +881,11 @@ def main() -> None:
     jp_result = jp_rsi_daily.freeze_candidates_jp()
     if jp_result is None:
         print("JP候補確定に失敗した（moomoo未接続）")
+        _send_freeze_failure_alert(us_failed=False, jp_failed=True)
     else:
         print(f"JP候補確定完了: {len(jp_result['candidates'])}件 generated_at={jp_result['generated_at']}")
 
     if result is None or jp_result is None:
-        _send_freeze_failure_alert(us_failed=result is None, jp_failed=jp_result is None)
         raise SystemExit(1)
 
 
