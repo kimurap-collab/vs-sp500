@@ -145,15 +145,18 @@ class TestExecuteTradesRespectsAvailableCash(unittest.TestCase):
         }])
         market = {"VOO": _snap("VOO", 100.0), "QQQ": _snap("QQQ", 100.0)}
         trade = {"action": "BUY", "ticker": "QQQ", "amount_usd": 1500.0, "rule": "rebalance"}
-        with patch("portfolio.broker.get_cash", return_value=10000.0), \
-             patch("portfolio.broker.place_market_order") as mock_place:
+        # 2026-09-16以降、ターゲット系BUYは全額拒否ではなく「発注可能額-現金下限2%」に株数を縮小する。
+        # 発注可能額$1,000-下限$200=$800 → 8株。raw cash_usd($10,000)基準の15株では決して発注されない。
+        with patch("portfolio.broker.get_cash", side_effect=[10000.0, 9200.0]), \
+             patch("portfolio.broker.place_market_order", return_value={
+                 "order_id": "2", "status": "FILLED_ALL", "filled_qty": 8, "avg_price": 100.0,
+             }) as mock_place:
             new_state, accepted, rejected, queued = portfolio.execute_trades(
                 [trade], state, market, None, "2026-08-18",
             )
-        self.assertEqual(accepted, [])
-        self.assertEqual(len(rejected), 1)
-        self.assertIn("現金不足", rejected[0]["reason"])
-        mock_place.assert_not_called()  # ガードレールで弾かれ、実発注まで到達しない
+        self.assertEqual(rejected, [])
+        self.assertEqual(len(accepted), 1)
+        mock_place.assert_called_once_with("QQQ", 8, "BUY")
 
     def test_buy_accepted_when_within_available_cash(self):
         state = _main_state(cash_usd=10000.0, holdings={}, pending_orders=[{

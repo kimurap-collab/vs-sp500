@@ -386,6 +386,21 @@ def execute_trades(
                 if qty <= 0:
                     raise TradeRejected("金額が小さすぎて1株も買えない")
                 estimated_cost = qty * snap.close
+                if is_target_directed:
+                    # ターゲット系BUYは現金下限(MIN_CASH_RATIO)を残せる範囲に株数を縮小して発注する。
+                    # 2026-09-16: 採用直後のVOO買い18株が発注可能額を$2超えて全額拒否され、現金19.9%のまま
+                    # 放置された（番兵は現金目標を差し引かずに金額を出すため、毎晩同じ拒否を繰り返す構造）。
+                    max_cost = available_cash - nav_usd * config.MIN_CASH_RATIO
+                    if estimated_cost > max_cost + 1e-6:
+                        shrunk_qty = int(max_cost / snap.close + 1e-6)
+                        if shrunk_qty <= 0:
+                            raise TradeRejected("現金不足（現金下限を残すと1株も買えない）")
+                        logger.info(
+                            "BUY %s: 現金に合わせて株数を縮小 %d→%d株（発注可能額$%.2f・現金下限$%.2f）",
+                            ticker, qty, shrunk_qty, available_cash, nav_usd * config.MIN_CASH_RATIO,
+                        )
+                        qty = shrunk_qty
+                        estimated_cost = qty * snap.close
                 if estimated_cost > available_cash + 1e-6:
                     raise TradeRejected("現金不足（見積りで発注可能額＝現金-未決BUY予約分を超過）")
 
