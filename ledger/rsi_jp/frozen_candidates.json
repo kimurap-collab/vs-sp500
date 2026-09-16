@@ -1,495 +1,355 @@
 {
-  "generated_at": "2026-09-15T12:00:05.291901+00:00",
+  "generated_at": "2026-09-16T12:00:06.532788+00:00",
   "candidates": [
     {
       "ticker": "7741",
-      "rsi14": 23.748,
-      "price": 22330.0,
-      "market_cap": 7476932986600.0,
+      "rsi14": 25.008,
+      "price": 22390.0,
+      "market_cap": 7497023267800.0,
       "name": "Hoya"
     },
     {
-      "ticker": "6804",
-      "rsi14": 25.123,
-      "price": 2503.0,
-      "market_cap": 146431967752.0,
-      "name": "Hosiden"
-    },
-    {
       "ticker": "5334",
-      "rsi14": 25.218,
-      "price": 7262.0,
-      "market_cap": 1446936942640.0,
+      "rsi14": 25.01,
+      "price": 7245.0,
+      "market_cap": 1443549731400.0,
       "name": "Niterra"
     },
     {
-      "ticker": "7731",
-      "rsi14": 25.412,
-      "price": 1696.5,
-      "market_cap": 565928116299.0,
-      "name": "Nikon"
-    },
-    {
-      "ticker": "9983",
-      "rsi14": 27.265,
-      "price": 66620.0,
-      "market_cap": 21199880888160.0,
-      "name": "Fast Retailing"
-    },
-    {
-      "ticker": "3292",
-      "rsi14": 27.778,
-      "price": 113700.0,
-      "market_cap": 239062095300.0,
-      "name": "AEON REIT Investment"
-    },
-    {
-      "ticker": "5332",
-      "rsi14": 28.48,
-      "price": 5656.0,
-      "market_cap": 940923093432.0,
-      "name": "TOTO"
-    },
-    {
-      "ticker": "8987",
-      "rsi14": 28.668,
-      "price": 133500.0,
-      "market_cap": 172280014500.0,
-      "name": "Japan Excellent"
+      "ticker": "7906",
+      "rsi14": 27.431,
+      "price": 2309.0,
+      "market_cap": 214438677200.0,
+      "name": "Yonex"
     },
     {
       "ticker": "7532",
-      "rsi14": 28.972,
-      "price": 727.3,
-      "market_cap": 2310847889910.0,
+      "rsi14": 27.711,
+      "price": 719.6,
+      "market_cap": 2286382705320.0,
       "name": "Pan Pacific International Holdings"
     },
     {
       "ticker": "3563",
-      "rsi14": 29.947,
-      "price": 4946.0,
-      "market_cap": 1148156368128.0,
+      "rsi14": 28.13,
+      "price": 4846.0,
+      "market_cap": 1124942531328.0,
       "name": "Food & Life Companies"
     },
     {
-      "ticker": "7747",
-      "rsi14": 30.277,
-      "price": 3253.0,
-      "market_cap": 863125971900.0,
-      "name": "Asahi Intecc"
-    },
-    {
-      "ticker": "6506",
-      "rsi14": 30.453,
-      "price": 4296.0,
-      "market_cap": 1145702375112.0,
-      "name": "YASKAWA Electric"
-    },
-    {
-      "ticker": "7906",
-      "rsi14": 30.495,
-      "price": 2370.0,
-      "market_cap": 220103796000.0,
-      "name": "Yonex"
-    },
-    {
-      "ticker": "8976",
-      "rsi14": 30.684,
-      "price": 305500.0,
-      "market_cap": 285564597500.0,
-      "name": "Daiwa Office Investment"
-    },
-    {
-      "ticker": "7309",
-      "rsi14": 30.82,
-      "price": 17905.0,
-      "market_cap": 1549319650000.0,
-      "name": "Shimano"
-    },
-    {
-      "ticker": "6361",
-      "rsi14": 31.174,
-      "price": 4258.0,
-      "market_cap": 1947788823730.0,
-      "name": "Ebara"
-    },
-    {
-      "ticker": "6141",
-      "rsi14": 31.318,
-      "price": 2759.0,
-      "market_cap": 434062251906.0,
-      "name": "Dmg Mori"
-    },
-    {
-      "ticker": "6707",
-      "rsi14": 31.334,
-      "price": 6646.0,
-      "market_cap": 139069942560.0,
-      "name": "Sanken Electric"
-    },
-    {
-      "ticker": "3186",
-      "rsi14": 31.362,
-      "price": 2955.0,
-      "market_cap": 239074570500.0,
-      "name": "NEXTAGE"
-    },
-    {
-      "ticker": "7564",
-      "rsi14": 31.394,
-      "price": 5570.0,
-      "market_cap": 455886765120.0,
-      "name": "Workman"
-    },
-    {
-      "ticker": "6103",
-      "rsi14": 31.633,
-      "price": 4320.0,
-      "market_cap": 291644530560.0,
-      "name": "Okuma"
-    },
-    {
-      "ticker": "6368",
-      "rsi14": 31.697,
-      "price": 11695.0,
-      "market_cap": 542176691500.0,
-      "name": "Organo"
-    },
-    {
-      "ticker": "9708",
-      "rsi14": 31.762,
-      "price": 942.0,
-      "market_cap": 111909600000.0,
-      "name": "Imperial Hotel"
-    },
-    {
-      "ticker": "8923",
-      "rsi14": 32.04,
-      "price": 1665.0,
-      "market_cap": 162387117000.0,
-      "name": "Tosei"
-    },
-    {
-      "ticker": "4099",
-      "rsi14": 32.055,
-      "price": 2099.0,
-      "market_cap": 188362425474.0,
-      "name": "Shikoku Kasei Holdings"
-    },
-    {
-      "ticker": "5943",
-      "rsi14": 32.068,
-      "price": 2227.0,
-      "market_cap": 108131829110.0,
-      "name": "Noritz"
-    },
-    {
-      "ticker": "7730",
-      "rsi14": 32.091,
-      "price": 1449.0,
-      "market_cap": 155047748373.0,
-      "name": "Mani"
-    },
-    {
-      "ticker": "3279",
-      "rsi14": 32.183,
-      "price": 131000.0,
-      "market_cap": 311297658000.0,
-      "name": "Activia Properties"
-    },
-    {
-      "ticker": "5706",
-      "rsi14": 32.23,
-      "price": 22805.0,
-      "market_cap": 1309471971145.0,
-      "name": "Mitsui Kinzoku"
-    },
-    {
-      "ticker": "8967",
-      "rsi14": 32.252,
-      "price": 91900.0,
-      "market_cap": 252345361100.0,
-      "name": "Japan Logistics Fund"
-    },
-    {
-      "ticker": "4536",
-      "rsi14": 32.356,
-      "price": 1742.0,
-      "market_cap": 561429448268.0,
-      "name": "Santen Pharmaceutical"
-    },
-    {
-      "ticker": "4063",
-      "rsi14": 32.544,
-      "price": 5693.0,
-      "market_cap": 11300581459445.0,
-      "name": "Shin-Etsu Chemical"
-    },
-    {
-      "ticker": "2802",
-      "rsi14": 32.68,
-      "price": 4870.0,
-      "market_cap": 4761572449920.0,
-      "name": "Ajinomoto"
-    },
-    {
-      "ticker": "6235",
-      "rsi14": 32.69,
-      "price": 2364.0,
-      "market_cap": 104862312000.0,
-      "name": "Optorun"
-    },
-    {
-      "ticker": "6841",
-      "rsi14": 32.83,
-      "price": 4570.0,
-      "market_cap": 1175409529700.0,
-      "name": "Yokogawa Electric"
-    },
-    {
-      "ticker": "6146",
-      "rsi14": 32.893,
-      "price": 51400.0,
-      "market_cap": 5577240730600.0,
-      "name": "Disco"
-    },
-    {
-      "ticker": "4151",
-      "rsi14": 32.895,
-      "price": 2241.0,
-      "market_cap": 1177946914500.0,
-      "name": "Kyowa Kirin"
-    },
-    {
-      "ticker": "5108",
-      "rsi14": 32.902,
-      "price": 3740.0,
-      "market_cap": 4989298537080.0,
-      "name": "Bridgestone"
-    },
-    {
-      "ticker": "3295",
-      "rsi14": 33.218,
-      "price": 147800.0,
-      "market_cap": 212832000000.0,
-      "name": "Hulic Reit"
-    },
-    {
-      "ticker": "6383",
-      "rsi14": 33.326,
-      "price": 5368.0,
-      "market_cap": 2038928680008.0,
-      "name": "Daifuku"
-    },
-    {
-      "ticker": "6370",
-      "rsi14": 33.374,
-      "price": 7412.0,
-      "market_cap": 861279543928.0,
-      "name": "Kurita Water Industries"
-    },
-    {
-      "ticker": "8986",
-      "rsi14": 33.412,
-      "price": 92600.0,
-      "market_cap": 220947489200.0,
-      "name": "Daiwa Securities Living Investment"
-    },
-    {
-      "ticker": "3234",
-      "rsi14": 33.539,
-      "price": 124100.0,
-      "market_cap": 233237883500.0,
-      "name": "Mori Hills Reit Investment"
-    },
-    {
-      "ticker": "6728",
-      "rsi14": 33.562,
-      "price": 6942.0,
-      "market_cap": 342628921596.0,
-      "name": "ULVAC"
-    },
-    {
-      "ticker": "6465",
-      "rsi14": 33.657,
-      "price": 5297.0,
-      "market_cap": 767482859700.0,
-      "name": "Hoshizaki"
-    },
-    {
-      "ticker": "3465",
-      "rsi14": 33.669,
-      "price": 3235.0,
-      "market_cap": 102674371000.0,
-      "name": "Ki-Star Real Estate"
-    },
-    {
-      "ticker": "8233",
-      "rsi14": 33.693,
-      "price": 2103.0,
-      "market_cap": 641854350348.0,
-      "name": "Takashimaya"
-    },
-    {
-      "ticker": "6877",
-      "rsi14": 33.73,
-      "price": 5250.0,
-      "market_cap": 109564245000.0,
-      "name": "Obara Group"
-    },
-    {
-      "ticker": "5110",
-      "rsi14": 33.826,
-      "price": 1994.0,
-      "market_cap": 524507855658.0,
-      "name": "Sumitomo Rubber Industries"
-    },
-    {
-      "ticker": "6367",
-      "rsi14": 33.914,
-      "price": 20415.0,
-      "market_cap": 5983921758795.0,
-      "name": "Daikin Industries"
-    },
-    {
-      "ticker": "6113",
-      "rsi14": 33.932,
-      "price": 2326.5,
-      "market_cap": 738550721650.5,
-      "name": "AMADA"
-    },
-    {
-      "ticker": "6744",
-      "rsi14": 33.969,
-      "price": 4015.0,
-      "market_cap": 244243575565.0,
-      "name": "Nohmi Bosai"
-    },
-    {
-      "ticker": "6481",
-      "rsi14": 34.001,
-      "price": 5918.0,
-      "market_cap": 704832634154.0,
-      "name": "THK"
-    },
-    {
-      "ticker": "4543",
-      "rsi14": 34.056,
-      "price": 2242.5,
-      "market_cap": 3320155082400.0,
-      "name": "Terumo"
+      "ticker": "6804",
+      "rsi14": 28.211,
+      "price": 2517.0,
+      "market_cap": 147251003928.0,
+      "name": "Hosiden"
     },
     {
       "ticker": "4385",
-      "rsi14": 34.063,
-      "price": 3867.0,
-      "market_cap": 639208425558.0,
+      "rsi14": 28.88,
+      "price": 3621.0,
+      "market_cap": 598545050154.0,
       "name": "Mercari"
     },
     {
-      "ticker": "3099",
-      "rsi14": 34.289,
-      "price": 3189.0,
-      "market_cap": 1171803005706.0,
-      "name": "Isetan Mitsukoshi Holdings"
+      "ticker": "3186",
+      "rsi14": 28.931,
+      "price": 2890.0,
+      "market_cap": 233815739000.0,
+      "name": "NEXTAGE"
     },
     {
-      "ticker": "8830",
-      "rsi14": 34.31,
-      "price": 3164.0,
-      "market_cap": 2961504000000.0,
-      "name": "Sumitomo Realty & Development"
+      "ticker": "8976",
+      "rsi14": 29.119,
+      "price": 304000.0,
+      "market_cap": 284162480000.0,
+      "name": "Daiwa Office Investment"
+    },
+    {
+      "ticker": "7564",
+      "rsi14": 29.123,
+      "price": 5480.0,
+      "market_cap": 448520551680.0,
+      "name": "Workman"
+    },
+    {
+      "ticker": "3292",
+      "rsi14": 29.216,
+      "price": 113900.0,
+      "market_cap": 239482609100.0,
+      "name": "AEON REIT Investment"
+    },
+    {
+      "ticker": "9983",
+      "rsi14": 29.995,
+      "price": 67030.0,
+      "market_cap": 21330351485040.0,
+      "name": "Fast Retailing"
     },
     {
       "ticker": "2685",
-      "rsi14": 34.444,
-      "price": 3205.0,
-      "market_cap": 156404000000.0,
+      "rsi14": 30.144,
+      "price": 3145.0,
+      "market_cap": 153476000000.0,
       "name": "And ST HD"
     },
     {
-      "ticker": "8086",
-      "rsi14": 34.458,
-      "price": 1450.5,
-      "market_cap": 248701974289.5,
-      "name": "Nipro"
+      "ticker": "4536",
+      "rsi14": 30.551,
+      "price": 1725.0,
+      "market_cap": 555950515650.0,
+      "name": "Santen Pharmaceutical"
     },
     {
-      "ticker": "3462",
-      "rsi14": 34.494,
-      "price": 143400.0,
-      "market_cap": 666288597600.0,
-      "name": "Nomura Real Estate Master Fund"
+      "ticker": "5332",
+      "rsi14": 30.608,
+      "price": 5696.0,
+      "market_cap": 947577429312.0,
+      "name": "TOTO"
     },
     {
-      "ticker": "5726",
-      "rsi14": 34.562,
-      "price": 2404.0,
-      "market_cap": 105295200000.0,
-      "name": "OSAKA Titanium technologies"
+      "ticker": "8987",
+      "rsi14": 30.85,
+      "price": 133800.0,
+      "market_cap": 172667160600.0,
+      "name": "Japan Excellent"
+    },
+    {
+      "ticker": "5943",
+      "rsi14": 30.914,
+      "price": 2216.0,
+      "market_cap": 107597724880.0,
+      "name": "Noritz"
+    },
+    {
+      "ticker": "7731",
+      "rsi14": 31.347,
+      "price": 1729.5,
+      "market_cap": 576936443937.0,
+      "name": "Nikon"
+    },
+    {
+      "ticker": "5108",
+      "rsi14": 31.485,
+      "price": 3715.0,
+      "market_cap": 4955947611030.0,
+      "name": "Bridgestone"
+    },
+    {
+      "ticker": "4151",
+      "rsi14": 31.646,
+      "price": 2218.5,
+      "market_cap": 1166120138250.0,
+      "name": "Kyowa Kirin"
+    },
+    {
+      "ticker": "7747",
+      "rsi14": 31.795,
+      "price": 3271.0,
+      "market_cap": 867901953300.0,
+      "name": "Asahi Intecc"
+    },
+    {
+      "ticker": "5706",
+      "rsi14": 32.118,
+      "price": 22760.0,
+      "market_cap": 1306888053640.0,
+      "name": "Mitsui Kinzoku"
+    },
+    {
+      "ticker": "6146",
+      "rsi14": 32.175,
+      "price": 51000.0,
+      "market_cap": 5533838079000.0,
+      "name": "Disco"
+    },
+    {
+      "ticker": "4578",
+      "rsi14": 32.678,
+      "price": 10905.0,
+      "market_cap": 5921294139885.0,
+      "name": "Otsuka Holdings"
+    },
+    {
+      "ticker": "7649",
+      "rsi14": 32.857,
+      "price": 1245.0,
+      "market_cap": 485735539860.0,
+      "name": "Sugi Holdings"
+    },
+    {
+      "ticker": "6707",
+      "rsi14": 33.114,
+      "price": 6700.0,
+      "market_cap": 140199912000.0,
+      "name": "Sanken Electric"
+    },
+    {
+      "ticker": "6368",
+      "rsi14": 33.17,
+      "price": 11780.0,
+      "market_cap": 546117266000.0,
+      "name": "Organo"
+    },
+    {
+      "ticker": "3234",
+      "rsi14": 33.172,
+      "price": 124000.0,
+      "market_cap": 233049940000.0,
+      "name": "Mori Hills Reit Investment"
+    },
+    {
+      "ticker": "6361",
+      "rsi14": 33.234,
+      "price": 4300.0,
+      "market_cap": 1967001395500.0,
+      "name": "Ebara"
     },
     {
       "ticker": "215A",
-      "rsi14": 34.583,
-      "price": 1316.0,
-      "market_cap": 132577788000.0,
+      "rsi14": 33.367,
+      "price": 1287.0,
+      "market_cap": 129656241000.0,
       "name": "Timee"
     },
     {
-      "ticker": "6471",
-      "rsi14": 34.704,
-      "price": 1045.0,
-      "market_cap": 522500000000.0,
-      "name": "NSK"
+      "ticker": "7581",
+      "rsi14": 33.443,
+      "price": 6390.0,
+      "market_cap": 334020265380.0,
+      "name": "Saizeriya"
     },
     {
-      "ticker": "6845",
-      "rsi14": 34.742,
-      "price": 1447.0,
-      "market_cap": 783366348992.0,
-      "name": "Azbil"
+      "ticker": "3591",
+      "rsi14": 33.444,
+      "price": 3994.0,
+      "market_cap": 209685000000.0,
+      "name": "Wacoal Holdings"
     },
     {
-      "ticker": "6806",
-      "rsi14": 34.753,
-      "price": 23900.0,
-      "market_cap": 825277396500.0,
-      "name": "Hirose Electric"
+      "ticker": "5726",
+      "rsi14": 33.758,
+      "price": 2382.0,
+      "market_cap": 104331600000.0,
+      "name": "OSAKA Titanium technologies"
     },
     {
-      "ticker": "5101",
-      "rsi14": 34.756,
-      "price": 6711.0,
-      "market_cap": 1116686112891.0,
-      "name": "Yokohama Rubber"
+      "ticker": "5110",
+      "rsi14": 33.793,
+      "price": 1993.5,
+      "market_cap": 524376334129.5,
+      "name": "Sumitomo Rubber Industries"
     },
     {
-      "ticker": "8035",
-      "rsi14": 34.794,
-      "price": 50650.0,
-      "market_cap": 23705857926450.0,
-      "name": "Tokyo Electron"
+      "ticker": "6506",
+      "rsi14": 33.837,
+      "price": 4360.0,
+      "market_cap": 1162770566920.0,
+      "name": "YASKAWA Electric"
     },
     {
-      "ticker": "6856",
-      "rsi14": 34.928,
-      "price": 21560.0,
-      "market_cap": 910548913120.0,
-      "name": "Horiba"
+      "ticker": "8984",
+      "rsi14": 33.896,
+      "price": 114400.0,
+      "market_cap": 519358268000.0,
+      "name": "Daiwa House REIT Investment"
     },
     {
-      "ticker": "6101",
-      "rsi14": 34.933,
-      "price": 4805.0,
-      "market_cap": 230640000000.0,
-      "name": "Tsugami"
+      "ticker": "2802",
+      "rsi14": 33.908,
+      "price": 4888.0,
+      "market_cap": 4779171691008.0,
+      "name": "Ajinomoto"
     },
     {
-      "ticker": "1911",
-      "rsi14": 34.951,
-      "price": 1233.0,
-      "market_cap": 762692252832.0,
-      "name": "Sumitomo Forestry"
+      "ticker": "3279",
+      "rsi14": 33.921,
+      "price": 131300.0,
+      "market_cap": 312010553400.0,
+      "name": "Activia Properties"
+    },
+    {
+      "ticker": "6465",
+      "rsi14": 34.046,
+      "price": 5301.0,
+      "market_cap": 768062420100.0,
+      "name": "Hoshizaki"
+    },
+    {
+      "ticker": "2875",
+      "rsi14": 34.153,
+      "price": 9895.0,
+      "market_cap": 1097167930380.0,
+      "name": "Toyo Suisan Kaisha"
+    },
+    {
+      "ticker": "3462",
+      "rsi14": 34.21,
+      "price": 143300.0,
+      "market_cap": 665823961200.0,
+      "name": "Nomura Real Estate Master Fund"
+    },
+    {
+      "ticker": "4543",
+      "rsi14": 34.265,
+      "price": 2244.0,
+      "market_cap": 3322375921920.0,
+      "name": "Terumo"
+    },
+    {
+      "ticker": "8923",
+      "rsi14": 34.374,
+      "price": 1673.0,
+      "market_cap": 163167355400.0,
+      "name": "Tosei"
+    },
+    {
+      "ticker": "9708",
+      "rsi14": 34.469,
+      "price": 946.0,
+      "market_cap": 112384800000.0,
+      "name": "Imperial Hotel"
+    },
+    {
+      "ticker": "3295",
+      "rsi14": 34.522,
+      "price": 148000.0,
+      "market_cap": 213120000000.0,
+      "name": "Hulic Reit"
+    },
+    {
+      "ticker": "3465",
+      "rsi14": 34.567,
+      "price": 3245.0,
+      "market_cap": 102991757000.0,
+      "name": "Ki-Star Real Estate"
+    },
+    {
+      "ticker": "7730",
+      "rsi14": 34.652,
+      "price": 1457.0,
+      "market_cap": 155903774589.0,
+      "name": "Mani"
+    },
+    {
+      "ticker": "7309",
+      "rsi14": 34.811,
+      "price": 18075.0,
+      "market_cap": 1564029750000.0,
+      "name": "Shimano"
+    },
+    {
+      "ticker": "94346",
+      "rsi14": 34.828,
+      "price": 7560.0,
+      "market_cap": 362224660507920.0,
+      "name": "Series 2 Bond-Type Class Shares of SoftBank Prf"
+    },
+    {
+      "ticker": "4519",
+      "rsi14": 34.864,
+      "price": 6446.0,
+      "market_cap": 10823205721482.0,
+      "name": "Chugai Pharmaceutical"
     }
   ]
 }

@@ -9,3 +9,4 @@ date,action,ticker,shares,price,currency,amount_usd,fee_usd,rule,note
 2026-08-18,BUY,EWJ,65,96.49,USD,6271.85,0.0,rebalance,pending決済(order_id=3145613)・手数料不明のため未計上
 2026-09-15,SELL,GLD,11,393.89,USD,4332.79,1.0,rebalance,
 2026-09-15,SELL,EWJ,32,96.81,USD,3097.92,1.0,rebalance,
+2026-09-16,BUY,VOO,16,698.545,USD,11176.72,0.99,rebalance,

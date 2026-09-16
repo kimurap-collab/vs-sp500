@@ -1,18 +1,18 @@
 {
   "start_date": "2026-08-05",
   "mode": "normal",
-  "cash_usd": 12528.845553000021,
+  "cash_usd": 1351.135553,
   "holdings": {
     "QQQ": 21.0,
     "XLV": 18.0,
     "GLD": 12.0,
     "IEF": 33.0,
-    "VOO": 31.0,
+    "VOO": 47.0,
     "EWJ": 33.0
   },
   "bench_units": 89.51845852876495,
-  "last_processed_voo_date": "2026-09-15",
+  "last_processed_voo_date": "2026-09-16",
   "below_200dma_streak": 0,
-  "above_200dma_streak": 29,
+  "above_200dma_streak": 30,
   "pending_orders": []
 }
