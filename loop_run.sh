@@ -22,6 +22,23 @@ export IKE_GATE_AUTONOMOUS=1
 # 自律ループの週報・月次総括も夜には送らず、朝07:00の send_report.py にまとめて流す
 export VS_SP500_DEFER_TELEGRAM=1
 
+# 二重起動防止（2026-09-18追加）。Macスリープ復帰時にlaunchdの03:00 daily_run と 07:00 send_report が
+# 同時刻に発火し、両方が loop_run.sh を起動して自律ループが2本並走した（同じ日誌・台帳に2つのFableが書く）。
+# mkdirの原子性でロックを取り、生きとるPIDが持っとれば何もせず終了する。持ち主が死んどる古いロックは奪う。
+# 置き場を/tmpにしとるのは、末尾の git add -A にロックを拾わせんため。
+LOCK_DIR="/tmp/vs-sp500-loop_run.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    OTHER_PID="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+    if [ -n "$OTHER_PID" ] && kill -0 "$OTHER_PID" 2>/dev/null; then
+        echo "[loop_run.sh] 既に実行中(pid=${OTHER_PID})のため二重起動せず終了 $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
+        exit 0
+    fi
+    rm -rf "$LOCK_DIR"
+    mkdir "$LOCK_DIR" || exit 1
+fi
+echo $$ > "$LOCK_DIR/pid"
+trap 'rm -rf "$LOCK_DIR"' EXIT
+
 echo "[loop_run.sh] 開始 $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 
 # 529のような一時的なサーバ側エラーは待てば回復するため、間隔を空けて最大3回まで試行する
