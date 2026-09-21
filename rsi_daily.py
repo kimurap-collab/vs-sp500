@@ -885,8 +885,13 @@ def main() -> None:
     else:
         print(f"JP候補確定完了: {len(jp_result['candidates'])}件 generated_at={jp_result['generated_at']}")
 
-    if result is None or jp_result is None:
-        raise SystemExit(1)
+    exit_code = 1 if (result is None or jp_result is None) else 0
+    # moomoo SDKの非デーモンスレッド（OpenD未応答時の永久再接続）が残ってもプロセスを確実に終了させる。
+    # daily_run.pyには2026-09-02に同じ対策を入れたがこちらは漏れとった。
+    # 2026-09-21実測: Mac再起動後OpenDが未ログインのまま、20:00の候補確定が3回失敗した後も
+    # 6時間以上生き残り（22スレッド・再接続1万3千回・ログ7MB）、launchdの翌20:00起動を塞ぐ状態だった。
+    logging.shutdown()
+    os._exit(exit_code)
 
 
 if __name__ == "__main__":
