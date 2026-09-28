@@ -301,7 +301,7 @@ def run_jp(
     **moomooへの発注は行わない（日本の仮想口座が存在しないため）。台帳の上だけの仮想売買**。
     約定価格はその日の終値をそのまま使う（新規エントリーはfrozen候補の株価＝20:00確定の
     当日終値、既存ロットの判定はyfinanceの当日終値）。手数料はモデル化しない（ゼロ）。
-    処理順序は米国RSI枠と同じ: 利確（SELL）→買い増し→新規エントリー。
+    処理順序は米国RSI枠と同じ: 損切り→利確（SELL）→買い増し→新規エントリー。
 
     戻り値: (更新後のjp_state, 約定した取引ログ, ログ用メッセージ行, NAV(円), 保有銘柄の市場スナップショット)
     """
@@ -343,7 +343,7 @@ def run_jp(
     do_trade = not already_processed_today and not dry_run
 
     if do_trade:
-        # --- 1. 利確（SELL群を先に処理して現金を作る） ---
+        # --- 1. 損切り・利確（SELL群を先に処理して現金を作る） ---
         for lot in sorted(state["lots"], key=lambda x: (x["ticker"], x["lot_id"])):
             if lot.get("closed"):
                 continue
@@ -352,6 +352,23 @@ def run_jp(
                 logger.warning("JP: %s の価格が取得できずロット%sの判定をスキップした", lot["ticker"], lot["lot_id"])
                 continue
             idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot["lot_id"])
+
+            stop = rsi_strategy.decide_stop_loss(state["lots"][idx], price, rsi_strategy.JP_RULES)
+            if stop is not None:
+                qty = stop["qty"]
+                state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], qty, trading_date)
+                state["cash_jpy"] += qty * price
+                trade_row = {
+                    "date": trading_date, "action": "SELL", "ticker": stop["ticker"],
+                    "shares": qty, "price": round(price, 2), "amount_jpy": round(qty * price, 0),
+                    "rule": "stop_loss", "lot_id": stop["lot_id"],
+                    "note": "moomoo発注なし・台帳のみの仮想売買",
+                    "name": state["lots"][idx].get("name"),
+                }
+                jp_rsi_ledger.append_trade_row(trade_row)
+                accepted_trades.append(trade_row)
+                continue  # 損切りした日は利確判定を行わない
+
             trading_days_elapsed = rsi_strategy.business_days_since(lot["initial_entry_date"], trading_date)
             while True:
                 intents = rsi_strategy.decide_profit_takes(
@@ -433,7 +450,7 @@ def run_jp(
             accepted_trades.append(trade_row)
 
         state["last_processed_date"] = trading_date
-        log_lines.append(f"[JP-2] 約定{len(accepted_trades)}件（利確/買い増し/新規エントリー込み）")
+        log_lines.append(f"[JP-2] 約定{len(accepted_trades)}件（損切り/利確/買い増し/新規エントリー込み）")
     else:
         reason = "dry-run" if dry_run else "処理済み"
         log_lines.append(f"[JP-2] 売買スキップ（{reason}）")

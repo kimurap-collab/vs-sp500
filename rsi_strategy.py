@@ -43,6 +43,7 @@ class StrategyRules:
     profit1_sell_fraction: float
     profit2_pct: float
     profit2_sell_fraction: float
+    stop_loss_pct: float
     exception_window_trading_days: int
     exception_hold_calendar_days: int
     # 新規エントリーで「1単元の金額が予算超過でも最低1単元は買う」を有効にするか
@@ -60,6 +61,7 @@ US_RULES = StrategyRules(
     profit1_sell_fraction=config.RSI_PROFIT1_SELL_FRACTION,
     profit2_pct=config.RSI_PROFIT2_PCT,
     profit2_sell_fraction=config.RSI_PROFIT2_SELL_FRACTION,
+    stop_loss_pct=config.RSI_STOP_LOSS_PCT,
     exception_window_trading_days=config.RSI_EXCEPTION_WINDOW_TRADING_DAYS,
     exception_hold_calendar_days=config.RSI_EXCEPTION_HOLD_CALENDAR_DAYS,
 )
@@ -74,6 +76,7 @@ JP_RULES = StrategyRules(
     profit1_sell_fraction=config.RSI_JP_PROFIT1_SELL_FRACTION,
     profit2_pct=config.RSI_JP_PROFIT2_PCT,
     profit2_sell_fraction=config.RSI_JP_PROFIT2_SELL_FRACTION,
+    stop_loss_pct=config.RSI_STOP_LOSS_PCT,  # 米国枠と同じ-8%（2026-09-28復活。JP枠専用の値は作らない）
     exception_window_trading_days=config.RSI_JP_EXCEPTION_WINDOW_TRADING_DAYS,
     exception_hold_calendar_days=config.RSI_JP_EXCEPTION_HOLD_CALENDAR_DAYS,
     min_one_lot_entry=True,  # 2026-08-27改訂: 値がさ株は300万円を超えても1単元だけ買う
@@ -208,9 +211,36 @@ def new_lot(
     }
 
 
+def _stop_loss_price(lot: dict[str, Any], rules: StrategyRules = US_RULES) -> float:
+    return lot["initial_entry_price"] * (1 + rules.stop_loss_pct)
+
+
+def _is_runner_only(lot: dict[str, Any]) -> bool:
+    """利確1・2が両方済みで、伸ばす玉（残り25%）だけが残っている状態か。"""
+    return bool(lot["profit1_taken"] and lot["profit2_taken"])
+
+
 # ---------------------------------------------------------------------------
 # 決定（decide_*）: 現在の状態と当日の価格から必要な意思決定を返す。状態は変更しない。
 # ---------------------------------------------------------------------------
+
+def decide_stop_loss(lot: dict[str, Any], price: float, rules: StrategyRules = US_RULES) -> dict[str, Any] | None:
+    """STOP: 株価が初期エントリー価格×(1+stop_loss_pct)以下 → 全株売却（2026-09-28復活）。
+
+    例外（8週ホールド）中も有効。ただし伸ばす玉（利確1・2済み）のみを保有していて
+    かつ含み益が出ている場合は対象外（SPEC_RSI30.md「伸ばす玉」「利益が出ている場合は適用しない」）。
+    """
+    if lot["closed"] or lot["shares"] <= 0:
+        return None
+    if price > _stop_loss_price(lot, rules):
+        return None
+    if _is_runner_only(lot) and price > lot["avg_cost"]:
+        return None
+    return {
+        "kind": "stop_loss", "action": "SELL", "ticker": lot["ticker"], "lot_id": lot["lot_id"],
+        "qty": int(lot["shares"]),
+    }
+
 
 def decide_pyramid_buys(
     lot: dict[str, Any], price: float, rules: StrategyRules = US_RULES,
@@ -242,7 +272,7 @@ def decide_profit_takes(
 ) -> list[dict[str, Any]]:
     """NORMAL PROFIT / EXCEPTION: 利確1(50%)・利確2(25%)の判定。
 
-    例外発動中（exception_active かつ deadline未到達）は何も返さない。
+    例外発動中（exception_active かつ deadline未到達）は何も返さない（損切りは別関数で有効）。
     利確1が未実施の状態で+20%条件が満たされた日が初期エントリーから15営業日以内なら、
     売らずに例外を発動する意図（kind="exception_trigger"）だけを返す。
     利確1が未実施のうちは利確2を判定しない（base_sharesが確定していないため）。
@@ -326,6 +356,16 @@ def apply_profit2_fill(lot: dict[str, Any], filled_qty: int) -> dict[str, Any]:
     return new_lot
 
 
+def apply_stop_loss_fill(lot: dict[str, Any], filled_qty: int, current_date: str) -> dict[str, Any]:
+    new_lot = dict(lot)
+    new_lot["shares"] = lot["shares"] - filled_qty
+    if new_lot["shares"] <= 0:
+        new_lot["closed"] = True
+        new_lot["closed_reason"] = "stop_loss"
+        new_lot["closed_date"] = current_date
+    return new_lot
+
+
 # ---------------------------------------------------------------------------
 # テスト・単一ロット検証用のオーケストレーション。
 # 「その日ありうる決定を全て適用し終える」まで decide→apply を繰り返す
@@ -341,6 +381,12 @@ def simulate_lot_day(
     戻り値: (更新後のlot, 発生した取引記録のリスト)
     """
     trades: list[dict[str, Any]] = []
+
+    stop = decide_stop_loss(lot, price, rules)
+    if stop is not None:
+        lot = apply_stop_loss_fill(lot, stop["qty"], current_date)
+        trades.append({**stop, "fill_price": price, "filled_qty": stop["qty"]})
+        return lot, trades  # 損切りが出た日は他の判定を行わない
 
     trading_days_elapsed = business_days_since(lot["initial_entry_date"], current_date)
 

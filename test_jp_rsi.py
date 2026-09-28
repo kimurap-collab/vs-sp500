@@ -173,12 +173,17 @@ class TestJpRulesShareUsBehaviorRatios(unittest.TestCase):
         self.assertEqual(trades, [])
         self.assertEqual(lot["shares"], remaining)
 
-    def test_no_stop_loss_with_jp_rules(self):
-        """米国版と同じく損切りルールは無い（-30%でも何も起きない）。"""
+    def test_stop_loss_triggers_and_closes_lot_with_jp_rules(self):
+        """JP枠も米国枠と同じ-8%損切りルールを共用する（2026-09-28復活。大将「日本枠にも適用」）。
+        台帳のみの仮想売買（moomoo発注なし）でロットが閉じること。"""
         lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=1000, fill_price=3000.0, lot_size=100)
-        lot, trades = rs.simulate_lot_day(lot, 2100.0, "2026-01-06", rules=rs.JP_RULES)  # -30%
-        self.assertEqual(trades, [])
-        self.assertFalse(lot["closed"])
+        stop_price = 3000.0 * (1 + config.RSI_STOP_LOSS_PCT)  # -8% = 2760.0
+        lot, trades = rs.simulate_lot_day(lot, stop_price, "2026-01-06", rules=rs.JP_RULES)
+        self.assertEqual([t["kind"] for t in trades], ["stop_loss"])
+        self.assertEqual(trades[0]["filled_qty"], 1000)
+        self.assertEqual(lot["shares"], 0)
+        self.assertTrue(lot["closed"])
+        self.assertEqual(lot["closed_reason"], "stop_loss")
 
     def test_exception_15day_window_with_jp_rules(self):
         entry_date = "2026-01-05"

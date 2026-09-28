@@ -58,34 +58,62 @@ class TestPyramid(unittest.TestCase):
         self.assertEqual(trades, [])
 
 
-class TestNoStopLoss(unittest.TestCase):
-    """2026-08-19改訂（損切りルール削除。大将「損切りのルールは削除しようか」）:
-    株価が初期エントリー価格を大きく下回っても売却が発生しないこと。"""
+class TestStopLoss(unittest.TestCase):
+    """検証1-b: エントリー後に-8%到達 → 全株売却されること（2026-09-28復活。
+    大将「損切りルール復活させようか。」択一１）-8%で全株売却）。"""
 
-    def test_large_drawdown_does_not_trigger_a_sell(self):
+    def test_stop_loss_sells_all(self):
         lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
-        lot, trades = rs.simulate_lot_day(lot, 70.0, "2026-01-06")  # -30%
-        self.assertEqual(trades, [])
-        self.assertEqual(lot["shares"], 300)
-        self.assertFalse(lot["closed"])
+        lot, trades = rs.simulate_lot_day(lot, 92.0, "2026-01-06")  # ちょうど-8%
+        self.assertEqual(len(trades), 1)
+        self.assertEqual(trades[0]["kind"], "stop_loss")
+        self.assertEqual(trades[0]["filled_qty"], 300)
+        self.assertEqual(lot["shares"], 0)
+        self.assertTrue(lot["closed"])
+        self.assertEqual(lot["closed_reason"], "stop_loss")
 
-    def test_drawdown_during_exception_hold_does_not_trigger_a_sell(self):
-        """例外（8週ホールド）中に大きく下落しても、旧損切りルールは既に無いため何も起きない。"""
-        entry_date = "2026-01-05"
-        lot = rs.new_lot("TST", "TST-1", entry_date, filled_qty=300, fill_price=100.0)
-        lot, _ = rs.simulate_lot_day(lot, 102.5, add_days(entry_date, 1))
-        lot, _ = rs.simulate_lot_day(lot, 105.0, add_days(entry_date, 2))
-        lot, _ = rs.simulate_lot_day(lot, 107.5, add_days(entry_date, 3))
-        avg_cost = lot["avg_cost"]
-
-        day10 = "2026-01-19"
-        lot, trades = rs.simulate_lot_day(lot, avg_cost * 1.20 * 1.001, day10)
-        self.assertTrue(lot["exception_active"])
-
-        drawdown_date = add_days(entry_date, 20)
-        lot, trades = rs.simulate_lot_day(lot, lot["initial_entry_price"] * 0.70, drawdown_date)  # -30%
+    def test_price_above_stop_does_not_trigger(self):
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot, trades = rs.simulate_lot_day(lot, 92.5, "2026-01-06")  # -7.5%（未到達）
         self.assertEqual(trades, [])
         self.assertFalse(lot["closed"])
+
+    def test_boundary_price_exactly_at_stop_triggers(self):
+        """境界値: 初期エントリー価格×0.92ちょうど → 損切りが発動すること。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=100, fill_price=570.64)
+        stop_price = 570.64 * 0.92
+        lot, trades = rs.simulate_lot_day(lot, stop_price, "2026-01-06")
+        self.assertEqual([t["kind"] for t in trades], ["stop_loss"])
+        self.assertTrue(lot["closed"])
+
+    def test_boundary_price_just_above_stop_does_not_trigger(self):
+        """境界値: 初期エントリー価格570.64の-8%ラインは524.9888。525.06はそれを上回るため未到達。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=100, fill_price=570.64)
+        lot, trades = rs.simulate_lot_day(lot, 525.06, "2026-01-06")
+        self.assertEqual(trades, [])
+        self.assertFalse(lot["closed"])
+
+    def test_runner_only_with_profit_is_exempt(self):
+        """例外: 伸ばす玉（利確1・2済み）のみを保有していて含み益が出ている場合は損切り対象外
+        （decide_stop_lossを直接検証。実運用の買い増しではavg_costは初期エントリー価格以上
+        にしかならず「price<=stop_line かつ price>avg_cost」を自然な取引列で再現できないため、
+        ロットを直接組み立てて純粋関数の分岐を検証する）。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=100, fill_price=100.0)
+        lot = {**lot, "avg_cost": 85.0, "profit1_taken": True, "profit2_taken": True}
+        stop_line = 100.0 * (1 + config.RSI_STOP_LOSS_PCT)  # 92.0
+        price = 90.0  # stop_line以下だが avg_cost(85.0)は上回る → 含み益あり
+        self.assertLessEqual(price, stop_line)
+        self.assertGreater(price, lot["avg_cost"])
+
+        self.assertIsNone(rs.decide_stop_loss(lot, price))
+
+    def test_runner_only_without_profit_still_triggers(self):
+        """伸ばす玉でも含み益が無ければ（price<=avg_cost）例外は適用されず損切りされる。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=100, fill_price=100.0)
+        lot = {**lot, "profit1_taken": True, "profit2_taken": True}
+        intent = rs.decide_stop_loss(lot, 90.0)  # avg_cost=100のまま。含み益なし
+        self.assertIsNotNone(intent)
+        self.assertEqual(intent["kind"], "stop_loss")
 
 
 class TestProfitTaking(unittest.TestCase):
@@ -132,7 +160,8 @@ class TestProfitTaking(unittest.TestCase):
 
 
 class TestException15Day(unittest.TestCase):
-    """検証1-d: 10営業日目に+20%到達 → 利確されず、初期エントリーから56日後まで保持されること。"""
+    """検証1-d: 10営業日目に+20%到達 → 利確されず、初期エントリーから56日後まで保持されること。
+    検証1-e: その期間中に-8%到達 → 損切りが実行されること。"""
 
     def _lot_after_pyramids(self, entry_date="2026-01-05"):
         lot = rs.new_lot("TST", "TST-1", entry_date, filled_qty=300, fill_price=100.0)
@@ -171,6 +200,24 @@ class TestException15Day(unittest.TestCase):
         self.assertEqual([t["kind"] for t in trades], ["profit1"])
         self.assertTrue(lot["profit1_taken"])
 
+    def test_stop_loss_still_active_during_exception_hold(self):
+        entry_date = "2026-01-05"
+        lot = self._lot_after_pyramids(entry_date)
+        avg_cost = lot["avg_cost"]
+
+        day10 = "2026-01-19"
+        lot, trades = rs.simulate_lot_day(lot, avg_cost * 1.20 * 1.001, day10)
+        self.assertTrue(lot["exception_active"])
+
+        # 例外ホールド中に初期エントリー価格の-8%まで下落 → 損切りが実行される
+        stop_date = add_days(entry_date, 20)
+        stop_price = lot["initial_entry_price"] * (1 + config.RSI_STOP_LOSS_PCT)
+        lot, trades = rs.simulate_lot_day(lot, stop_price, stop_date)
+        self.assertEqual([t["kind"] for t in trades], ["stop_loss"])
+        self.assertTrue(lot["closed"])
+        self.assertEqual(lot["shares"], 0)
+
+
 class TestReentry(unittest.TestCase):
     """検証1-f: 伸ばす玉のみ保有中に再びRSI≤30 → 別ロットとして新規建てされること。"""
 
@@ -206,7 +253,7 @@ class TestFilterBlockedEntries(unittest.TestCase):
 
     a. 未クローズかつ利確前のロットがある銘柄 → 新規エントリーされない
     b. 未クローズだが利確1実施済みのロットがある銘柄 → 新規エントリーされる
-    c. ロットが無い銘柄 → 新規エントリーされる
+    c. ロットが無い（または損切りでクローズ済み）銘柄 → 新規エントリーされる
     """
 
     def test_a_unclosed_lot_before_any_profit_blocks_new_entry(self):
@@ -238,6 +285,17 @@ class TestFilterBlockedEntries(unittest.TestCase):
         self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
         self.assertEqual(blocked, [])
 
+    def test_c_stop_loss_closed_lot_allows_new_entry(self):
+        lot = rs.new_lot("MSFT", "MSFT-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot = rs.apply_stop_loss_fill(lot, filled_qty=300, current_date="2026-01-06")
+        self.assertTrue(lot["closed"])
+        candidates = [{"ticker": "MSFT", "rsi14": 25.0, "price": 90.0}]
+
+        allowed, blocked = rs.filter_blocked_entries(candidates, [lot])
+
+        self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
+        self.assertEqual(blocked, [])
+
     def test_unrelated_tickers_pass_through_untouched(self):
         blocked_lot = rs.new_lot("DVA", "DVA-1", "2026-08-18", filled_qty=169, fill_price=177.64)
         candidates = [
@@ -249,7 +307,7 @@ class TestFilterBlockedEntries(unittest.TestCase):
 
         self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
         self.assertEqual(blocked, ["DVA"])
-        # 買い増し・利確の判定用フィールドはそのまま(関与しない)
+        # 買い増し・損切り・利確の判定用フィールドはそのまま(関与しない)
         self.assertFalse(blocked_lot["profit1_taken"])
 
 
