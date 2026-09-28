@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 6448.380000000005,
+  "cash_usd": 17761.09600000002,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -58,7 +58,7 @@
         false,
         false
       ],
-      "shares": 73,
+      "shares": 0,
       "total_invested_usd": 29971.245,
       "avg_cost": 410.565,
       "profit1_taken": false,
@@ -66,9 +66,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "Lennox International"
     },
     {
@@ -81,7 +81,7 @@
         false,
         false
       ],
-      "shares": 1224,
+      "shares": 0,
       "total_invested_usd": 44954.91499999999,
       "avg_cost": 36.72787173202614,
       "profit1_taken": false,
@@ -89,9 +89,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "Rollins"
     },
     {
@@ -104,7 +104,7 @@
         false,
         false
       ],
-      "shares": 2235,
+      "shares": 0,
       "total_invested_usd": 29982.524999999998,
       "avg_cost": 13.415,
       "profit1_taken": false,
@@ -112,9 +112,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "The Trade Desk"
     },
     {
@@ -192,13 +192,13 @@
       "initial_entry_date": "2026-08-21",
       "initial_entry_price": 40.08,
       "pyramid_done": [
-        false,
-        false,
+        true,
+        true,
         false
       ],
-      "shares": 748,
-      "total_invested_usd": 29979.84,
-      "avg_cost": 40.08,
+      "shares": 1274,
+      "total_invested_usd": 52392.7,
+      "avg_cost": 41.124568288854,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -215,13 +215,13 @@
       "initial_entry_date": "2026-08-21",
       "initial_entry_price": 224.825,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 133,
-      "total_invested_usd": 29901.725,
-      "avg_cost": 224.825,
+      "shares": 198,
+      "total_invested_usd": 44858.549999999996,
+      "avg_cost": 226.5583333333333,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -239,12 +239,12 @@
       "initial_entry_price": 103.045,
       "pyramid_done": [
         true,
-        false,
+        true,
         false
       ],
-      "shares": 432,
-      "total_invested_usd": 44881.335,
-      "avg_cost": 103.89197916666666,
+      "shares": 500,
+      "total_invested_usd": 52280.415,
+      "avg_cost": 104.56083,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -312,7 +312,7 @@
         false,
         false
       ],
-      "shares": 52,
+      "shares": 0,
       "lot_size": 1,
       "total_invested_usd": 29673.28,
       "avg_cost": 570.64,
@@ -321,9 +321,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "Cummins"
     },
     {
@@ -336,7 +336,7 @@
         false,
         false
       ],
-      "shares": 409,
+      "shares": 0,
       "lot_size": 1,
       "total_invested_usd": 29918.350000000002,
       "avg_cost": 73.15,
@@ -345,13 +345,85 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
+      "name": "Public Service Enterprise Group"
+    },
+    {
+      "lot_id": "MGM-2026-09-28-1",
+      "ticker": "MGM",
+      "name": "MGM Resorts International",
+      "initial_entry_date": "2026-09-28",
+      "initial_entry_price": 32.355,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 928,
+      "lot_size": 1,
+      "total_invested_usd": 30025.44,
+      "avg_cost": 32.355,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
       "closed": false,
       "closed_reason": null,
-      "closed_date": null,
-      "name": "Public Service Enterprise Group"
+      "closed_date": null
+    },
+    {
+      "lot_id": "O-2026-09-28-1",
+      "ticker": "O",
+      "name": "Realty Income",
+      "initial_entry_date": "2026-09-28",
+      "initial_entry_price": 55.355,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 541,
+      "lot_size": 1,
+      "total_invested_usd": 29947.054999999997,
+      "avg_cost": 55.355,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "DTE-2026-09-28-1",
+      "ticker": "DTE",
+      "name": "DTE Energy",
+      "initial_entry_date": "2026-09-28",
+      "initial_entry_price": 121.2,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 247,
+      "lot_size": 1,
+      "total_invested_usd": 29936.4,
+      "avg_cost": 121.2,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-09-25",
+  "last_processed_date": "2026-09-28",
   "pending_orders": []
 }

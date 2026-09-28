@@ -37,3 +37,10 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name
 2026-09-03,BUY,9143,2000,1467.0,2934000.0,entry,9143-2026-09-03-1,RSI14=32.3 lot_size=100・moomoo発注なし・台帳のみの仮想売買,SG Holdings
 2026-09-03,BUY,6845,2000,1466.0,2932000.0,entry,6845-2026-09-03-1,RSI14=32.7 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Azbil
 2026-09-03,BUY,6101,500,5030.0,2515000.0,entry,6101-2026-09-03-1,RSI14=32.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買,Tsugami
+2026-09-28,SELL,5334,300,7658.0,2297400.0,stop_loss,5334-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Niterra
+2026-09-28,SELL,7532,3700,718.8,2659560.0,stop_loss,7532-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Pan Pacific International Holdings
+2026-09-28,BUY,268A,800,1740.0,1392000.0,pyramid1,268A-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Rigaku Holdings
+2026-09-28,BUY,3099,400,3327.0,1330800.0,pyramid1,3099-2026-09-03-1,moomoo発注なし・台帳のみの仮想売買,Isetan Mitsukoshi Holdings
+2026-09-28,BUY,3905,300,2052.0,615600.0,pyramid2,3905-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Datasection
+2026-09-28,BUY,3905,300,2052.0,615600.0,pyramid3,3905-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Datasection
+2026-09-28,BUY,6479,200,3567.0,713400.0,pyramid2,6479-2026-08-24-1,moomoo発注なし・台帳のみの仮想売買,Minebea Mitsumi

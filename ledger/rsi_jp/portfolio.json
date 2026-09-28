@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 20610.0,
+  "cash_jpy": 310169.9548339844,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -81,13 +81,13 @@
       "initial_entry_price": 3344.0,
       "pyramid_done": [
         false,
-        false,
+        true,
         false
       ],
-      "shares": 800,
+      "shares": 1000,
       "lot_size": 100,
-      "total_invested_usd": 2675200.0,
-      "avg_cost": 3344.0,
+      "total_invested_usd": 3388600.0,
+      "avg_cost": 3388.6,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -108,7 +108,7 @@
         false,
         false
       ],
-      "shares": 300,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2615700.0,
       "avg_cost": 8719.0,
@@ -117,9 +117,9 @@
       "base_shares": null,
       "exception_active": true,
       "exception_deadline_date": "2026-10-19",
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "Niterra"
     },
     {
@@ -129,13 +129,13 @@
       "initial_entry_price": 1662.0,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 2600,
+      "shares": 3200,
       "lot_size": 100,
-      "total_invested_usd": 4373200.0,
-      "avg_cost": 1682.0,
+      "total_invested_usd": 5604400.0,
+      "avg_cost": 1751.375,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -176,14 +176,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 1671.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1700,
+      "shares": 2500,
       "lot_size": 100,
-      "total_invested_usd": 2840700.0,
-      "avg_cost": 1671.0,
+      "total_invested_usd": 4232700.0,
+      "avg_cost": 1693.08,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -276,7 +276,7 @@
         false,
         false
       ],
-      "shares": 3700,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2999590.0,
       "avg_cost": 810.7,
@@ -285,9 +285,9 @@
       "base_shares": null,
       "exception_active": true,
       "exception_deadline_date": "2026-10-19",
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-28",
       "name": "Pan Pacific International Holdings"
     },
     {
@@ -465,14 +465,14 @@
       "initial_entry_date": "2026-09-03",
       "initial_entry_price": 3211.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 900,
+      "shares": 1300,
       "lot_size": 100,
-      "total_invested_usd": 2889900.0,
-      "avg_cost": 3211.0,
+      "total_invested_usd": 4220700.0,
+      "avg_cost": 3246.6923076923076,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -771,5 +771,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-09-25"
+  "last_processed_date": "2026-09-28"
 }
