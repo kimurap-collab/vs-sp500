@@ -1,257 +1,782 @@
 {
-  "generated_at": "2026-09-28T12:00:10.983338+00:00",
+  "generated_at": "2026-09-29T12:00:11.097846+00:00",
   "candidates": [
     {
+      "ticker": "8952",
+      "rsi14": 22.101,
+      "price": 108800.0,
+      "market_cap": 792453504000.0,
+      "name": "Japan Real Estate Investment"
+    },
+    {
+      "ticker": "3591",
+      "rsi14": 22.566,
+      "price": 3700.0,
+      "market_cap": 194250000000.0,
+      "name": "Wacoal Holdings"
+    },
+    {
       "ticker": "8987",
-      "rsi14": 25.785,
-      "price": 131600.0,
-      "market_cap": 169828089200.0,
+      "rsi14": 23.099,
+      "price": 130600.0,
+      "market_cap": 168537602200.0,
       "name": "Japan Excellent"
     },
     {
-      "ticker": "7564",
-      "rsi14": 26.205,
-      "price": 5220.0,
-      "market_cap": 427240379520.0,
-      "name": "Workman"
-    },
-    {
-      "ticker": "3309",
-      "rsi14": 26.573,
-      "price": 70000.0,
-      "market_cap": 301277900000.0,
-      "name": "Sekisui House Reit"
-    },
-    {
-      "ticker": "3186",
-      "rsi14": 27.511,
-      "price": 2823.0,
-      "market_cap": 228395097300.0,
-      "name": "NEXTAGE"
-    },
-    {
-      "ticker": "3471",
-      "rsi14": 28.192,
-      "price": 100400.0,
-      "market_cap": 323257779600.0,
-      "name": "Mitsui Fudosan Logistics Park"
-    },
-    {
-      "ticker": "3279",
-      "rsi14": 29.609,
-      "price": 129500.0,
-      "market_cap": 307733181000.0,
-      "name": "Activia Properties"
-    },
-    {
-      "ticker": "6804",
-      "rsi14": 29.827,
-      "price": 2497.0,
-      "market_cap": 146080952248.0,
-      "name": "Hosiden"
+      "ticker": "4547",
+      "rsi14": 23.514,
+      "price": 3735.0,
+      "market_cap": 173834313975.0,
+      "name": "Kissei Pharmaceutical"
     },
     {
       "ticker": "4732",
-      "rsi14": 30.001,
-      "price": 1850.5,
-      "market_cap": 877137000000.0,
+      "rsi14": 23.92,
+      "price": 1798.0,
+      "market_cap": 852252000000.0,
       "name": "USS"
     },
     {
-      "ticker": "8951",
-      "rsi14": 30.299,
-      "price": 119000.0,
-      "market_cap": 1048985000000.0,
-      "name": "Nippon Building Fund"
+      "ticker": "4928",
+      "rsi14": 25.009,
+      "price": 4470.0,
+      "market_cap": 152680104810.0,
+      "name": "Noevir Holdings"
     },
     {
-      "ticker": "3292",
-      "rsi14": 30.367,
-      "price": 111900.0,
-      "market_cap": 235277471100.0,
-      "name": "AEON REIT Investment"
+      "ticker": "3471",
+      "rsi14": 25.041,
+      "price": 99500.0,
+      "market_cap": 320360050500.0,
+      "name": "Mitsui Fudosan Logistics Park"
     },
     {
-      "ticker": "9627",
-      "rsi14": 30.442,
-      "price": 5412.0,
-      "market_cap": 191737483344.0,
-      "name": "Ain Holdings"
+      "ticker": "3309",
+      "rsi14": 25.073,
+      "price": 69700.0,
+      "market_cap": 299986709000.0,
+      "name": "Sekisui House Reit"
+    },
+    {
+      "ticker": "6804",
+      "rsi14": 25.296,
+      "price": 2445.0,
+      "market_cap": 143038817880.0,
+      "name": "Hosiden"
+    },
+    {
+      "ticker": "3279",
+      "rsi14": 25.538,
+      "price": 128000.0,
+      "market_cap": 304168704000.0,
+      "name": "Activia Properties"
+    },
+    {
+      "ticker": "8958",
+      "rsi14": 25.883,
+      "price": 106100.0,
+      "market_cap": 116130375700.0,
+      "name": "Global One Real Estate Investment"
+    },
+    {
+      "ticker": "8955",
+      "rsi14": 26.552,
+      "price": 92000.0,
+      "market_cap": 372439552000.0,
+      "name": "Japan Prime Realty Investment"
+    },
+    {
+      "ticker": "3186",
+      "rsi14": 26.575,
+      "price": 2800.0,
+      "market_cap": 226534280000.0,
+      "name": "NEXTAGE"
+    },
+    {
+      "ticker": "8986",
+      "rsi14": 26.693,
+      "price": 88700.0,
+      "market_cap": 211641925400.0,
+      "name": "Daiwa Securities Living Investment"
+    },
+    {
+      "ticker": "8086",
+      "rsi14": 26.778,
+      "price": 1371.0,
+      "market_cap": 253267853055.0,
+      "name": "Nipro"
+    },
+    {
+      "ticker": "3295",
+      "rsi14": 26.859,
+      "price": 144400.0,
+      "market_cap": 207936000000.0,
+      "name": "Hulic Reit"
     },
     {
       "ticker": "8961",
-      "rsi14": 30.755,
-      "price": 70300.0,
-      "market_cap": 250268000000.0,
+      "rsi14": 26.871,
+      "price": 69600.0,
+      "market_cap": 247776000000.0,
       "name": "Mori Trust Reit"
     },
     {
       "ticker": "8953",
-      "rsi14": 31.179,
-      "price": 108900.0,
-      "market_cap": 783296900100.0,
+      "rsi14": 27.219,
+      "price": 107600.0,
+      "market_cap": 773946248400.0,
       "name": "Japan Metropolitan Fund Investment"
     },
     {
-      "ticker": "3462",
-      "rsi14": 31.315,
-      "price": 140600.0,
-      "market_cap": 653278778400.0,
-      "name": "Nomura Real Estate Master Fund"
-    },
-    {
-      "ticker": "3591",
-      "rsi14": 31.53,
-      "price": 3908.0,
-      "market_cap": 205170000000.0,
-      "name": "Wacoal Holdings"
-    },
-    {
-      "ticker": "3282",
-      "rsi14": 31.548,
-      "price": 95200.0,
-      "market_cap": 232744484000.0,
-      "name": "Comforia Residential REIT"
-    },
-    {
-      "ticker": "3295",
-      "rsi14": 31.664,
-      "price": 146100.0,
-      "market_cap": 210384000000.0,
-      "name": "Hulic Reit"
-    },
-    {
-      "ticker": "2702",
-      "rsi14": 31.68,
-      "price": 7580.0,
-      "market_cap": 1007836800000.0,
-      "name": "McDonald's Holdings Co (Japan)"
-    },
-    {
-      "ticker": "8960",
-      "rsi14": 31.776,
-      "price": 153500.0,
-      "market_cap": 491200000000.0,
-      "name": "United Urban Investment"
-    },
-    {
-      "ticker": "2875",
-      "rsi14": 31.862,
-      "price": 9673.0,
-      "market_cap": 1072552338612.0,
-      "name": "Toyo Suisan Kaisha"
-    },
-    {
-      "ticker": "7532",
-      "rsi14": 32.023,
-      "price": 718.8,
-      "market_cap": 2283840867960.0,
-      "name": "Pan Pacific International Holdings"
-    },
-    {
-      "ticker": "8955",
-      "rsi14": 32.222,
-      "price": 93300.0,
-      "market_cap": 377702284800.0,
-      "name": "Japan Prime Realty Investment"
+      "ticker": "8951",
+      "rsi14": 27.454,
+      "price": 117700.0,
+      "market_cap": 1037525500000.0,
+      "name": "Nippon Building Fund"
     },
     {
       "ticker": "1332",
-      "rsi14": 32.275,
-      "price": 1149.5,
-      "market_cap": 350902579599.0,
+      "rsi14": 27.509,
+      "price": 1117.0,
+      "market_cap": 340981454034.0,
       "name": "Nissui"
     },
     {
-      "ticker": "3391",
-      "rsi14": 32.532,
-      "price": 2144.0,
-      "market_cap": 974494074560.0,
-      "name": "Tsuruha Holdings"
+      "ticker": "2875",
+      "rsi14": 27.844,
+      "price": 9482.0,
+      "market_cap": 1051374059208.0,
+      "name": "Toyo Suisan Kaisha"
     },
     {
-      "ticker": "4547",
-      "rsi14": 32.588,
-      "price": 3890.0,
-      "market_cap": 181048321650.0,
-      "name": "Kissei Pharmaceutical"
+      "ticker": "9627",
+      "rsi14": 27.96,
+      "price": 5320.0,
+      "market_cap": 188478087840.0,
+      "name": "Ain Holdings"
     },
     {
-      "ticker": "3234",
-      "rsi14": 32.706,
-      "price": 121800.0,
-      "market_cap": 228915183000.0,
-      "name": "Mori Hills Reit Investment"
+      "ticker": "3292",
+      "rsi14": 28.006,
+      "price": 111000.0,
+      "market_cap": 233385159000.0,
+      "name": "AEON REIT Investment"
     },
     {
-      "ticker": "3481",
-      "rsi14": 33.141,
-      "price": 111900.0,
-      "market_cap": 166172730900.0,
-      "name": "Mitsubishi Estate Logistics REIT Investment"
+      "ticker": "3282",
+      "rsi14": 28.215,
+      "price": 94300.0,
+      "market_cap": 230544168500.0,
+      "name": "Comforia Residential REIT"
     },
     {
-      "ticker": "2685",
-      "rsi14": 33.731,
-      "price": 3105.0,
-      "market_cap": 151524000000.0,
-      "name": "And ST HD"
+      "ticker": "8960",
+      "rsi14": 28.352,
+      "price": 152100.0,
+      "market_cap": 486720000000.0,
+      "name": "United Urban Investment"
     },
     {
-      "ticker": "8952",
-      "rsi14": 33.993,
-      "price": 113200.0,
-      "market_cap": 824501256000.0,
-      "name": "Japan Real Estate Investment"
+      "ticker": "3462",
+      "rsi14": 28.535,
+      "price": 139400.0,
+      "market_cap": 647703141600.0,
+      "name": "Nomura Real Estate Master Fund"
     },
     {
       "ticker": "4403",
-      "rsi14": 34.014,
-      "price": 2544.0,
-      "market_cap": 601717381632.0,
+      "rsi14": 28.69,
+      "price": 2484.0,
+      "market_cap": 562685933952.0,
       "name": "NOF"
     },
     {
-      "ticker": "4755",
-      "rsi14": 34.272,
-      "price": 687.8,
-      "market_cap": 1500774166380.0,
-      "name": "Rakuten Group"
+      "ticker": "7564",
+      "rsi14": 28.757,
+      "price": 5260.0,
+      "market_cap": 430514252160.0,
+      "name": "Workman"
     },
     {
-      "ticker": "8267",
-      "rsi14": 34.371,
-      "price": 1265.0,
-      "market_cap": 3521164211565.0,
-      "name": "AEON"
+      "ticker": "2702",
+      "rsi14": 29.028,
+      "price": 7490.0,
+      "market_cap": 995870400000.0,
+      "name": "McDonald's Holdings Co (Japan)"
+    },
+    {
+      "ticker": "1925",
+      "rsi14": 29.269,
+      "price": 2173.5,
+      "market_cap": 2868281383842.0,
+      "name": "Daiwa House Industry"
+    },
+    {
+      "ticker": "50765",
+      "rsi14": 29.279,
+      "price": 4612.0,
+      "market_cap": 1166884781124.0,
+      "name": "Infroneer Holdings"
     },
     {
       "ticker": "7599",
-      "rsi14": 34.421,
-      "price": 1194.0,
-      "market_cap": 127624272000.0,
+      "rsi14": 29.484,
+      "price": 1169.0,
+      "market_cap": 124952072000.0,
       "name": "IDOM"
     },
     {
-      "ticker": "4385",
-      "rsi14": 34.459,
-      "price": 3661.0,
-      "market_cap": 605156981114.0,
-      "name": "Mercari"
+      "ticker": "3289",
+      "rsi14": 29.489,
+      "price": 1221.5,
+      "market_cap": 879273534741.0,
+      "name": "Tokyu Fudosan Holdings"
+    },
+    {
+      "ticker": "3234",
+      "rsi14": 29.573,
+      "price": 120700.0,
+      "market_cap": 226847804500.0,
+      "name": "Mori Hills Reit Investment"
+    },
+    {
+      "ticker": "9042",
+      "rsi14": 29.58,
+      "price": 4336.0,
+      "market_cap": 1090496342624.0,
+      "name": "Hankyu Hanshin Holdings"
+    },
+    {
+      "ticker": "2815",
+      "rsi14": 29.731,
+      "price": 5070.0,
+      "market_cap": 166340022810.0,
+      "name": "Ariake Japan"
+    },
+    {
+      "ticker": "3249",
+      "rsi14": 29.865,
+      "price": 132200.0,
+      "market_cap": 334262544200.0,
+      "name": "Industrial & Infrastructure Fund Investment"
+    },
+    {
+      "ticker": "4519",
+      "rsi14": 29.938,
+      "price": 6096.0,
+      "market_cap": 10235535538032.0,
+      "name": "Chugai Pharmaceutical"
+    },
+    {
+      "ticker": "3659",
+      "rsi14": 29.946,
+      "price": 2625.5,
+      "market_cap": 2049793513755.0,
+      "name": "NEXON"
+    },
+    {
+      "ticker": "3391",
+      "rsi14": 30.044,
+      "price": 2114.0,
+      "market_cap": 961151218860.0,
+      "name": "Tsuruha Holdings"
+    },
+    {
+      "ticker": "2201",
+      "rsi14": 30.267,
+      "price": 2383.0,
+      "market_cap": 205204033354.0,
+      "name": "Morinaga"
+    },
+    {
+      "ticker": "3481",
+      "rsi14": 30.285,
+      "price": 111100.0,
+      "market_cap": 164984722100.0,
+      "name": "Mitsubishi Estate Logistics REIT Investment"
     },
     {
       "ticker": "8954",
-      "rsi14": 34.577,
-      "price": 94100.0,
-      "market_cap": 519432000000.0,
+      "rsi14": 30.302,
+      "price": 92800.0,
+      "market_cap": 512256000000.0,
       "name": "Orix Jreit"
     },
     {
+      "ticker": "4023",
+      "rsi14": 30.355,
+      "price": 3985.0,
+      "market_cap": 160365250685.0,
+      "name": "Kureha"
+    },
+    {
       "ticker": "1911",
-      "rsi14": 34.656,
-      "price": 1212.0,
-      "market_cap": 749702360448.0,
+      "rsi14": 30.563,
+      "price": 1185.0,
+      "market_cap": 733022044740.0,
       "name": "Sumitomo Forestry"
+    },
+    {
+      "ticker": "9882",
+      "rsi14": 30.581,
+      "price": 1657.0,
+      "market_cap": 142537446544.0,
+      "name": "Yellow Hat"
+    },
+    {
+      "ticker": "7532",
+      "rsi14": 30.671,
+      "price": 712.6,
+      "market_cap": 2264141628420.0,
+      "name": "Pan Pacific International Holdings"
+    },
+    {
+      "ticker": "1803",
+      "rsi14": 30.816,
+      "price": 2096.5,
+      "market_cap": 1502539354354.5,
+      "name": "Shimizu"
+    },
+    {
+      "ticker": "8871",
+      "rsi14": 31.074,
+      "price": 3085.0,
+      "market_cap": 110393640000.0,
+      "name": "Goldcrest"
+    },
+    {
+      "ticker": "2685",
+      "rsi14": 31.27,
+      "price": 3065.0,
+      "market_cap": 149572000000.0,
+      "name": "And ST HD"
+    },
+    {
+      "ticker": "9409",
+      "rsi14": 31.453,
+      "price": 2962.0,
+      "market_cap": 321462898000.0,
+      "name": "TV Asahi Holdings"
+    },
+    {
+      "ticker": "8934",
+      "rsi14": 31.515,
+      "price": 2297.0,
+      "market_cap": 131864600258.0,
+      "name": "Sun Frontier Fudousan"
+    },
+    {
+      "ticker": "4666",
+      "rsi14": 31.525,
+      "price": 1859.0,
+      "market_cap": 317978917971.0,
+      "name": "Park24"
+    },
+    {
+      "ticker": "4536",
+      "rsi14": 31.624,
+      "price": 1664.5,
+      "market_cap": 536491909333.0,
+      "name": "Santen Pharmaceutical"
+    },
+    {
+      "ticker": "8585",
+      "rsi14": 31.652,
+      "price": 813.0,
+      "market_cap": 139744960260.0,
+      "name": "Orient"
+    },
+    {
+      "ticker": "8967",
+      "rsi14": 31.736,
+      "price": 90300.0,
+      "market_cap": 247951970700.0,
+      "name": "Japan Logistics Fund"
+    },
+    {
+      "ticker": "4755",
+      "rsi14": 31.846,
+      "price": 676.1,
+      "market_cap": 1476517211400.0,
+      "name": "Rakuten Group"
+    },
+    {
+      "ticker": "9001",
+      "rsi14": 31.923,
+      "price": 2816.5,
+      "market_cap": 555602001346.5,
+      "name": "Tobu Railway"
+    },
+    {
+      "ticker": "1808",
+      "rsi14": 31.937,
+      "price": 2595.5,
+      "market_cap": 759131572663.5,
+      "name": "HASEKO"
+    },
+    {
+      "ticker": "8219",
+      "rsi14": 31.999,
+      "price": 719.0,
+      "market_cap": 108699892512.0,
+      "name": "Aoyama Trading"
+    },
+    {
+      "ticker": "8584",
+      "rsi14": 32.071,
+      "price": 3555.0,
+      "market_cap": 160188271560.0,
+      "name": "Jaccs"
+    },
+    {
+      "ticker": "9793",
+      "rsi14": 32.166,
+      "price": 3545.0,
+      "market_cap": 170160000000.0,
+      "name": "Daiseki"
+    },
+    {
+      "ticker": "3231",
+      "rsi14": 32.226,
+      "price": 871.0,
+      "market_cap": 799528078635.0,
+      "name": "Nomura Real Estate Holdings"
+    },
+    {
+      "ticker": "5938",
+      "rsi14": 32.403,
+      "price": 1675.0,
+      "market_cap": 481838094450.0,
+      "name": "LIXIL"
+    },
+    {
+      "ticker": "3296",
+      "rsi14": 32.454,
+      "price": 79500.0,
+      "market_cap": 145511235000.0,
+      "name": "NIPPON REIT Investment"
+    },
+    {
+      "ticker": "94346",
+      "rsi14": 32.5,
+      "price": 7490.0,
+      "market_cap": 359037755466179.94,
+      "name": "Series 2 Bond-Type Class Shares of SoftBank Prf"
+    },
+    {
+      "ticker": "4385",
+      "rsi14": 32.559,
+      "price": 3585.0,
+      "market_cap": 592601123790.0,
+      "name": "Mercari"
+    },
+    {
+      "ticker": "5943",
+      "rsi14": 32.586,
+      "price": 2203.0,
+      "market_cap": 106966510790.0,
+      "name": "Noritz"
+    },
+    {
+      "ticker": "2127",
+      "rsi14": 32.69,
+      "price": 614.8,
+      "market_cap": 207147515040.0,
+      "name": "Nihon M&A Center Holdings"
+    },
+    {
+      "ticker": "9364",
+      "rsi14": 32.767,
+      "price": 4699.0,
+      "market_cap": 500804557063.0,
+      "name": "Kamigumi"
+    },
+    {
+      "ticker": "7988",
+      "rsi14": 32.768,
+      "price": 2367.0,
+      "market_cap": 474501194676.0,
+      "name": "Nifco"
+    },
+    {
+      "ticker": "8593",
+      "rsi14": 32.837,
+      "price": 1319.5,
+      "market_cap": 1935590705958.0,
+      "name": "Mitsubishi HC Capital"
+    },
+    {
+      "ticker": "7202",
+      "rsi14": 33.255,
+      "price": 2080.5,
+      "market_cap": 1432948055404.5,
+      "name": "Isuzu Motors"
+    },
+    {
+      "ticker": "6744",
+      "rsi14": 33.264,
+      "price": 3960.0,
+      "market_cap": 240897773160.0,
+      "name": "Nohmi Bosai"
+    },
+    {
+      "ticker": "8976",
+      "rsi14": 33.314,
+      "price": 302500.0,
+      "market_cap": 282760362500.0,
+      "name": "Daiwa Office Investment"
+    },
+    {
+      "ticker": "9031",
+      "rsi14": 33.315,
+      "price": 2927.5,
+      "market_cap": 232326944515.0,
+      "name": "Nishi-Nippon Railroad"
+    },
+    {
+      "ticker": "6465",
+      "rsi14": 33.336,
+      "price": 5239.0,
+      "market_cap": 759079233900.0,
+      "name": "Hoshizaki"
+    },
+    {
+      "ticker": "1833",
+      "rsi14": 33.406,
+      "price": 5460.0,
+      "market_cap": 211112133960.0,
+      "name": "Okumura"
+    },
+    {
+      "ticker": "9989",
+      "rsi14": 33.518,
+      "price": 3546.0,
+      "market_cap": 423148378464.0,
+      "name": "Sundrug"
+    },
+    {
+      "ticker": "9003",
+      "rsi14": 33.523,
+      "price": 2502.0,
+      "market_cap": 245560038498.0,
+      "name": "Sotetsu Holdings"
+    },
+    {
+      "ticker": "9404",
+      "rsi14": 33.703,
+      "price": 2813.5,
+      "market_cap": 723293398330.0,
+      "name": "Nippon Television Holdings"
+    },
+    {
+      "ticker": "2588",
+      "rsi14": 33.711,
+      "price": 3510.0,
+      "market_cap": 108602801190.0,
+      "name": "Premium Water Holdings"
+    },
+    {
+      "ticker": "6594",
+      "rsi14": 33.758,
+      "price": 2250.0,
+      "market_cap": 2683280106000.0,
+      "name": "Nidec"
+    },
+    {
+      "ticker": "3283",
+      "rsi14": 33.829,
+      "price": 82600.0,
+      "market_cap": 692940238200.0,
+      "name": "Nippon Prologis REIT"
+    },
+    {
+      "ticker": "2264",
+      "rsi14": 33.87,
+      "price": 1071.0,
+      "market_cap": 369194203224.0,
+      "name": "Morinaga Milk Industry"
+    },
+    {
+      "ticker": "2282",
+      "rsi14": 33.937,
+      "price": 1955.5,
+      "market_cap": 552888292500.0,
+      "name": "NH Foods"
+    },
+    {
+      "ticker": "8830",
+      "rsi14": 33.948,
+      "price": 3096.0,
+      "market_cap": 2897856000000.0,
+      "name": "Sumitomo Realty & Development"
+    },
+    {
+      "ticker": "8282",
+      "rsi14": 33.971,
+      "price": 1789.0,
+      "market_cap": 300552000000.0,
+      "name": "K'S Holdings"
+    },
+    {
+      "ticker": "8984",
+      "rsi14": 34.026,
+      "price": 110900.0,
+      "market_cap": 503468810500.0,
+      "name": "Daiwa House REIT Investment"
+    },
+    {
+      "ticker": "8972",
+      "rsi14": 34.042,
+      "price": 143200.0,
+      "market_cap": 578413153600.0,
+      "name": "KDX Realty Investment"
+    },
+    {
+      "ticker": "7278",
+      "rsi14": 34.168,
+      "price": 5720.0,
+      "market_cap": 277956169920.0,
+      "name": "Exedy"
+    },
+    {
+      "ticker": "3288",
+      "rsi14": 34.173,
+      "price": 7362.0,
+      "market_cap": 859675464000.0,
+      "name": "Open House Group"
+    },
+    {
+      "ticker": "8267",
+      "rsi14": 34.181,
+      "price": 1263.5,
+      "market_cap": 3516988918033.5,
+      "name": "AEON"
+    },
+    {
+      "ticker": "2281",
+      "rsi14": 34.182,
+      "price": 2311.0,
+      "market_cap": 116761886089.0,
+      "name": "Prima Meat Packers"
+    },
+    {
+      "ticker": "8252",
+      "rsi14": 34.236,
+      "price": 2773.0,
+      "market_cap": 509290336341.0,
+      "name": "Marui Group"
+    },
+    {
+      "ticker": "1333",
+      "rsi14": 34.274,
+      "price": 1240.5,
+      "market_cap": 188229141895.5,
+      "name": "Umios"
+    },
+    {
+      "ticker": "9672",
+      "rsi14": 34.324,
+      "price": 4760.0,
+      "market_cap": 133683905040.0,
+      "name": "Tokyotokeiba"
+    },
+    {
+      "ticker": "8174",
+      "rsi14": 34.35,
+      "price": 948.0,
+      "market_cap": 307014913512.0,
+      "name": "Nippon Gas"
+    },
+    {
+      "ticker": "9708",
+      "rsi14": 34.432,
+      "price": 941.0,
+      "market_cap": 111790800000.0,
+      "name": "Imperial Hotel"
+    },
+    {
+      "ticker": "2270",
+      "rsi14": 34.516,
+      "price": 3525.0,
+      "market_cap": 225019978875.0,
+      "name": "Megmilk Snow Brand"
+    },
+    {
+      "ticker": "4041",
+      "rsi14": 34.551,
+      "price": 3690.0,
+      "market_cap": 204036830460.0,
+      "name": "Nippon Soda"
+    },
+    {
+      "ticker": "9045",
+      "rsi14": 34.554,
+      "price": 3085.0,
+      "market_cap": 329528603255.0,
+      "name": "Keihan Holdings"
+    },
+    {
+      "ticker": "3549",
+      "rsi14": 34.563,
+      "price": 3732.0,
+      "market_cap": 356842569360.0,
+      "name": "Kusuri No Aoki Holdings"
+    },
+    {
+      "ticker": "9435",
+      "rsi14": 34.605,
+      "price": 36310.0,
+      "market_cap": 1597263901020.0,
+      "name": "Hikari Tsushin"
+    },
+    {
+      "ticker": "8595",
+      "rsi14": 34.625,
+      "price": 2221.5,
+      "market_cap": 120516375000.0,
+      "name": "Jafco Group"
+    },
+    {
+      "ticker": "9065",
+      "rsi14": 34.759,
+      "price": 1567.0,
+      "market_cap": 414485203415.0,
+      "name": "Sankyu"
+    },
+    {
+      "ticker": "7906",
+      "rsi14": 34.846,
+      "price": 2313.0,
+      "market_cap": 214810160400.0,
+      "name": "Yonex"
+    },
+    {
+      "ticker": "3281",
+      "rsi14": 34.879,
+      "price": 131200.0,
+      "market_cap": 629462307200.0,
+      "name": "GLP J-REIT"
+    },
+    {
+      "ticker": "1861",
+      "rsi14": 34.889,
+      "price": 1254.0,
+      "market_cap": 217120368960.0,
+      "name": "Kumagai Gumi"
+    },
+    {
+      "ticker": "1878",
+      "rsi14": 34.963,
+      "price": 3143.0,
+      "market_cap": 1083061754985.0,
+      "name": "Daito Trust Construction"
+    },
+    {
+      "ticker": "2809",
+      "rsi14": 34.964,
+      "price": 4407.0,
+      "market_cap": 623590500000.0,
+      "name": "Kewpie"
     }
   ]
 }

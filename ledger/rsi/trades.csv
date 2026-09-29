@@ -29,3 +29,4 @@ date,action,ticker,shares,price,amount_usd,rule,lot_id,note,name
 2026-09-28,BUY,MGM,928,32.355,30025.44,entry,MGM-2026-09-28-1,RSI14=14.3 basis=prev_close,MGM Resorts International
 2026-09-28,BUY,O,541,55.355,29947.05,entry,O-2026-09-28-1,RSI14=17.4 basis=prev_close,Realty Income
 2026-09-28,BUY,DTE,247,121.2,29936.4,entry,DTE-2026-09-28-1,RSI14=17.8 basis=prev_close,DTE Energy
+2026-09-29,BUY,CHRW,100,149.02,14902.0,pyramid1,CHRW-2026-08-20-1,,C.H. Robinson Worldwide

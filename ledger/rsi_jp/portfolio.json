@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 310169.9548339844,
+  "cash_jpy": 378069.9548339844,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -202,12 +202,12 @@
       "pyramid_done": [
         true,
         true,
-        false
+        true
       ],
-      "shares": 1600,
+      "shares": 1800,
       "lot_size": 100,
-      "total_invested_usd": 4726700.0,
-      "avg_cost": 2954.1875,
+      "total_invested_usd": 5357300.0,
+      "avg_cost": 2976.277777777778,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -441,14 +441,14 @@
       "initial_entry_date": "2026-08-28",
       "initial_entry_price": 2971.0,
       "pyramid_done": [
-        false,
-        false,
+        true,
+        true,
         false
       ],
-      "shares": 1000,
+      "shares": 1600,
       "lot_size": 100,
-      "total_invested_usd": 2971000.0,
-      "avg_cost": 2971.0,
+      "total_invested_usd": 4846000.0,
+      "avg_cost": 3028.75,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -469,7 +469,7 @@
         false,
         false
       ],
-      "shares": 1300,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 4220700.0,
       "avg_cost": 3246.6923076923076,
@@ -478,9 +478,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-29"
     },
     {
       "lot_id": "3465-2026-09-03-1",
@@ -589,7 +589,7 @@
         false,
         false
       ],
-      "shares": 300,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2419200.0,
       "avg_cost": 8064.0,
@@ -598,9 +598,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-09-29"
     },
     {
       "lot_id": "5332-2026-09-03-1",
@@ -771,5 +771,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-09-28"
+  "last_processed_date": "2026-09-29"
 }
