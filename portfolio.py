@@ -575,6 +575,41 @@ def check_stop_losses(state: dict[str, Any], market: dict[str, TickerSnapshot]) 
     return orders
 
 
+def compute_forced_zero_target_sells(
+    state: dict[str, Any],
+    market: dict[str, TickerSnapshot],
+    charter_targets: dict[str, dict[str, float]] | None,
+) -> list[dict[str, Any]]:
+    """現行モードのターゲットが0%の銘柄を、±5pt乖離バンドに関わらず全量売却する注文を返す。
+
+    発動条件1（リバランス）は±5pt超の乖離でしか発動しないため、ターゲット0%の銘柄が
+    バンド内（例: IEF 4.6%・EWJ 5.0%ちょうど）に留まり続けると永久に売れない欠陥があった。
+    目標0%は方向が一意（売るだけ）なのでバンドを適用しない（2026-10-01 大将承認）。
+    ターゲット方向の取引（rule="rebalance"）としてexecute_tradesへ渡せば、ガードレールの
+    1日10%上限の対象外のまま通常のSELL検証（保有株数内に丸める等）を受ける。
+    """
+    if not charter_targets:
+        return []
+    target_key = "defense" if state.get("mode") == "defense" else "normal"
+    orders: list[dict[str, Any]] = []
+    for ticker, shares in state["holdings"].items():
+        if shares <= 0:
+            continue
+        targets = charter_targets.get(ticker)
+        if not targets:
+            continue
+        if targets.get(target_key, 0.0) > config.TARGET_WEIGHT_TOLERANCE:
+            continue
+        snap = market.get(ticker)
+        if snap is None:
+            continue
+        orders.append({
+            "action": "SELL", "ticker": ticker, "amount_usd": shares * snap.close,
+            "rule": "rebalance",
+        })
+    return orders
+
+
 # ---------------------------------------------------------------------------
 # 未決注文の決済（保有照合の代わり。各枠は自分のpending_ordersだけを見る。2026-08-18仕様変更）
 # ---------------------------------------------------------------------------

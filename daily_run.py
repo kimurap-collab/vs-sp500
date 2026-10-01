@@ -498,6 +498,42 @@ def run(dry_run: bool = False, report_only: bool = False) -> str:
                 for q in stop_loss_queued:
                     logger.info("未決キューに追加された損切り注文: %s", q)
 
+        # 5b. ターゲット0%銘柄の強制全売却（発動条件1の±5pt乖離バンド対象外。2026-10-01大将承認。
+        #     Sonnetの判断より前に強制執行する。損切りと同様、番兵の裁量ではない）
+        if already_processed_today:
+            log_and_report("[5b] ターゲット0%強制売却判定スキップ（休場・本日処理済み）")
+        elif not can_trade:
+            log_and_report(f"[5b] ターゲット0%強制売却判定スキップ（売買停止中: {moomoo_skip_reason}）")
+        elif charter_targets is None:
+            log_and_report("[5b] ターゲット0%強制売却判定スキップ（ターゲット未記入）")
+        else:
+            zero_target_orders = portfolio.compute_forced_zero_target_sells(state, snapshots, charter_targets)
+            if not zero_target_orders:
+                log_and_report("[5b] ターゲット0%強制売却判定: 該当なし")
+            elif dry_run:
+                log_and_report(
+                    f"[5b] ターゲット0%強制売却判定: {len(zero_target_orders)}件該当"
+                    f"（dry-runのため約定はスキップ）: {[o['ticker'] for o in zero_target_orders]}"
+                )
+            else:
+                trade_date = voo_snap.date
+                state, zero_target_accepted, zero_target_rejected, zero_target_queued = portfolio.execute_trades(
+                    zero_target_orders, state, snapshots, charter_targets, trade_date, market_us_state,
+                )
+                for t in zero_target_accepted:
+                    portfolio.append_trade_row(t)
+                accepted_trades.extend(zero_target_accepted)
+                rejected_trades.extend(zero_target_rejected)
+                queued_trades.extend(zero_target_queued)
+                log_and_report(
+                    f"[5b] ターゲット0%強制売却完了: 約定{len(zero_target_accepted)}件 "
+                    f"拒否{len(zero_target_rejected)}件 未決{len(zero_target_queued)}件"
+                )
+                for r in zero_target_rejected:
+                    logger.warning("拒否されたターゲット0%強制売却注文: %s", r)
+                for q in zero_target_queued:
+                    logger.info("未決キューに追加されたターゲット0%強制売却注文: %s", q)
+
         if skip_reason:
             log_and_report(f"[5] 売買判断スキップ: ホールド（{skip_reason}）")
         else:
