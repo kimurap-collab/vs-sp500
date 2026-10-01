@@ -30,3 +30,6 @@ date,action,ticker,shares,price,amount_usd,rule,lot_id,note,name
 2026-09-28,BUY,O,541,55.355,29947.05,entry,O-2026-09-28-1,RSI14=17.4 basis=prev_close,Realty Income
 2026-09-28,BUY,DTE,247,121.2,29936.4,entry,DTE-2026-09-28-1,RSI14=17.8 basis=prev_close,DTE Energy
 2026-09-29,BUY,CHRW,100,149.02,14902.0,pyramid1,CHRW-2026-08-20-1,,C.H. Robinson Worldwide
+2026-10-01,SELL,APP,96,280.37,26915.52,stop_loss,APP-2026-08-18-1,,Applovin
+2026-10-01,BUY,CDNS,21,348.63,7321.23,pyramid2,CDNS-2026-08-21-1,,Cadence Design Systems
+2026-10-01,BUY,CDNS,21,348.97,7328.37,pyramid3,CDNS-2026-08-21-1,,Cadence Design Systems

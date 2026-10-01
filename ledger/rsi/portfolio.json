@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 2858.106000000029,
+  "cash_usd": 15121.039999999979,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -35,7 +35,7 @@
         false,
         false
       ],
-      "shares": 96,
+      "shares": 0,
       "total_invested_usd": 29694.72,
       "avg_cost": 309.32,
       "profit1_taken": false,
@@ -43,9 +43,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-01",
       "name": "Applovin"
     },
     {
@@ -262,12 +262,12 @@
       "initial_entry_price": 318.89,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 139,
-      "total_invested_usd": 44710.235,
-      "avg_cost": 321.65636690647483,
+      "shares": 181,
+      "total_invested_usd": 59359.835,
+      "avg_cost": 327.9548895027624,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -424,6 +424,6 @@
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-09-30",
+  "last_processed_date": "2026-10-01",
   "pending_orders": []
 }
