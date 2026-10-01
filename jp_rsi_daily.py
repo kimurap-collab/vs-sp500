@@ -285,6 +285,39 @@ def _new_lot_id_jp(ticker: str, entry_date: str, existing_lots: list[dict[str, A
     return f"{ticker}-{entry_date}-{seq + 1}"
 
 
+def adjust_lots_for_splits_jp(state: dict[str, Any], trading_date: str, log_lines: list[str]) -> None:
+    """保有ロットに建て後の株式分割があれば、判定の前に株数・単価を分割後の値へ直す（2026-10-01追加）。
+
+    大将「分割は分割できちんと計算しないとね。」。9/29に3099(1:2)・9065(1:5)の分割を暴落と誤認し
+    -8%損切りが誤発動した事故の再発防止。分割情報はyfinance（この枠は価格もyfinance）。
+    取得に失敗した銘柄はWARNINGを出して調整せずに続行する（実行は止めない）。state["lots"]を置き換える。
+    """
+    held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
+    splits_by_ticker: dict[str, list[tuple[str, float]]] = {}
+    for ticker in held_tickers:
+        splits = jp_market.get_splits(ticker)
+        if splits is None:
+            logger.warning("JP: %s の分割情報が取得できず、分割調整なしで判定する", ticker)
+            continue
+        splits_by_ticker[ticker] = splits
+    new_lots = []
+    for lot in state["lots"]:
+        new_lot, applied = rsi_strategy.adjust_lot_for_splits(
+            lot, splits_by_ticker.get(lot["ticker"], []), trading_date,
+        )
+        if applied:
+            splits_text = ", ".join(f"{d} 1:{r:g}" for d, r in applied)
+            msg = (
+                f"[JP-0] 株式分割を反映: {lot['ticker']} ({splits_text}) "
+                f"株数{lot['shares']}→{new_lot['shares']} 初期単価{lot['initial_entry_price']:.2f}→"
+                f"{new_lot['initial_entry_price']:.2f}"
+            )
+            logger.warning(msg)
+            log_lines.append(msg)
+        new_lots.append(new_lot)
+    state["lots"] = new_lots
+
+
 def compute_snapshot_only_jp(jp_state: dict[str, Any]) -> tuple[float, dict[str, JpSnapshot]]:
     """保有銘柄の価格だけを取得してNAVを計算する（--report-only・異常停止時用）。"""
     held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(jp_state)})
@@ -316,6 +349,9 @@ def run_jp(
         log_lines.append(f"[JP-0] 初回構築: start_date={state['start_date']}")
 
     already_processed_today = state.get("last_processed_date") == trading_date
+
+    # 判定（損切り・利確・買い増し）とNAV計算の前に株式分割を反映する（2026-10-01）
+    adjust_lots_for_splits_jp(state, trading_date, log_lines)
 
     held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
     raw_candidates = [] if already_processed_today else get_jp_candidates()

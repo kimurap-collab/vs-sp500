@@ -90,3 +90,21 @@ def get_snapshots(tickers: list[str]) -> dict[str, JpSnapshot]:
         except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
             logger.warning("%s: yfinance取得に失敗した: %s", yf_ticker, e)
     return result
+
+
+def get_splits(ticker: str) -> list[tuple[str, float]] | None:
+    """yfinanceから株式分割の履歴を [(分割日 "YYYY-MM-DD", ratio), ...] で返す（2026-10-01追加）。
+
+    ratioは分割後の株数/分割前の株数（yfinanceのsplits値そのもの。1:2なら2.0、5株→1株の併合なら0.2）。
+    取得に失敗した場合はNone（呼び出し側はWARNINGを出して分割調整なしで続行する）。
+    分割が1件も無い銘柄は空リスト。
+    """
+    yf_ticker = ticker_to_yf(ticker)
+    try:
+        splits = yf.Ticker(yf_ticker).splits
+    except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+        logger.warning("%s: yfinanceの分割情報の取得に失敗した: %s", yf_ticker, e)
+        return None
+    if splits is None:
+        return None
+    return [(idx.date().isoformat(), float(val)) for idx, val in splits.items() if val and float(val) > 0]

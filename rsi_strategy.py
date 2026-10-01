@@ -20,7 +20,8 @@ brokerに触れずにルールだけを検証する。
     shares, total_invested_usd, avg_cost, lot_size（単元株数。米国は1固定）,
     profit1_taken, profit2_taken, base_shares（利確1発動時点の株数）,
     exception_active, exception_deadline_date,
-    closed, closed_reason, closed_date
+    closed, closed_reason, closed_date,
+    splits_applied（任意。株式分割を反映済みの分割日リスト。2026-10-01追加）
 """
 from __future__ import annotations
 
@@ -364,6 +365,58 @@ def apply_stop_loss_fill(lot: dict[str, Any], filled_qty: int, current_date: str
         new_lot["closed_reason"] = "stop_loss"
         new_lot["closed_date"] = current_date
     return new_lot
+
+
+# ---------------------------------------------------------------------------
+# 株式分割の調整（2026-10-01追加。大将「分割は分割できちんと計算しないとね。」）
+# 2026-09-29に日本株RSI枠で3099(1:2)・9065(1:5)の分割を暴落と誤認し、-8%損切りが誤発動した事故の再発防止。
+# 判定（損切り・利確・買い増し）の前に、ロット建て後に起きた分割を株数・単価へ反映する。
+# ---------------------------------------------------------------------------
+
+def apply_split(lot: dict[str, Any], split_date: str, ratio: float) -> dict[str, Any]:
+    """1件の分割をロットへ反映した新しいロットを返す（ratio=分割後の株数/分割前の株数。1:2なら2.0）。
+
+    株数（shares・base_shares）は×ratio、1株あたりの価格（initial_entry_price・avg_cost）は÷ratio。
+    金額（total_invested_usd）は変えない。適用した分割日をsplits_appliedに記録し、二重適用を防ぐ。
+    買い増しの閾値・損切り線・利確線はいずれもinitial_entry_price/avg_costから都度計算するため、
+    この2つを直せば全ての判定が分割後の単価基準になる。
+    """
+    new_lot = dict(lot)
+    new_shares = lot["shares"] * ratio
+    new_lot["shares"] = int(round(new_shares)) if abs(new_shares - round(new_shares)) < 1e-9 else new_shares
+    if lot.get("base_shares") is not None:
+        new_base = lot["base_shares"] * ratio
+        new_lot["base_shares"] = int(round(new_base)) if abs(new_base - round(new_base)) < 1e-9 else new_base
+    new_lot["initial_entry_price"] = lot["initial_entry_price"] / ratio
+    new_lot["avg_cost"] = lot["avg_cost"] / ratio
+    new_lot["splits_applied"] = list(lot.get("splits_applied") or []) + [split_date]
+    return new_lot
+
+
+def adjust_lot_for_splits(
+    lot: dict[str, Any], splits: list[tuple[str, float]], current_date: str,
+) -> tuple[dict[str, Any], list[tuple[str, float]]]:
+    """ロット建て日より後〜current_date以前に起きた未適用の分割を、日付順に全て反映する。
+
+    splits: [(分割日 "YYYY-MM-DD", ratio), ...]（ratio=分割後の株数/分割前の株数）。
+    建て日当日の分割は対象外（建て値がすでに分割後の価格のため）。クローズ済みロットは触らない。
+    splits_appliedに記録済みの日付は再適用しない（同日の再実行・翌日以降の実行でも冪等）。
+
+    戻り値: (更新後のlot, 今回適用した分割のリスト)
+    """
+    if lot.get("closed"):
+        return lot, []
+    applied: list[tuple[str, float]] = []
+    for split_date, ratio in sorted(splits):
+        if ratio <= 0 or ratio == 1:
+            continue
+        if not (lot["initial_entry_date"] < split_date <= current_date):
+            continue
+        if split_date in (lot.get("splits_applied") or []):
+            continue
+        lot = apply_split(lot, split_date, ratio)
+        applied.append((split_date, ratio))
+    return lot, applied
 
 
 # ---------------------------------------------------------------------------

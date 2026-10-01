@@ -494,6 +494,42 @@ def settle_pending_orders(
     return state, applied_trades, warnings, resolved_notes
 
 
+def adjust_lots_for_splits(state: dict[str, Any], trade_date: str, log_lines: list[str]) -> None:
+    """保有ロットに建て後の株式分割があれば、判定の前に株数・単価を分割後の値へ直す（2026-10-01追加）。
+
+    大将「分割は分割できちんと計算しないとね。」。分割情報はmoomooのget_rehab（charter v1.6
+    「基本データ…moomooにしなさいよ」）。取得に失敗したらWARNINGを出して調整せずに続行する
+    （実行は止めない）。state["lots"]を置き換える。
+    """
+    held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
+    if not held_tickers:
+        return
+    splits_by_ticker = broker.get_splits(held_tickers)
+    if splits_by_ticker is None:
+        logger.warning("RSI: moomooから分割情報が取得できず、分割調整なしで判定する")
+        log_lines.append("[RSI-0] 警告: 分割情報の取得に失敗（分割調整なしで続行）")
+        splits_by_ticker = {}
+    for ticker in held_tickers:
+        if ticker not in splits_by_ticker:
+            logger.warning("RSI: %s の分割情報が取得できず、分割調整なしで判定する", ticker)
+    new_lots = []
+    for lot in state["lots"]:
+        new_lot, applied = rsi_strategy.adjust_lot_for_splits(
+            lot, splits_by_ticker.get(lot["ticker"], []), trade_date,
+        )
+        if applied:
+            splits_text = ", ".join(f"{d} 1:{r:g}" for d, r in applied)
+            msg = (
+                f"[RSI-0] 株式分割を反映: {lot['ticker']} ({splits_text}) "
+                f"株数{lot['shares']}→{new_lot['shares']} 初期単価{lot['initial_entry_price']:.4f}→"
+                f"{new_lot['initial_entry_price']:.4f}"
+            )
+            logger.warning(msg)
+            log_lines.append(msg)
+        new_lots.append(new_lot)
+    state["lots"] = new_lots
+
+
 def compute_snapshot_only(
     rsi_state: dict[str, Any], voo_snap: TickerSnapshot,
 ) -> tuple[float, float, dict[str, TickerSnapshot]]:
@@ -550,6 +586,9 @@ def run(
     # frozen候補が無い・古い場合はscreen_rsi_candidates()を今叩く（rsi_basis="live"）。
     # この場合はget_market_snapshot済みの戻り値をそのまま使い、価格取得を二重に行わない。
     # いずれの経路でも、重複銘柄（保有中の再エントリー候補）は保有側の値を優先する。
+    # 判定（損切り・利確・買い増し）とNAV計算の前に株式分割を反映する（2026-10-01）
+    adjust_lots_for_splits(state, trade_date, log_lines)
+
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
     rsi_candidates, rsi_basis = get_rsi_candidates()
     if rsi_basis == "prev_close":

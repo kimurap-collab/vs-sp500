@@ -158,6 +158,54 @@ def get_snapshot(tickers: list[str]) -> dict[str, float] | None:
     return _run_with_timeout(_call)
 
 
+def _split_ratio_from_rehab_row(row: dict[str, Any]) -> float | None:
+    """get_rehabの1行から株数の倍率（分割後の株数/分割前の株数）を返す。分割・併合の行でなければNone。
+
+    実機確認（2026-10-01）: 分割は split_base→split_ert（NVDA 2024-06-10: 1→10）、
+    併合は join_base→join_ert（GE 2021-08-02: 8→1）。配当だけの行はどちらもNaN。
+    """
+    for base_key, ert_key in (("split_base", "split_ert"), ("join_base", "join_ert")):
+        base, ert = row.get(base_key), row.get(ert_key)
+        if base is None or ert is None or base != base or ert != ert:  # NaN判定
+            continue
+        if float(base) > 0 and float(ert) > 0:
+            return float(ert) / float(base)
+    return None
+
+
+def get_splits(tickers: list[str]) -> dict[str, list[tuple[str, float]]] | None:
+    """moomooのget_rehab（復権情報）から株式分割・併合の履歴を取得する（2026-10-01追加）。
+
+    戻り値: {ticker: [(分割日 "YYYY-MM-DD", ratio), ...]}。ratioは分割後の株数/分割前の株数。
+    接続失敗・タイムアウトはNone。個別銘柄の取得失敗はその銘柄を戻り値に含めない（呼び出し側でWARNING）。
+    """
+    if not tickers:
+        return {}
+
+    def _call() -> dict[str, list[tuple[str, float]]]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            result: dict[str, list[tuple[str, float]]] = {}
+            for ticker in tickers:
+                ret, data = ctx.get_rehab(ticker_to_code(ticker))
+                if ret != 0:
+                    logger.warning("get_rehab失敗: %s %s", ticker, data)
+                    continue
+                splits: list[tuple[str, float]] = []
+                for row in data.to_dict(orient="records"):
+                    ratio = _split_ratio_from_rehab_row(row)
+                    if ratio is not None:
+                        splits.append((str(row["ex_div_date"])[:10], ratio))
+                result[ticker] = splits
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call)
+
+
 def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | None:
     """成行注文を出し、可能なら約定まで待つ（最大ORDER_FILL_TIMEOUT_SEC秒）。
 
