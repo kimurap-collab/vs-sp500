@@ -33,3 +33,5 @@ date,action,ticker,shares,price,amount_usd,rule,lot_id,note,name
 2026-10-01,SELL,APP,96,280.37,26915.52,stop_loss,APP-2026-08-18-1,,Applovin
 2026-10-01,BUY,CDNS,21,348.63,7321.23,pyramid2,CDNS-2026-08-21-1,,Cadence Design Systems
 2026-10-01,BUY,CDNS,21,348.97,7328.37,pyramid3,CDNS-2026-08-21-1,,Cadence Design Systems
+2026-10-02,BUY,CHRW,47,157.28,7392.16,pyramid2,CHRW-2026-08-20-1,,C.H. Robinson Worldwide
+2026-10-02,BUY,CHRW,47,157.29,7392.63,pyramid3,CHRW-2026-08-20-1,,C.H. Robinson Worldwide
