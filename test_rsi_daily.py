@@ -271,13 +271,13 @@ class TestGetRsiCandidates(unittest.TestCase):
 
 class TestRunUsesFrozenCandidatesWithoutReassessingRsi(unittest.TestCase):
     def test_rsi_above_threshold_in_frozen_file_still_buys(self):
-        """SPEC: 確定済み候補にRSI35(閾値32超)の銘柄が入っていても、執行時に再判定せず買うこと。"""
+        """SPEC: 確定済み候補にRSI38(閾値35超)の銘柄が入っていても、執行時に再判定せず買うこと。"""
         with tempfile.TemporaryDirectory() as tmp:
             fake_path = Path(tmp) / "frozen_candidates.json"
             fake_path.write_text(json.dumps({
                 "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                 "rsi_basis": "prev_close",
-                "candidates": [{"ticker": "AAPL", "rsi14": 35.0, "price": 150.0, "date": "2026-08-18"}],
+                "candidates": [{"ticker": "AAPL", "rsi14": 38.0, "price": 150.0, "date": "2026-08-18"}],
             }), encoding="utf-8")
             state = _rsi_state()
 
@@ -302,7 +302,7 @@ class TestRunUsesFrozenCandidatesWithoutReassessingRsi(unittest.TestCase):
             entry = accepted[0]
             self.assertEqual(entry["ticker"], "AAPL")
             self.assertEqual(entry["action"], "BUY")
-            self.assertIn("RSI14=35.0", entry["note"])
+            self.assertIn("RSI14=38.0", entry["note"])
             self.assertIn("basis=prev_close", entry["note"])
             self.assertEqual(len(new_state["lots"]), 1)
 

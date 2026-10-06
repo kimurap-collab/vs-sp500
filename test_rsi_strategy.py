@@ -233,10 +233,10 @@ class TestReentry(unittest.TestCase):
         runner_shares = lot["shares"]
         self.assertGreater(runner_shares, 0)
 
-        # クールダウンは存在しない: RSI<=32なら常にTrue
-        self.assertTrue(rs.should_enter(31.9))
+        # クールダウンは存在しない: RSI<=35なら常にTrue
+        self.assertTrue(rs.should_enter(34.9))
         self.assertTrue(rs.should_enter(5.0))
-        self.assertFalse(rs.should_enter(32.1))
+        self.assertFalse(rs.should_enter(35.1))
 
         new_lot = rs.new_lot("TST", "TST-2", "2026-03-10", filled_qty=400, fill_price=80.0)
         # 新ロットは既存ロットと完全に独立
