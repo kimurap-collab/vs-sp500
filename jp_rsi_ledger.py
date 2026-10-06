@@ -23,7 +23,10 @@ DEFAULT_JP_PORTFOLIO: dict[str, Any] = {
     "last_processed_date": None,
 }
 
-JP_TRADES_CSV_HEADER = ["date", "action", "ticker", "shares", "price", "amount_jpy", "rule", "lot_id", "note", "name"]
+JP_TRADES_CSV_HEADER = [
+    "date", "action", "ticker", "shares", "price", "amount_jpy", "rule", "lot_id", "note", "name",
+    "realized_pnl", "realized_pnl_pct",
+]
 JP_HISTORY_CSV_HEADER = ["date", "nav_jpy", "principal_jpy", "diff_jpy", "diff_pct", "cash_ratio", "open_lots"]
 
 

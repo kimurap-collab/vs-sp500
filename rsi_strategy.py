@@ -317,6 +317,18 @@ def decide_profit_takes(
     return []
 
 
+def compute_realized_pnl(avg_cost: float, sell_price: float, shares: float) -> tuple[float, float]:
+    """SELL1件分の実現損益（金額・%）。ロットのavg_cost基準（2026-10-06追加）。
+
+    米国・日本株RSI枠ともロットのavg_costが常に既知のため、本体のcompute_realized_pnlと違い
+    空文字フォールバックは持たない。手数料は両枠とも未記帳のため差し引かない
+    （米国RSI枠はtrades.csvにfee列が無い・日本株RSI枠はmoomoo発注なしでfee自体が存在しない）。
+    """
+    pnl = round((sell_price - avg_cost) * shares, 2)
+    pnl_pct = round((sell_price / avg_cost - 1) * 100, 4)
+    return pnl, pnl_pct
+
+
 # ---------------------------------------------------------------------------
 # 反映（apply_*）: 実約定結果（filled_qty・fill_price）をロットへ反映した新しいロットを返す。
 # ---------------------------------------------------------------------------

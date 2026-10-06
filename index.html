@@ -148,7 +148,7 @@
   <section>
     <h2>取引記録</h2>
     <table id="tradesTable">
-      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">金額</th><th>ルール</th></tr></thead>
+      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">金額</th><th>ルール</th><th class="num">実現損益</th></tr></thead>
       <tbody></tbody>
     </table>
     <div class="empty" id="tradesEmpty" style="display:none;">取引履歴なし</div>
@@ -219,7 +219,7 @@
   <section>
     <h2>取引記録</h2>
     <table id="rsiTradesTable">
-      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th></tr></thead>
+      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th><th class="num">実現損益</th></tr></thead>
       <tbody></tbody>
     </table>
     <div class="empty" id="rsiTradesEmpty" style="display:none;">取引履歴なし</div>
@@ -290,7 +290,7 @@
   <section>
     <h2>取引記録</h2>
     <table id="rsiJpTradesTable">
-      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th></tr></thead>
+      <thead><tr><th>日付</th><th>種別</th><th>銘柄</th><th class="num">株数</th><th class="num">金額</th><th>ルール</th><th class="num">実現損益</th></tr></thead>
       <tbody></tbody>
     </table>
     <div class="empty" id="rsiJpTradesEmpty" style="display:none;">取引履歴なし</div>
@@ -427,8 +427,16 @@ async function load() {
     trades.forEach(t => {
       const tr = document.createElement("tr");
       const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      let pnlStr = "-", pnlCls = "";
+      if (t.action === "SELL" && t.realized_pnl !== undefined && t.realized_pnl !== "") {
+        const pnl = Number(t.realized_pnl);
+        const pnlPct = Number(t.realized_pnl_pct);
+        const sign = pnl >= 0 ? "+" : "";
+        pnlStr = `${sign}$${pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pnlPct.toFixed(2)}%)`;
+        pnlCls = pnl >= 0 ? "win" : "lose";
+      }
       tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
-        `<td class="num">$${amt}</td><td>${t.rule}</td>`;
+        `<td class="num">$${amt}</td><td>${t.rule}</td><td class="num ${pnlCls}">${pnlStr}</td>`;
       tradesBody.appendChild(tr);
     });
   }
@@ -532,8 +540,17 @@ async function load() {
       rsiTrades.forEach(t => {
         const tr = document.createElement("tr");
         const amt = Number(t.amount_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        let pnlStr = "-", pnlCls = "";
+        if (t.action === "SELL" && t.realized_pnl !== undefined && t.realized_pnl !== "") {
+          const pnl = Number(t.realized_pnl);
+          const pnlPct = Number(t.realized_pnl_pct);
+          const sign = pnl >= 0 ? "+" : "";
+          pnlStr = `${sign}$${pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pnlPct.toFixed(2)}%)`;
+          pnlCls = pnl >= 0 ? "win" : "lose";
+        }
         tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
-          `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${t.rule}</td>`;
+          `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${t.rule}</td>` +
+          `<td class="num ${pnlCls}">${pnlStr}</td>`;
         rsiTradesBody.appendChild(tr);
       });
     }
@@ -633,8 +650,17 @@ async function load() {
       jpTrades.forEach(t => {
         const tr = document.createElement("tr");
         const amt = Number(t.amount_jpy || 0).toLocaleString();
+        let pnlStr = "-", pnlCls = "";
+        if (t.action === "SELL" && t.realized_pnl !== undefined && t.realized_pnl !== "") {
+          const pnl = Number(t.realized_pnl);
+          const pnlPct = Number(t.realized_pnl_pct);
+          const sign = pnl >= 0 ? "+" : "";
+          pnlStr = `${sign}¥${pnl.toLocaleString()} (${sign}${pnlPct.toFixed(2)}%)`;
+          pnlCls = pnl >= 0 ? "win" : "lose";
+        }
         tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
-          `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${t.rule}</td>`;
+          `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${t.rule}</td>` +
+          `<td class="num ${pnlCls}">${pnlStr}</td>`;
         jpTradesBody.appendChild(tr);
       });
     }

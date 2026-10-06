@@ -392,12 +392,16 @@ def run_jp(
             stop = rsi_strategy.decide_stop_loss(state["lots"][idx], price, rsi_strategy.JP_RULES)
             if stop is not None:
                 qty = stop["qty"]
+                realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                    lot["avg_cost"], price, qty,
+                )
                 state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], qty, trading_date)
                 state["cash_jpy"] += qty * price
                 trade_row = {
                     "date": trading_date, "action": "SELL", "ticker": stop["ticker"],
                     "shares": qty, "price": round(price, 2), "amount_jpy": round(qty * price, 0),
                     "rule": "stop_loss", "lot_id": stop["lot_id"],
+                    "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                     "note": "moomoo発注なし・台帳のみの仮想売買",
                     "name": state["lots"][idx].get("name"),
                 }
@@ -417,6 +421,9 @@ def run_jp(
                     state["lots"][idx] = rsi_strategy.apply_exception_trigger(state["lots"][idx], rsi_strategy.JP_RULES)
                     break
                 qty = intent["qty"]
+                realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                    lot["avg_cost"], price, qty,
+                )
                 if intent["kind"] == "profit1":
                     state["lots"][idx] = rsi_strategy.apply_profit1_fill(state["lots"][idx], qty, intent["base_shares"])
                 else:
@@ -426,6 +433,7 @@ def run_jp(
                     "date": trading_date, "action": "SELL", "ticker": intent["ticker"],
                     "shares": qty, "price": round(price, 2), "amount_jpy": round(qty * price, 0),
                     "rule": intent["kind"], "lot_id": intent["lot_id"],
+                    "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                     "note": "moomoo発注なし・台帳のみの仮想売買",
                     "name": state["lots"][idx].get("name"),
                 }

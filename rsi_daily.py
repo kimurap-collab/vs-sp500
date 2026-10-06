@@ -401,6 +401,7 @@ def settle_pending_orders(
                 state["lots"].append(new_lot)
             else:
                 idx = next((i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot_id), None)
+                lot_avg_cost = state["lots"][idx]["avg_cost"] if idx is not None else None
                 if idx is None:
                     warnings.append(
                         f"pending決済: lot_id={lot_id} が見つからない（{ticker}・{rule}）。反映をスキップした"
@@ -437,11 +438,18 @@ def settle_pending_orders(
             else:
                 state["cash_usd"] += incremental_price * new_fill_qty
 
+            realized_pnl, realized_pnl_pct = "", ""
+            if side == "SELL" and lot_avg_cost:
+                realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                    lot_avg_cost, incremental_price, new_fill_qty,
+                )
+
             trade_row = {
                 "date": fill_date, "action": side, "ticker": ticker,
                 "shares": new_fill_qty, "price": round(incremental_price, 4),
                 "amount_usd": round(new_fill_qty * incremental_price, 2),
                 "rule": rule, "lot_id": lot_id,
+                "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                 "note": f"pending決済(order_id={order['order_id']})・手数料不明のため未計上",
                 "name": lot_name,
             }
@@ -649,6 +657,9 @@ def run(
                     continue
 
                 if filled_qty > 0:
+                    realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                        lot["avg_cost"], avg_price, filled_qty,
+                    )
                     state["cash_usd"] += cash_delta
                     state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], filled_qty, trade_date)
                     trade_row = {
@@ -656,6 +667,7 @@ def run(
                         "shares": filled_qty, "price": round(avg_price, 4),
                         "amount_usd": round(filled_qty * avg_price, 2),
                         "rule": "stop_loss", "lot_id": stop["lot_id"], "note": "",
+                        "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                         "name": state["lots"][idx].get("name"),
                     }
                     rsi_ledger.append_trade_row(trade_row)
@@ -701,6 +713,9 @@ def run(
                     break
 
                 if filled_qty > 0:
+                    realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                        lot["avg_cost"], avg_price, filled_qty,
+                    )
                     state["cash_usd"] += cash_delta
                     if intent["kind"] == "profit1":
                         state["lots"][idx] = rsi_strategy.apply_profit1_fill(
@@ -713,6 +728,7 @@ def run(
                         "shares": filled_qty, "price": round(avg_price, 4),
                         "amount_usd": round(filled_qty * avg_price, 2),
                         "rule": intent["kind"], "lot_id": intent["lot_id"], "note": "",
+                        "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                         "name": state["lots"][idx].get("name"),
                     }
                     rsi_ledger.append_trade_row(trade_row)

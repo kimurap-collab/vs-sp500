@@ -29,6 +29,7 @@ DEFAULT_PORTFOLIO: dict[str, Any] = {
 TRADES_CSV_HEADER = [
     "date", "action", "ticker", "shares", "price", "currency",
     "amount_usd", "fee_usd", "rule", "note",
+    "realized_pnl", "realized_pnl_pct",
 ]
 HISTORY_CSV_HEADER = ["date", "nav_usd", "bench_usd", "diff_usd", "diff_pct", "cash_ratio"]
 
@@ -114,6 +115,22 @@ def compute_avg_costs() -> dict[str, float]:
         elif row["action"] == "SELL":
             total_shares[ticker] = prev_shares - shares
     return avg_cost
+
+
+def compute_realized_pnl(
+    avg_cost: float | None, sell_price: float, shares: float, fee: float = 0.0,
+) -> tuple[float | str, float | str]:
+    """SELL1件分の実現損益（金額・%）を平均取得単価から計算する。
+
+    avg_costが取得できない（ticker不明等）場合は空文字を返し、CSVには空欄で記帳する
+    （2026-10-06・大将「損切りや利益確定した際の履歴にいくら損や得をしたか書いておいてほしい」）。
+    金額はfee分を差し引く（主枠はfee_usdが既知のため）。
+    """
+    if not avg_cost:
+        return "", ""
+    pnl = round((sell_price - avg_cost) * shares - fee, 2)
+    pnl_pct = round((sell_price / avg_cost - 1) * 100, 4)
+    return pnl, pnl_pct
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +339,9 @@ def execute_trades(
     new_state = json.loads(json.dumps(state))
     # SELLを先に約定して現金を作ってからBUYを処理する（リバランス時の現金不足による誤拒否を防ぐ）
     proposed_trades = sorted(proposed_trades, key=lambda t: 0 if t.get("action") == "SELL" else 1)
+    # SELLの実現損益計算用（この関数が追加するBUYはSELLより後に処理されるため、
+    # ディスク上のtrades.csvから読んだ値のままで全SELLに使って問題ない）
+    sell_avg_costs = compute_avg_costs()
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     queued: list[dict[str, Any]] = []
@@ -540,11 +560,18 @@ def execute_trades(
                     )
                     note = f"一部約定({filled_qty}/{qty}株)のまま終端・残数は打ち切り"
 
+            realized_pnl, realized_pnl_pct = "", ""
+            if action == "SELL":
+                realized_pnl, realized_pnl_pct = compute_realized_pnl(
+                    sell_avg_costs.get(ticker), price_for_log, shares, fee_usd,
+                )
+
             accepted.append({
                 "date": trade_date, "action": action, "ticker": ticker,
                 "shares": shares, "price": round(price_for_log, 4), "currency": currency,
                 "amount_usd": round(shares * price_for_log, 2), "fee_usd": fee_usd,
                 "rule": rule, "note": note,
+                "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
             })
 
         except TradeRejected as e:
@@ -642,6 +669,9 @@ def settle_pending_orders(
     warnings: list[str] = []
     resolved_notes: list[str] = []
     market_open = broker.is_market_open_us() if pending else None
+    # SELLの実現損益計算用（execute_tradesと同じ簡略化。同一バッチ内に同一銘柄のBUY/SELL
+    # pendingが両方決済される稀なケースでは今回決済したBUYを反映しないが、影響は小さい）
+    sell_avg_costs = compute_avg_costs()
 
     for order in pending:
         info = broker.get_order_status(order["order_id"])
@@ -680,12 +710,19 @@ def settle_pending_orders(
                     del new_state["holdings"][ticker]
                 new_state["cash_usd"] += incremental_price * new_fill_qty
 
+            realized_pnl, realized_pnl_pct = "", ""
+            if side == "SELL":
+                realized_pnl, realized_pnl_pct = compute_realized_pnl(
+                    sell_avg_costs.get(ticker), incremental_price, new_fill_qty, 0.0,
+                )
+
             trade_row = {
                 "date": fill_date, "action": side, "ticker": ticker,
                 "shares": new_fill_qty, "price": round(incremental_price, 4),
                 "currency": config.WHITELIST.get(ticker, {}).get("currency", "USD"),
                 "amount_usd": round(new_fill_qty * incremental_price, 2), "fee_usd": 0.0,
                 "rule": order.get("rule", ""),
+                "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
                 "note": f"pending決済(order_id={order['order_id']})・手数料不明のため未計上",
             }
             applied_trades.append(trade_row)
