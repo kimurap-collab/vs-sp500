@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 1125.1700000000187,
+  "cash_usd": 458.0389999999679,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -173,7 +173,7 @@
         true,
         true
       ],
-      "shares": 401,
+      "shares": 0,
       "total_invested_usd": 59587.939999999995,
       "avg_cost": 148.5983541147132,
       "profit1_taken": false,
@@ -181,9 +181,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-07",
       "name": "C.H. Robinson Worldwide"
     },
     {
@@ -361,7 +361,7 @@
         false,
         false
       ],
-      "shares": 928,
+      "shares": 0,
       "lot_size": 1,
       "total_invested_usd": 30025.44,
       "avg_cost": 32.355,
@@ -370,9 +370,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-07"
     },
     {
       "lot_id": "O-2026-09-28-1",
@@ -405,14 +405,62 @@
       "initial_entry_date": "2026-09-28",
       "initial_entry_price": 121.2,
       "pyramid_done": [
+        true,
+        true,
+        false
+      ],
+      "shares": 422,
+      "lot_size": 1,
+      "total_invested_usd": 52365.865,
+      "avg_cost": 124.08972748815165,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "GIS-2026-10-07-1",
+      "ticker": "GIS",
+      "name": "General Mills",
+      "initial_entry_date": "2026-10-07",
+      "initial_entry_price": 31.9,
+      "pyramid_done": [
         false,
         false,
         false
       ],
-      "shares": 247,
+      "shares": 941,
       "lot_size": 1,
-      "total_invested_usd": 29936.4,
-      "avg_cost": 121.2,
+      "total_invested_usd": 30017.899999999998,
+      "avg_cost": 31.9,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "FIS-2026-10-07-1",
+      "ticker": "FIS",
+      "name": "Fidelity National Information Services",
+      "initial_entry_date": "2026-10-07",
+      "initial_entry_price": 34.155,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 880,
+      "lot_size": 1,
+      "total_invested_usd": 30056.4,
+      "avg_cost": 34.155,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -424,6 +472,6 @@
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-10-06",
+  "last_processed_date": "2026-10-07",
   "pending_orders": []
 }

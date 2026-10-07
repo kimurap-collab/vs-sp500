@@ -1,734 +1,545 @@
 {
-  "generated_at": "2026-10-06T12:00:07.803610+00:00",
+  "generated_at": "2026-10-07T12:00:08.324575+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "MGM",
-      "rsi14": 11.285,
+      "rsi14": 15.114,
       "name": "MGM Resorts International",
-      "price": 30.17,
-      "date": "2026-10-06"
+      "price": 30.54,
+      "date": "2026-10-07"
     },
     {
       "ticker": "WY",
-      "rsi14": 16.999,
+      "rsi14": 19.292,
       "name": "Weyerhaeuser Co",
-      "price": 18.49,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "O",
-      "rsi14": 19.966,
-      "name": "Realty Income",
-      "price": 53.77,
-      "date": "2026-10-06"
+      "price": 18.6,
+      "date": "2026-10-07"
     },
     {
       "ticker": "LVS",
-      "rsi14": 21.384,
+      "rsi14": 20.491,
       "name": "Las Vegas Sands",
-      "price": 36.61,
-      "date": "2026-10-06"
+      "price": 36.31,
+      "date": "2026-10-07"
     },
     {
       "ticker": "PCAR",
-      "rsi14": 21.397,
+      "rsi14": 21.331,
       "name": "PACCAR Inc",
-      "price": 109.36,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "VTR",
-      "rsi14": 21.724,
-      "name": "Ventas Inc",
-      "price": 81.36,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "KHC",
-      "rsi14": 22.251,
-      "name": "The Kraft Heinz",
-      "price": 21.84,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "INVH",
-      "rsi14": 23.448,
-      "name": "Invitation Homes Inc",
-      "price": 26.06,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "VICI",
-      "rsi14": 23.525,
-      "name": "VICI Properties",
-      "price": 22.53,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "FRT",
-      "rsi14": 23.617,
-      "name": "Federal Realty Investment Trust",
-      "price": 105.97,
-      "date": "2026-10-06"
+      "price": 109.32,
+      "date": "2026-10-07"
     },
     {
       "ticker": "RTX",
-      "rsi14": 23.647,
+      "rsi14": 22.422,
       "name": "RTX Corp",
-      "price": 184.33,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "LOW",
-      "rsi14": 24.389,
-      "name": "Lowe's Companies",
-      "price": 179.5,
-      "date": "2026-10-06"
+      "price": 183.29,
+      "date": "2026-10-07"
     },
     {
       "ticker": "GD",
-      "rsi14": 24.409,
+      "rsi14": 24.139,
       "name": "General Dynamics",
-      "price": 331.72,
-      "date": "2026-10-06"
+      "price": 331.33,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "NOC",
-      "rsi14": 24.412,
-      "name": "Northrop Grumman",
-      "price": 476.11,
-      "date": "2026-10-06"
+      "ticker": "VTR",
+      "rsi14": 25.362,
+      "name": "Ventas Inc",
+      "price": 81.86,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "FRT",
+      "rsi14": 25.411,
+      "name": "Federal Realty Investment Trust",
+      "price": 106.2,
+      "date": "2026-10-07"
     },
     {
       "ticker": "BAC",
-      "rsi14": 24.757,
+      "rsi14": 25.665,
       "name": "Bank of America",
-      "price": 54.0,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "DOC",
-      "rsi14": 24.818,
-      "name": "Healthpeak Properties",
-      "price": 18.84,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "ROL",
-      "rsi14": 25.147,
-      "name": "Rollins",
-      "price": 29.69,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PNR",
-      "rsi14": 25.296,
-      "name": "Pentair",
-      "price": 52.78,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "BX",
-      "rsi14": 25.485,
-      "name": "Blackstone",
-      "price": 111.65,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "GIS",
-      "rsi14": 25.496,
-      "name": "General Mills",
-      "price": 31.68,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "HD",
-      "rsi14": 25.533,
-      "name": "Home Depot",
-      "price": 281.15,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PEP",
-      "rsi14": 25.589,
-      "name": "PepsiCo",
-      "price": 125.65,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "KIM",
-      "rsi14": 25.654,
-      "name": "Kimco Realty Corp",
-      "price": 22.03,
-      "date": "2026-10-06"
+      "price": 54.09,
+      "date": "2026-10-07"
     },
     {
       "ticker": "BNY",
-      "rsi14": 25.947,
+      "rsi14": 25.919,
       "name": "Bank of New York Mellon",
-      "price": 143.75,
-      "date": "2026-10-06"
+      "price": 143.73,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "STZ",
-      "rsi14": 26.706,
-      "name": "Constellation Brands",
-      "price": 113.31,
-      "date": "2026-10-06"
+      "ticker": "PEP",
+      "rsi14": 25.942,
+      "name": "PepsiCo",
+      "price": 125.71,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "MCD",
-      "rsi14": 26.937,
-      "name": "McDonald's",
-      "price": 233.04,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PNC",
-      "rsi14": 26.947,
-      "name": "PNC Financial Services",
-      "price": 220.28,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "LHX",
-      "rsi14": 27.035,
-      "name": "L3Harris Technologies",
-      "price": 236.88,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "CMCSA",
-      "rsi14": 27.092,
-      "name": "Comcast",
-      "price": 21.57,
-      "date": "2026-10-06"
+      "ticker": "KHC",
+      "rsi14": 26.121,
+      "name": "The Kraft Heinz",
+      "price": 22.03,
+      "date": "2026-10-07"
     },
     {
       "ticker": "FER",
-      "rsi14": 27.335,
+      "rsi14": 26.314,
       "name": "Ferrovial SE",
-      "price": 51.84,
-      "date": "2026-10-06"
+      "price": 51.46,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "CHTR",
-      "rsi14": 27.386,
-      "name": "Charter Communications",
-      "price": 107.77,
-      "date": "2026-10-06"
+      "ticker": "O",
+      "rsi14": 26.323,
+      "name": "Realty Income",
+      "price": 54.25,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "REG",
-      "rsi14": 27.61,
-      "name": "Regency Centers Corp",
-      "price": 71.33,
-      "date": "2026-10-06"
+      "ticker": "MCD",
+      "rsi14": 26.377,
+      "name": "McDonald's",
+      "price": 232.45,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "PNC",
+      "rsi14": 26.817,
+      "name": "PNC Financial Services",
+      "price": 220.16,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "PNR",
+      "rsi14": 26.838,
+      "name": "Pentair",
+      "price": 52.94,
+      "date": "2026-10-07"
     },
     {
       "ticker": "WYNN",
-      "rsi14": 27.739,
+      "rsi14": 26.869,
       "name": "Wynn Resorts",
-      "price": 77.17,
-      "date": "2026-10-06"
+      "price": 76.62,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "AON",
-      "rsi14": 27.877,
-      "name": "Aon PLC",
-      "price": 272.05,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PAYX",
-      "rsi14": 27.891,
-      "name": "Paychex",
-      "price": 99.78,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "CTVA",
-      "rsi14": 27.964,
-      "name": "Corteva",
-      "price": 12.39,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "MAA",
-      "rsi14": 28.281,
-      "name": "Mid-America Apartment Communities Inc",
-      "price": 116.47,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PLD",
-      "rsi14": 28.633,
-      "name": "Prologis",
-      "price": 128.08,
-      "date": "2026-10-06"
+      "ticker": "CMCSA",
+      "rsi14": 27.021,
+      "name": "Comcast",
+      "price": 21.56,
+      "date": "2026-10-07"
     },
     {
       "ticker": "RF",
-      "rsi14": 28.743,
+      "rsi14": 28.564,
       "name": "Regions Financial",
-      "price": 27.07,
-      "date": "2026-10-06"
+      "price": 27.05,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "KKR",
-      "rsi14": 29.155,
-      "name": "KKR & Co",
-      "price": 89.96,
-      "date": "2026-10-06"
+      "ticker": "VICI",
+      "rsi14": 28.845,
+      "name": "VICI Properties",
+      "price": 22.73,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "DOC",
+      "rsi14": 28.886,
+      "name": "Healthpeak Properties",
+      "price": 19.0,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "CHTR",
+      "rsi14": 28.887,
+      "name": "Charter Communications",
+      "price": 108.64,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "REG",
+      "rsi14": 28.89,
+      "name": "Regency Centers Corp",
+      "price": 71.42,
+      "date": "2026-10-07"
     },
     {
       "ticker": "EFX",
-      "rsi14": 29.229,
+      "rsi14": 29.138,
       "name": "Equifax",
-      "price": 142.6,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "IP",
-      "rsi14": 29.25,
-      "name": "International Paper",
-      "price": 32.05,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "NKE",
-      "rsi14": 29.412,
-      "name": "Nike",
-      "price": 33.96,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "JNJ",
-      "rsi14": 29.57,
-      "name": "Johnson & Johnson",
-      "price": 252.93,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "WTW",
-      "rsi14": 29.897,
-      "name": "Willis Towers Watson",
-      "price": 288.11,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "MS",
-      "rsi14": 29.898,
-      "name": "Morgan Stanley",
-      "price": 190.19,
-      "date": "2026-10-06"
+      "price": 142.48,
+      "date": "2026-10-07"
     },
     {
       "ticker": "BKNG",
-      "rsi14": 29.91,
+      "rsi14": 29.329,
       "name": "Booking Holdings",
-      "price": 158.33,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "FICO",
-      "rsi14": 30.043,
-      "name": "Fair Isaac",
-      "price": 689.61,
-      "date": "2026-10-06"
+      "price": 157.63,
+      "date": "2026-10-07"
     },
     {
       "ticker": "ALL",
-      "rsi14": 30.11,
+      "rsi14": 29.758,
       "name": "Allstate",
-      "price": 224.71,
-      "date": "2026-10-06"
+      "price": 224.27,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "GEN",
-      "rsi14": 30.388,
-      "name": "Gen Digital",
-      "price": 22.28,
-      "date": "2026-10-06"
+      "ticker": "LHX",
+      "rsi14": 29.928,
+      "name": "L3Harris Technologies",
+      "price": 237.9,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "GS",
-      "rsi14": 30.463,
-      "name": "Goldman Sachs",
-      "price": 893.46,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "MTB",
-      "rsi14": 30.851,
-      "name": "M&T Bank",
-      "price": 218.26,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "BXP",
-      "rsi14": 30.922,
-      "name": "BXP Inc",
-      "price": 59.37,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "AXON",
-      "rsi14": 31.044,
-      "name": "Axon Enterprise",
-      "price": 411.81,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "NEE",
-      "rsi14": 31.167,
-      "name": "NextEra Energy",
-      "price": 76.28,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "SBAC",
-      "rsi14": 31.225,
-      "name": "SBA Communications Corp",
-      "price": 161.82,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "MKC",
-      "rsi14": 31.279,
-      "name": "McCormick & Co",
-      "price": 45.54,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "APO",
-      "rsi14": 31.356,
-      "name": "Apollo Global Management",
-      "price": 115.35,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "CMG",
-      "rsi14": 31.36,
-      "name": "Chipotle Mexican Grill",
-      "price": 30.85,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "DUK",
-      "rsi14": 31.547,
-      "name": "Duke Energy",
-      "price": 113.84,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "TFC",
-      "rsi14": 31.615,
-      "name": "Truist Financial",
-      "price": 46.33,
-      "date": "2026-10-06"
+      "ticker": "IP",
+      "rsi14": 30.1,
+      "name": "International Paper",
+      "price": 32.14,
+      "date": "2026-10-07"
     },
     {
       "ticker": "INCY",
-      "rsi14": 31.971,
+      "rsi14": 30.122,
       "name": "Incyte",
-      "price": 114.13,
-      "date": "2026-10-06"
+      "price": 112.73,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "FDXF",
-      "rsi14": 32.356,
-      "name": "FEDEX FREIGHT HOLDING CO INC",
-      "price": 111.58,
-      "date": "2026-10-06"
+      "ticker": "AON",
+      "rsi14": 30.189,
+      "name": "Aon PLC",
+      "price": 273.99,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "LMT",
-      "rsi14": 32.369,
-      "name": "Lockheed Martin",
-      "price": 506.63,
-      "date": "2026-10-06"
+      "ticker": "GIS",
+      "rsi14": 30.221,
+      "name": "General Mills",
+      "price": 32.18,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "HSY",
-      "rsi14": 32.434,
-      "name": "Hershey",
-      "price": 161.01,
-      "date": "2026-10-06"
+      "ticker": "KIM",
+      "rsi14": 30.232,
+      "name": "Kimco Realty Corp",
+      "price": 22.14,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "PSA",
-      "rsi14": 32.44,
-      "name": "Public Storage",
-      "price": 281.66,
-      "date": "2026-10-06"
+      "ticker": "BX",
+      "rsi14": 30.567,
+      "name": "Blackstone",
+      "price": 113.36,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "LULU",
-      "rsi14": 32.485,
-      "name": "Lululemon Athletica",
-      "price": 93.14,
-      "date": "2026-10-06"
+      "ticker": "MKC",
+      "rsi14": 30.837,
+      "name": "McCormick & Co",
+      "price": 45.4,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "AEE",
-      "rsi14": 32.514,
-      "name": "Ameren",
-      "price": 99.7,
-      "date": "2026-10-06"
+      "ticker": "FICO",
+      "rsi14": 30.883,
+      "name": "Fair Isaac",
+      "price": 695.46,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "BMY",
-      "rsi14": 32.627,
-      "name": "Bristol-Myers Squibb",
-      "price": 58.81,
-      "date": "2026-10-06"
+      "ticker": "NOC",
+      "rsi14": 31.034,
+      "name": "Northrop Grumman",
+      "price": 483.11,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "NFLX",
-      "rsi14": 32.786,
-      "name": "Netflix",
-      "price": 67.5,
-      "date": "2026-10-06"
+      "ticker": "MAA",
+      "rsi14": 31.156,
+      "name": "Mid-America Apartment Communities Inc",
+      "price": 116.99,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "ALB",
-      "rsi14": 32.815,
-      "name": "Albemarle",
-      "price": 104.37,
-      "date": "2026-10-06"
+      "ticker": "TFC",
+      "rsi14": 31.176,
+      "name": "Truist Financial",
+      "price": 46.25,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "REGN",
-      "rsi14": 32.905,
-      "name": "Regeneron Pharmaceuticals",
-      "price": 726.47,
-      "date": "2026-10-06"
+      "ticker": "CPRT",
+      "rsi14": 31.34,
+      "name": "Copart",
+      "price": 26.82,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "VRSK",
-      "rsi14": 32.908,
-      "name": "Verisk Analytics",
-      "price": 163.28,
-      "date": "2026-10-06"
+      "ticker": "PLD",
+      "rsi14": 31.58,
+      "name": "Prologis",
+      "price": 128.68,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "USB",
-      "rsi14": 32.917,
-      "name": "U.S. Bancorp",
-      "price": 57.27,
-      "date": "2026-10-06"
+      "ticker": "KKR",
+      "rsi14": 31.66,
+      "name": "KKR & Co",
+      "price": 90.67,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "SPG",
-      "rsi14": 32.958,
-      "name": "Simon Property",
-      "price": 201.4,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "GE",
-      "rsi14": 32.983,
-      "name": "GE Aerospace",
-      "price": 306.34,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "F",
-      "rsi14": 33.01,
-      "name": "Ford Motor",
-      "price": 12.15,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "ALGN",
-      "rsi14": 33.348,
-      "name": "Align Technology",
-      "price": 140.65,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "ARES",
-      "rsi14": 33.371,
-      "name": "Ares Management",
-      "price": 117.13,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "FIS",
-      "rsi14": 33.399,
-      "name": "Fidelity National Information Services",
-      "price": 33.58,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "TXT",
-      "rsi14": 33.458,
-      "name": "Textron",
-      "price": 75.75,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "AWK",
-      "rsi14": 33.501,
-      "name": "American Water Works",
-      "price": 127.84,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "AMP",
-      "rsi14": 33.656,
-      "name": "Ameriprise Financial",
-      "price": 494.94,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "D",
-      "rsi14": 33.658,
-      "name": "Dominion Resources",
-      "price": 61.02,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "PCG",
-      "rsi14": 33.879,
-      "name": "PG&E Corp",
-      "price": 12.35,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "KMB",
-      "rsi14": 33.946,
-      "name": "Kimberly-Clark",
-      "price": 95.41,
-      "date": "2026-10-06"
-    },
-    {
-      "ticker": "MOS",
-      "rsi14": 33.971,
-      "name": "The Mosaic",
-      "price": 21.29,
-      "date": "2026-10-06"
+      "ticker": "PAYX",
+      "rsi14": 31.7,
+      "name": "Paychex",
+      "price": 101.02,
+      "date": "2026-10-07"
     },
     {
       "ticker": "HRL",
-      "rsi14": 34.045,
+      "rsi14": 31.728,
       "name": "Hormel Foods",
-      "price": 20.08,
-      "date": "2026-10-06"
+      "price": 19.88,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "VZ",
-      "rsi14": 34.171,
-      "name": "Verizon",
-      "price": 45.85,
-      "date": "2026-10-06"
+      "ticker": "CMG",
+      "rsi14": 31.829,
+      "name": "Chipotle Mexican Grill",
+      "price": 30.9,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "CBRE",
-      "rsi14": 34.217,
-      "name": "CBRE Group",
-      "price": 129.4,
-      "date": "2026-10-05"
+      "ticker": "MS",
+      "rsi14": 31.926,
+      "name": "Morgan Stanley",
+      "price": 191.02,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "CRH",
-      "rsi14": 34.242,
-      "name": "CRH PLC",
-      "price": 82.65,
-      "date": "2026-10-06"
+      "ticker": "GS",
+      "rsi14": 32.022,
+      "name": "Goldman Sachs",
+      "price": 897.18,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "ROL",
+      "rsi14": 32.111,
+      "name": "Rollins",
+      "price": 30.35,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "HSY",
+      "rsi14": 32.125,
+      "name": "Hershey",
+      "price": 160.8,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "MOS",
+      "rsi14": 32.168,
+      "name": "The Mosaic",
+      "price": 20.94,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "MTB",
+      "rsi14": 32.216,
+      "name": "M&T Bank",
+      "price": 218.74,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "LDOS",
+      "rsi14": 32.487,
+      "name": "Leidos",
+      "price": 116.69,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "SCHW",
+      "rsi14": 32.705,
+      "name": "Charles Schwab",
+      "price": 96.8,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "FIS",
+      "rsi14": 32.757,
+      "name": "Fidelity National Information Services",
+      "price": 33.42,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "TXT",
+      "rsi14": 32.796,
+      "name": "Textron",
+      "price": 75.53,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "USB",
+      "rsi14": 33.115,
+      "name": "U.S. Bancorp",
+      "price": 57.29,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "APO",
+      "rsi14": 33.164,
+      "name": "Apollo Global Management",
+      "price": 115.95,
+      "date": "2026-10-07"
     },
     {
       "ticker": "CFG",
-      "rsi14": 34.28,
+      "rsi14": 33.398,
       "name": "Citizens Financial",
-      "price": 64.31,
-      "date": "2026-10-06"
+      "price": 64.09,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "SBUX",
-      "rsi14": 34.307,
-      "name": "Starbucks",
-      "price": 94.43,
-      "date": "2026-10-06"
+      "ticker": "INVH",
+      "rsi14": 33.456,
+      "name": "Invitation Homes Inc",
+      "price": 26.39,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "ALNY",
-      "rsi14": 34.482,
-      "name": "Alnylam Pharmaceuticals",
-      "price": 219.89,
-      "date": "2026-10-06"
+      "ticker": "JNJ",
+      "rsi14": 33.584,
+      "name": "Johnson & Johnson",
+      "price": 254.78,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "JPM",
-      "rsi14": 34.501,
-      "name": "JPMorgan",
-      "price": 332.38,
-      "date": "2026-10-06"
+      "ticker": "LULU",
+      "rsi14": 33.613,
+      "name": "Lululemon Athletica",
+      "price": 93.61,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "LEN",
-      "rsi14": 34.513,
-      "name": "Lennar Corp",
-      "price": 74.44,
-      "date": "2026-10-06"
+      "ticker": "FDXF",
+      "rsi14": 33.634,
+      "name": "FEDEX FREIGHT HOLDING CO INC",
+      "price": 112.1,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "ARE",
-      "rsi14": 34.557,
-      "name": "Alexandria Real Estate Equities Inc",
-      "price": 45.88,
-      "date": "2026-10-06"
+      "ticker": "BXP",
+      "rsi14": 33.717,
+      "name": "BXP Inc",
+      "price": 59.79,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "CHRW",
+      "rsi14": 33.809,
+      "name": "C.H. Robinson Worldwide",
+      "price": 135.05,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "NTRS",
+      "rsi14": 33.849,
+      "name": "Northern Trust",
+      "price": 169.46,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "AXON",
+      "rsi14": 34.005,
+      "name": "Axon Enterprise",
+      "price": 418.62,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "GEN",
+      "rsi14": 34.069,
+      "name": "Gen Digital",
+      "price": 22.8,
+      "date": "2026-10-07"
     },
     {
       "ticker": "KEY",
-      "rsi14": 34.649,
+      "rsi14": 34.086,
       "name": "KeyCorp",
-      "price": 20.18,
-      "date": "2026-10-06"
+      "price": 20.14,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "CCI",
-      "rsi14": 34.702,
-      "name": "Crown Castle",
-      "price": 67.58,
-      "date": "2026-10-06"
+      "ticker": "HD",
+      "rsi14": 34.097,
+      "name": "Home Depot",
+      "price": 286.69,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "EXC",
-      "rsi14": 34.786,
-      "name": "Exelon",
-      "price": 40.82,
-      "date": "2026-10-06"
+      "ticker": "LOW",
+      "rsi14": 34.259,
+      "name": "Lowe's Companies",
+      "price": 183.67,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "AMT",
-      "rsi14": 34.791,
-      "name": "American Tower Corp",
-      "price": 162.26,
-      "date": "2026-10-06"
+      "ticker": "AWK",
+      "rsi14": 34.273,
+      "name": "American Water Works",
+      "price": 128.04,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "SYY",
-      "rsi14": 34.824,
-      "name": "Sysco Corp",
-      "price": 76.38,
-      "date": "2026-10-06"
+      "ticker": "BSX",
+      "rsi14": 34.362,
+      "name": "Boston Scientific",
+      "price": 42.19,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "SPG",
+      "rsi14": 34.521,
+      "name": "Simon Property",
+      "price": 201.74,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "ARE",
+      "rsi14": 34.77,
+      "name": "Alexandria Real Estate Equities Inc",
+      "price": 45.92,
+      "date": "2026-10-07"
     },
     {
       "ticker": "UPS",
-      "rsi14": 34.873,
+      "rsi14": 34.802,
       "name": "United Parcel Service",
-      "price": 93.14,
-      "date": "2026-10-06"
+      "price": 93.11,
+      "date": "2026-10-07"
     },
     {
-      "ticker": "AXP",
-      "rsi14": 34.938,
-      "name": "American Express",
-      "price": 304.02,
-      "date": "2026-10-06"
+      "ticker": "ARES",
+      "rsi14": 34.995,
+      "name": "Ares Management",
+      "price": 117.74,
+      "date": "2026-10-07"
+    },
+    {
+      "ticker": "AMP",
+      "rsi14": 35.0,
+      "name": "Ameriprise Financial",
+      "price": 496.61,
+      "date": "2026-10-07"
     }
   ]
 }

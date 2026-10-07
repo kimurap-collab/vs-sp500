@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 966169.9548339844,
+  "cash_jpy": 249669.95483398438,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -177,13 +177,13 @@
       "initial_entry_price": 1671.0,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 2500,
+      "shares": 3300,
       "lot_size": 100,
-      "total_invested_usd": 4232700.0,
-      "avg_cost": 1693.08,
+      "total_invested_usd": 5722300.0,
+      "avg_cost": 1734.030303030303,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -204,13 +204,13 @@
         true,
         false
       ],
-      "shares": 1600,
+      "shares": 800,
       "lot_size": 100,
       "total_invested_usd": 4726700.0,
       "avg_cost": 2954.1875,
-      "profit1_taken": false,
+      "profit1_taken": true,
       "profit2_taken": false,
-      "base_shares": null,
+      "base_shares": 1600,
       "exception_active": false,
       "exception_deadline_date": null,
       "closed": false,
@@ -249,13 +249,13 @@
       "initial_entry_price": 2323.0,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 1800,
+      "shares": 2200,
       "lot_size": 100,
-      "total_invested_usd": 4223400.0,
-      "avg_cost": 2346.3333333333335,
+      "total_invested_usd": 5229000.0,
+      "avg_cost": 2376.818181818182,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -348,7 +348,7 @@
         false,
         false
       ],
-      "shares": 900,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2733300.0,
       "avg_cost": 3037.0,
@@ -357,9 +357,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-07",
       "name": "Dmg Mori"
     },
     {
@@ -441,14 +441,14 @@
       "initial_entry_date": "2026-08-28",
       "initial_entry_price": 2971.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 1000,
+      "shares": 1400,
       "lot_size": 100,
-      "total_invested_usd": 2971000.0,
-      "avg_cost": 2971.0,
+      "total_invested_usd": 4361000.0,
+      "avg_cost": 3115.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -466,13 +466,13 @@
       "initial_entry_price": 1605.5,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 2600,
+      "shares": 3400,
       "lot_size": 100,
-      "total_invested_usd": 4220700.0,
-      "avg_cost": 1623.3461538461538,
+      "total_invested_usd": 5618300.0,
+      "avg_cost": 1652.4411764705883,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -496,7 +496,7 @@
         false,
         false
       ],
-      "shares": 900,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2965500.0,
       "avg_cost": 3295.0,
@@ -505,9 +505,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-07"
     },
     {
       "lot_id": "6841-2026-09-03-1",
@@ -544,13 +544,13 @@
         false,
         false
       ],
-      "shares": 1300,
+      "shares": 650,
       "lot_size": 100,
       "total_invested_usd": 2848300.0,
       "avg_cost": 2191.0,
-      "profit1_taken": false,
+      "profit1_taken": true,
       "profit2_taken": false,
-      "base_shares": null,
+      "base_shares": 1300,
       "exception_active": false,
       "exception_deadline_date": null,
       "closed": false,
@@ -643,7 +643,7 @@
         false,
         false
       ],
-      "shares": 2600,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2899000.0,
       "avg_cost": 1115.0,
@@ -652,9 +652,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-07"
     },
     {
       "lot_id": "7220-2026-09-03-1",
@@ -775,7 +775,79 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "3591-2026-10-07-1",
+      "ticker": "3591",
+      "name": "Wacoal Holdings",
+      "initial_entry_date": "2026-10-07",
+      "initial_entry_price": 3559.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 800,
+      "lot_size": 100,
+      "total_invested_usd": 2847200.0,
+      "avg_cost": 3559.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "9715-2026-10-07-1",
+      "ticker": "9715",
+      "name": "transcosmos",
+      "initial_entry_date": "2026-10-07",
+      "initial_entry_price": 3360.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 800,
+      "lot_size": 100,
+      "total_invested_usd": 2688000.0,
+      "avg_cost": 3360.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "4928-2026-10-07-1",
+      "ticker": "4928",
+      "name": "Noevir Holdings",
+      "initial_entry_date": "2026-10-07",
+      "initial_entry_price": 4460.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 600,
+      "lot_size": 100,
+      "total_invested_usd": 2676000.0,
+      "avg_cost": 4460.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
-  "last_processed_date": "2026-10-06"
+  "last_processed_date": "2026-10-07"
 }
