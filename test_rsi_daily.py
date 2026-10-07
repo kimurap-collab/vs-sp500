@@ -562,14 +562,16 @@ class TestMarketCapTiersNoCaching(unittest.TestCase):
         self.assertEqual(result, {})
 
 
-class TestJpFrameUnaffectedBySwapFeature(unittest.TestCase):
-    """スワップ売却は米国RSI枠のみ（日本株RSI枠は無変更）。jp_rsi_daily.pyがスワップ関連の
-    新規関数を一切参照していないことをソース上で確認する（2026-10-07追加）。"""
+class TestUsFrameUnaffectedByJpSwapExtension(unittest.TestCase):
+    """スワップ売却を日本株RSI枠にも追加した際、米国RSI枠の既存関数は複製せず共用のまま
+    であることをソース上で確認する（2026-10-07改訂2追加。以前はこの逆
+    ＝JP枠がスワップに一切触れないことを保証するテストだったが、JP枠へのスワップ追加に伴い
+    前提が変わったため、米国枠の既存関数が変更されていないことの確認に置き換えた）。"""
 
-    def test_jp_rsi_daily_does_not_reference_swap_functions(self):
-        source = (config.BASE_DIR / "jp_rsi_daily.py").read_text(encoding="utf-8")
-        for forbidden in ("decide_swaps", "select_swap_sell_candidates", "_run_swaps", "get_sector_map"):
-            self.assertNotIn(forbidden, source)
+    def test_rsi_daily_still_defines_original_swap_functions(self):
+        source = (config.BASE_DIR / "rsi_daily.py").read_text(encoding="utf-8")
+        for expected in ("_run_swaps", "_execute_swap_decisions", "_preview_swaps", "get_sector_map", "get_market_cap_tiers"):
+            self.assertIn(expected, source)
 
 
 if __name__ == "__main__":

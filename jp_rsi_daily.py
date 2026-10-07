@@ -41,6 +41,7 @@ import dividends
 import jp_lotsize
 import jp_market
 import jp_rsi_ledger
+import jp_sector_map
 import rsi_strategy
 from jp_market import JpSnapshot
 
@@ -370,6 +371,268 @@ def credit_dividends_jp(state: dict[str, Any], log_lines: list[str]) -> None:
         )
 
 
+def _month_key(date_str: str) -> str:
+    return date_str[:7]  # "YYYY-MM"
+
+
+# ---------------------------------------------------------------------------
+# スワップ売却（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂（JP枠）」参照。米国RSI枠の
+# スワップ売却機能をJP枠にも追加したもの。判定ロジック(decide_swaps等)はrsi_strategy.pyを
+# そのまま共用し、ここではJP固有のデータ取得（yfinance・moomooスクリーナー）と
+# 台帳のみの仮想売買（moomoo発注なし）を行う。
+# ---------------------------------------------------------------------------
+
+def get_sector_map_jp(
+    universe_tickers: list[str], trading_date: str, dry_run: bool, log_lines: list[str],
+) -> dict[str, str | None]:
+    """ticker→TOPIX-17セクターコード（不明はNone）のマッピングをledger/rsi_jp/sector_map.jsonに
+    キャッシュする（2026-10-07追加。米国枠のget_sector_mapと同じ月次周期・dry-run時は保存しない契約）。
+
+    分類はyfinanceの.info（sector/industry）をjp_sector_map.classify_infoに渡して行う
+    （moomooのget_owner_plateに相当する発注不要の一括APIがJP株には無いため、1銘柄ずつ
+    yfinanceへ問い合わせる。月1回しか呼ばないため許容する）。個別銘柄の取得失敗はNone
+    （Tier0として扱う）。
+    """
+    path = config.RSI_JP_SWAP_SECTOR_MAP_PATH
+    month = _month_key(trading_date)
+    cache: dict[str, Any] | None = None
+    if path.exists():
+        try:
+            cache = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            logger.warning("JP sector_map.json読み込み失敗: %s", e)
+            cache = None
+    if cache is not None and cache.get("month") == month:
+        return cache["map"]
+
+    new_map: dict[str, str | None] = {}
+    for ticker in universe_tickers:
+        info = jp_market.get_info(ticker)
+        new_map[ticker] = jp_sector_map.classify_info(info, ticker)
+
+    if dry_run:
+        log_lines.append(f"[JP-SWAP] [dry-run] sector_map更新対象だが保存はスキップ（{len(universe_tickers)}銘柄・{month}）")
+        return new_map
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"month": month, "map": new_map}, ensure_ascii=False, indent=2), encoding="utf-8")
+    log_lines.append(f"[JP-SWAP] sector_map更新完了: {len(universe_tickers)}銘柄 ({month})")
+    return new_map
+
+
+def get_sector_tiers_jp(trading_date: str, dry_run: bool, log_lines: list[str]) -> dict[str, int]:
+    """TOPIX-17シリーズETF17本の直近21営業日リターンから月次のセクターTier(-1/0/+1)を
+    ledger/rsi_jp/sector_tiers.jsonにキャッシュする（2026-10-07追加。lookback日数は米国枠と
+    同じconfig.RSI_SWAP_SECTOR_RETURN_LOOKBACK_TRADING_DAYSを共用する＝JP専用の値は作らない）。
+    """
+    path = config.RSI_JP_SWAP_SECTOR_TIERS_PATH
+    month = _month_key(trading_date)
+    cache: dict[str, Any] | None = None
+    if path.exists():
+        try:
+            cache = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            logger.warning("JP sector_tiers.json読み込み失敗: %s", e)
+            cache = None
+    if cache is not None and cache.get("month") == month:
+        return cache["tiers"]
+
+    returns = jp_market.get_sector_etf_returns(
+        config.RSI_JP_SWAP_SECTOR_ETFS, config.RSI_SWAP_SECTOR_RETURN_LOOKBACK_TRADING_DAYS,
+    )
+    if not returns or len(returns) < len(config.RSI_JP_SWAP_SECTOR_ETFS):
+        msg = "[JP-SWAP] 警告: セクターTier更新に失敗（ETFリターン取得不足）。既存キャッシュ(無ければ全セクター0)で続行"
+        logger.warning(msg)
+        log_lines.append(msg)
+        return (cache or {}).get("tiers", {})
+
+    tiers = rsi_strategy.rank_sector_etf_tiers(returns)
+    if dry_run:
+        log_lines.append(f"[JP-SWAP] [dry-run] セクターTier更新対象だが保存はスキップ（{month}）: {tiers}")
+        return tiers
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"month": month, "tiers": tiers}, ensure_ascii=False, indent=2), encoding="utf-8")
+    log_lines.append(f"[JP-SWAP] セクターTier更新完了({month}): {tiers}")
+    return tiers
+
+
+def get_market_cap_tiers_jp(
+    raw_candidates: list[dict[str, Any]], held_tickers: list[str], log_lines: list[str],
+) -> dict[str, int]:
+    """JP候補ユニバース(raw_candidates)∪保有銘柄(held_tickers)の時価総額から3分位Tierを求め、
+    米国枠と符号を反転して返す（2026-10-07追加・大将「5)1」の日本株版＝小型株は時価総額Tierで
+    不利、のFableによる代替案＝小型株を有利にする。5年分のバックテストで10/10勝ち越しを確認し
+    「いけ」で承認済み）。毎晩実行しキャッシュしない（米国枠と同じ方針）。
+
+    時価総額データは2系統を使う:
+      - raw_candidatesの"market_cap"（moomooスクリーナーが1回の呼び出しで既に返している値。
+        追加のAPI呼び出し不要）。
+      - raw_candidatesに無い保有銘柄（当夜RSIが35を超えて候補から外れた銘柄等）はyfinance
+        （jp_market.get_market_caps）で個別に補う。
+    """
+    caps: dict[str, float] = {
+        c["ticker"]: c["market_cap"] for c in raw_candidates if c.get("market_cap")
+    }
+    missing = [t for t in held_tickers if t not in caps]
+    if missing:
+        caps.update(jp_market.get_market_caps(missing))
+
+    if not caps:
+        msg = "[JP-SWAP] 警告: 時価総額が1件も取得できずTierは全銘柄0として扱う"
+        logger.warning(msg)
+        log_lines.append(msg)
+        return {}
+
+    tiers = rsi_strategy.compute_market_cap_tiers(caps)
+    return {ticker: -tier for ticker, tier in tiers.items()}  # JPは符号反転: 小型+1/大型-1
+
+
+def _compute_swap_scores_jp(
+    raw_candidates: list[dict[str, Any]],
+    held_tickers: list[str],
+    score_tickers: list[str],
+    trading_date: str,
+    dry_run: bool,
+    log_lines: list[str],
+) -> dict[str, int]:
+    """スワップ判定用スコア（セクターTier＋時価総額Tier。時価総額Tierは米国枠と符号が逆）を
+    score_tickers分まとめて計算する（2026-10-07追加）。
+
+    Tierの母集団は「その夜の候補(raw_candidates)∪保有銘柄(held_tickers)」（JP枠には米国枠の
+    universe.jsonに相当する固定ユニバースが無いため、moomooスクリーナーが返す当夜のRSI<=35
+    候補集合をそのまま母集団として使う＝仕様「tertiles across the JP candidate universe/holdings
+    the frame uses」どおり）。
+    """
+    universe_tickers = sorted({c["ticker"] for c in raw_candidates} | set(held_tickers))
+    sector_of = get_sector_map_jp(universe_tickers, trading_date, dry_run, log_lines)
+    sector_tiers = get_sector_tiers_jp(trading_date, dry_run, log_lines)
+    mcap_tiers = get_market_cap_tiers_jp(raw_candidates, held_tickers, log_lines)
+    return {
+        t: rsi_strategy.compute_swap_score(t, sector_of, sector_tiers, mcap_tiers) for t in score_tickers
+    }
+
+
+def _run_swaps_jp(
+    state: dict[str, Any],
+    unfunded_entries: list[dict[str, Any]],
+    raw_candidates: list[dict[str, Any]],
+    market_prices: dict[str, float],
+    trading_date: str,
+    log_lines: list[str],
+) -> list[dict[str, Any]]:
+    """資金不足の新規エントリー候補を、保有ロットの入れ替え売りで拾えるか判定し台帳へ反映する
+    （2026-10-07追加。moomoo発注は一切行わない台帳のみの仮想売買。売り・買いともその日の
+    終値で即時約定として扱うため、米国枠にある「売りが未達なら買わない」分岐は無い）。
+    """
+    accepted: list[dict[str, Any]] = []
+    sell_candidates = rsi_strategy.select_swap_sell_candidates(state["lots"], market_prices)
+    if not sell_candidates:
+        log_lines.append(f"[JP-SWAP] 資金不足候補{len(unfunded_entries)}件だが売却可能なロットが無く入れ替え不可")
+        return accepted
+
+    held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
+    score_tickers = sorted({c["ticker"] for c in unfunded_entries} | {lot["ticker"] for lot in sell_candidates})
+    scores = _compute_swap_scores_jp(
+        raw_candidates, held_tickers, score_tickers, trading_date, dry_run=False, log_lines=log_lines,
+    )
+    decisions = rsi_strategy.decide_swaps(unfunded_entries, sell_candidates, scores, state["cash_jpy"])
+    if not decisions:
+        log_lines.append(f"[JP-SWAP] 資金不足候補{len(unfunded_entries)}件だが入れ替え条件を満たさず見送り")
+        return accepted
+
+    for decision in decisions:
+        buy = decision["buy"]
+        sold_rows: list[dict[str, Any]] = []
+        for sell in decision["sells"]:
+            idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == sell["lot_id"])
+            qty = int(sell["shares"])
+            price = sell["price"]
+            realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(sell["avg_cost"], price, qty)
+            state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(state["lots"][idx], qty, trading_date, reason="swap")
+            state["cash_jpy"] += qty * price
+            trade_row = {
+                "date": trading_date, "action": "SELL", "ticker": sell["ticker"],
+                "shares": qty, "price": round(price, 2), "amount_jpy": round(qty * price, 0),
+                "rule": "swap", "lot_id": sell["lot_id"],
+                "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
+                "note": (
+                    f"入れ替え買い{buy['ticker']}のため(score={scores.get(sell['ticker'], 0)})・"
+                    "moomoo発注なし・台帳のみの仮想売買"
+                ),
+                "name": state["lots"][idx].get("name"),
+            }
+            jp_rsi_ledger.append_trade_row(trade_row)
+            accepted.append(trade_row)
+            sold_rows.append(sell)
+
+        lot_id = _new_lot_id_jp(buy["ticker"], trading_date, state["lots"])
+        new_lot = rsi_strategy.new_lot(
+            buy["ticker"], lot_id, trading_date, buy["qty"], buy["price"], buy["lot_size"], name=buy.get("name"),
+        )
+        state["lots"].append(new_lot)
+        cost = buy["qty"] * buy["price"]
+        state["cash_jpy"] -= cost
+        trade_row = {
+            "date": trading_date, "action": "BUY", "ticker": buy["ticker"],
+            "shares": buy["qty"], "price": round(buy["price"], 2), "amount_jpy": round(cost, 0),
+            "rule": "entry", "lot_id": lot_id,
+            "note": (
+                f"RSI14={buy['rsi14']:.1f} lot_size={buy['lot_size']}・"
+                f"入れ替え(score={scores.get(buy['ticker'], 0)})・moomoo発注なし・台帳のみの仮想売買"
+            ),
+            "name": buy.get("name"),
+        }
+        jp_rsi_ledger.append_trade_row(trade_row)
+        accepted.append(trade_row)
+
+        sold_desc = ", ".join(
+            f"{s['ticker']}(score={scores.get(s['ticker'], 0)},含み損{(s['price'] / s['avg_cost'] - 1) * 100:.1f}%)"
+            for s in sold_rows
+        ) or "(売却なし)"
+        log_lines.append(
+            f"[JP-SWAP] 入れ替え成立: {buy['ticker']}(score={scores.get(buy['ticker'], 0)}) ← 売却: {sold_desc}"
+        )
+
+    return accepted
+
+
+def _preview_swaps_jp(
+    state: dict[str, Any],
+    unfunded_entries: list[dict[str, Any]],
+    raw_candidates: list[dict[str, Any]],
+    market_prices: dict[str, float],
+    trading_date: str,
+    log_lines: list[str],
+) -> None:
+    """dry-run専用: 今夜もし売買するならどのスワップが決まるかをログに残すだけの関数
+    （2026-10-07追加。台帳変更・ファイル書き込みは一切行わない）。
+    """
+    sell_candidates = rsi_strategy.select_swap_sell_candidates(state["lots"], market_prices)
+    if not sell_candidates:
+        log_lines.append(f"[JP-SWAP] [dry-run] 資金不足候補{len(unfunded_entries)}件だが売却可能なロットが無く入れ替え不可")
+        return
+
+    held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
+    score_tickers = sorted({c["ticker"] for c in unfunded_entries} | {lot["ticker"] for lot in sell_candidates})
+    scores = _compute_swap_scores_jp(
+        raw_candidates, held_tickers, score_tickers, trading_date, dry_run=True, log_lines=log_lines,
+    )
+    decisions = rsi_strategy.decide_swaps(unfunded_entries, sell_candidates, scores, state["cash_jpy"])
+    if not decisions:
+        log_lines.append(f"[JP-SWAP] [dry-run] 資金不足候補{len(unfunded_entries)}件だが入れ替え条件を満たさず見送り予定")
+        return
+
+    for decision in decisions:
+        buy = decision["buy"]
+        sold_desc = ", ".join(
+            f"{s['ticker']}(score={scores.get(s['ticker'], 0)})" for s in decision["sells"]
+        ) or "(売却なし)"
+        log_lines.append(
+            f"[JP-SWAP] [dry-run予告] {buy['ticker']}(score={scores.get(buy['ticker'], 0)}) ← 売却: {sold_desc}"
+        )
+
+
 def compute_snapshot_only_jp(jp_state: dict[str, Any]) -> tuple[float, dict[str, JpSnapshot]]:
     """保有銘柄の価格だけを取得してNAVを計算する（--report-only・異常停止時用）。"""
     held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(jp_state)})
@@ -452,6 +715,15 @@ def run_jp(
         log_lines.append(f"[JP-1] {ticker} は会社の株ではないため対象外（REIT等）")
     for ticker in no_lotsize:
         log_lines.append(f"[JP-1] 新規エントリー見送り(lot_size不明): {ticker}")
+
+    # dry-run専用のスワップ売却プレビュー（2026-10-07追加）。do_trade=Falseのため本番実行では
+    # 通らない経路（下のdo_trade内で改めて正式に判定・台帳反映する）。ファイル書き込みは行わない。
+    if dry_run:
+        _, preview_unfunded = rsi_strategy.select_entries_with_unfunded(
+            entry_candidates, state["cash_jpy"], rsi_strategy.JP_RULES,
+        )
+        if preview_unfunded:
+            _preview_swaps_jp(state, preview_unfunded, raw_candidates, market_prices, trading_date, log_lines)
 
     do_trade = not already_processed_today and not dry_run
 
@@ -556,7 +828,9 @@ def run_jp(
                 accepted_trades.append(trade_row)
 
         # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ。保有中・利確前は抑止済み） ---
-        selected = rsi_strategy.select_entries_within_cash(entry_candidates, state["cash_jpy"], rsi_strategy.JP_RULES)
+        selected, unfunded_entries = rsi_strategy.select_entries_with_unfunded(
+            entry_candidates, state["cash_jpy"], rsi_strategy.JP_RULES,
+        )
         for cand in selected:
             lot_id = _new_lot_id_jp(cand["ticker"], trading_date, state["lots"])
             new_lot = rsi_strategy.new_lot(
@@ -576,8 +850,14 @@ def run_jp(
             jp_rsi_ledger.append_trade_row(trade_row)
             accepted_trades.append(trade_row)
 
+        # --- 4. スワップ売却（資金不足の候補を保有ロットの入れ替え売りで拾う。2026-10-07追加。
+        #     台帳のみの仮想売買のため、米国枠にある「売りが未達なら買わない」分岐は無い） ---
+        if unfunded_entries:
+            swap_trades = _run_swaps_jp(state, unfunded_entries, raw_candidates, market_prices, trading_date, log_lines)
+            accepted_trades.extend(swap_trades)
+
         state["last_processed_date"] = trading_date
-        log_lines.append(f"[JP-2] 約定{len(accepted_trades)}件（損切り/利確/買い増し/新規エントリー込み）")
+        log_lines.append(f"[JP-2] 約定{len(accepted_trades)}件（損切り/利確/買い増し/新規エントリー/スワップ込み）")
     else:
         reason = "dry-run" if dry_run else "処理済み"
         log_lines.append(f"[JP-2] 売買スキップ（{reason}）")

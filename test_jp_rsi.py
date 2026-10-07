@@ -8,8 +8,12 @@ rsi_strategy.py（米国RSI-32枠と共用のルールエンジン）にJP_RULES
 from __future__ import annotations
 
 import datetime as dt
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -305,6 +309,254 @@ class TestGetSnapshotsNanCloseFallback(unittest.TestCase):
 
         self.assertNotIn("6367", result)
         self.assertEqual(result, {})
+
+
+# ---------------------------------------------------------------------------
+# スワップ売却（JP枠。2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂2」参照）
+# ---------------------------------------------------------------------------
+
+def _jp_lot(ticker, lot_id, avg_cost, shares, lot_size=100, profit1_taken=False, profit2_taken=False):
+    return {
+        "lot_id": lot_id, "ticker": ticker, "name": None,
+        "initial_entry_date": "2026-09-01", "initial_entry_price": avg_cost,
+        "pyramid_done": [False, False, False], "shares": shares, "lot_size": lot_size,
+        "total_invested_usd": shares * avg_cost, "avg_cost": avg_cost,
+        "profit1_taken": profit1_taken, "profit2_taken": profit2_taken, "base_shares": None,
+        "exception_active": False, "exception_deadline_date": None,
+        "closed": False, "closed_reason": None, "closed_date": None,
+    }
+
+
+def _jp_state(**overrides):
+    base = {"start_date": "2026-08-24", "cash_jpy": 0.0, "lots": [], "last_processed_date": None}
+    base.update(overrides)
+    return base
+
+
+class TestGetMarketCapTiersJp(unittest.TestCase):
+    """JP枠は時価総額Tierの符号を米国枠と反転する（小型+1/大型-1）。データ源はfrozen候補の
+    market_cap（moomooスクリーナー由来）を優先し、保有銘柄で候補に無い分だけyfinanceで補う
+    （2026-10-07追加）。"""
+
+    def test_small_cap_gets_plus_one_large_cap_gets_minus_one(self):
+        raw_candidates = [
+            {"ticker": "SMALL", "rsi14": 20.0, "price": 1000.0, "market_cap": 1.0e11},
+            {"ticker": "MID", "rsi14": 25.0, "price": 1000.0, "market_cap": 5.0e11},
+            {"ticker": "LARGE", "rsi14": 30.0, "price": 1000.0, "market_cap": 9.0e11},
+        ]
+        tiers = jp_rsi_daily.get_market_cap_tiers_jp(raw_candidates, held_tickers=[], log_lines=[])
+        self.assertEqual(tiers["SMALL"], 1)   # 米国枠なら-1になるところがJPは+1
+        self.assertEqual(tiers["LARGE"], -1)  # 米国枠なら+1になるところがJPは-1
+
+    def test_held_ticker_missing_from_candidates_falls_back_to_yfinance(self):
+        raw_candidates = [{"ticker": "SMALL", "rsi14": 20.0, "price": 1000.0, "market_cap": 1.0e11}]
+        with patch("jp_rsi_daily.jp_market.get_market_caps", return_value={"HELD": 9.0e11}) as mock_caps:
+            tiers = jp_rsi_daily.get_market_cap_tiers_jp(raw_candidates, held_tickers=["HELD"], log_lines=[])
+
+        mock_caps.assert_called_once_with(["HELD"])
+        self.assertEqual(tiers["HELD"], -1)  # 大型株なのでJPでは-1
+
+    def test_no_caps_available_returns_empty_dict_without_crashing(self):
+        with patch("jp_rsi_daily.jp_market.get_market_caps", return_value={}):
+            tiers = jp_rsi_daily.get_market_cap_tiers_jp([], held_tickers=["X"], log_lines=[])
+        self.assertEqual(tiers, {})
+
+
+class TestSectorMapJpMonthlyCaching(unittest.TestCase):
+    def test_cache_reused_within_same_month(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            with patch.object(config, "RSI_JP_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("jp_rsi_daily.jp_market.get_info", return_value={"industry": "Semiconductors"}) as mock_info:
+                first = jp_rsi_daily.get_sector_map_jp(["6758"], "2026-10-07", dry_run=False, log_lines=[])
+                second = jp_rsi_daily.get_sector_map_jp(["6758"], "2026-10-20", dry_run=False, log_lines=[])
+
+            mock_info.assert_called_once()  # 同じ月の2回目は呼ばない
+            self.assertEqual(first, second)
+            self.assertEqual(first["6758"], "1625")
+            self.assertTrue(fake_path.exists())
+
+    def test_dry_run_does_not_write_cache_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            with patch.object(config, "RSI_JP_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("jp_rsi_daily.jp_market.get_info", return_value={"industry": "Semiconductors"}):
+                result = jp_rsi_daily.get_sector_map_jp(["6758"], "2026-10-07", dry_run=True, log_lines=[])
+
+            self.assertEqual(result["6758"], "1625")
+            self.assertFalse(fake_path.exists())  # dry-runはledger/配下を一切変更しない
+
+
+class TestSectorTiersJpMonthlyCaching(unittest.TestCase):
+    def test_cache_reused_within_same_month(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_tiers.json"
+            returns = {code: 0.01 * i for i, code in enumerate(config.RSI_JP_SWAP_SECTOR_ETFS)}
+            with patch.object(config, "RSI_JP_SWAP_SECTOR_TIERS_PATH", fake_path), \
+                 patch("jp_rsi_daily.jp_market.get_sector_etf_returns", return_value=returns) as mock_returns:
+                first = jp_rsi_daily.get_sector_tiers_jp("2026-10-07", dry_run=False, log_lines=[])
+                second = jp_rsi_daily.get_sector_tiers_jp("2026-10-20", dry_run=False, log_lines=[])
+
+            mock_returns.assert_called_once()
+            self.assertEqual(first, second)
+            # 17本 → 6/6/5（divmod(17,3)=(5,2)でsizes=[6,6,5]）
+            self.assertEqual(sum(1 for v in first.values() if v == 1), 6)
+            self.assertEqual(sum(1 for v in first.values() if v == 0), 6)
+            self.assertEqual(sum(1 for v in first.values() if v == -1), 5)
+
+    def test_insufficient_etf_returns_falls_back_without_crashing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_tiers.json"
+            with patch.object(config, "RSI_JP_SWAP_SECTOR_TIERS_PATH", fake_path), \
+                 patch("jp_rsi_daily.jp_market.get_sector_etf_returns", return_value={"1617": 0.01}):
+                result = jp_rsi_daily.get_sector_tiers_jp("2026-10-07", dry_run=False, log_lines=[])
+
+            self.assertEqual(result, {})
+            self.assertFalse(fake_path.exists())
+
+
+class TestRunSwapsJp(unittest.TestCase):
+    """JP枠のスワップ実行（台帳のみの仮想売買）。スコア計算(_compute_swap_scores_jp)は
+    固定値へ差し替え、rsi_strategy.decide_swaps以降の挙動だけを検証する
+    （スコア計算そのものは米国枠と共用のためtest_rsi_strategy.pyで検証済み）。"""
+
+    def test_runner_lot_is_never_sold_even_with_deepest_loss(self):
+        runner = _jp_lot("RUNNER", "RUNNER-1", avg_cost=1000.0, shares=100,
+                          profit1_taken=True, profit2_taken=True)
+        seller = _jp_lot("SELLER", "SELLER-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[runner, seller], cash_jpy=0.0)
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 500.0, "qty": 100,
+                     "cost": 50_000.0, "lot_size": 100, "name": None}]
+        market_prices = {"RUNNER": 400.0, "SELLER": 500.0}  # どちらも含み損だがRUNNERは伸ばす玉
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp", return_value={"BUY": 2, "SELLER": -1, "RUNNER": -1}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row"):
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        sold_tickers = {t["ticker"] for t in accepted if t["action"] == "SELL"}
+        self.assertEqual(sold_tickers, {"SELLER"})
+        self.assertNotIn("RUNNER", sold_tickers)
+        self.assertFalse(state["lots"][0]["closed"])  # RUNNERは無傷のまま
+
+    def test_multi_sell_when_one_lot_is_not_enough(self):
+        seller_a = _jp_lot("A", "A-1", avg_cost=1000.0, shares=100)
+        seller_b = _jp_lot("B", "B-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[seller_a, seller_b], cash_jpy=0.0)
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 900.0, "qty": 100,
+                     "cost": 90_000.0, "lot_size": 100, "name": None}]
+        market_prices = {"A": 450.0, "B": 480.0}  # 各45,000円・48,000円の売却見込み。2件必要
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp", return_value={"BUY": 2, "A": -1, "B": -1}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row"):
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        sold = [t for t in accepted if t["action"] == "SELL"]
+        self.assertEqual({t["ticker"] for t in sold}, {"A", "B"})
+        bought = [t for t in accepted if t["action"] == "BUY"]
+        self.assertEqual(len(bought), 1)
+        self.assertEqual(bought[0]["ticker"], "BUY")
+        self.assertEqual(bought[0]["rule"], "entry")  # 買いは通常のentryルール名のまま
+        for row in sold:
+            self.assertEqual(row["rule"], "swap")
+
+    def test_strict_score_condition_blocks_equal_or_higher_scored_sells(self):
+        # 売却候補のスコアが買い候補と同点のため、スワップは成立しない
+        seller = _jp_lot("SELLER", "SELLER-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[seller], cash_jpy=0.0)
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 500.0, "qty": 100,
+                     "cost": 50_000.0, "lot_size": 100, "name": None}]
+        market_prices = {"SELLER": 500.0}
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp", return_value={"BUY": 0, "SELLER": 0}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row") as mock_append:
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        self.assertEqual(accepted, [])
+        mock_append.assert_not_called()
+        self.assertFalse(state["lots"][0]["closed"])
+
+    def test_highest_score_unfunded_candidate_is_resolved_first(self):
+        seller = _jp_lot("SELLER", "SELLER-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[seller], cash_jpy=0.0)
+        # LOW(score=0)はSELLER(score=-1)一本では賄えず、SELLERがHIGHに使われた後は
+        # 売却候補が尽きるため成立しない。HIGH(score=2)はスコア降順で先に判定されるため成立する。
+        unfunded = [
+            {"ticker": "LOW", "rsi14": 15.0, "price": 500.0, "qty": 50, "cost": 25_000.0,
+             "lot_size": 100, "name": None},
+            {"ticker": "HIGH", "rsi14": 20.0, "price": 500.0, "qty": 100, "cost": 50_000.0,
+             "lot_size": 100, "name": None},
+        ]
+        market_prices = {"SELLER": 500.0}
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp",
+                   return_value={"LOW": 0, "HIGH": 2, "SELLER": -1}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row"):
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        bought = [t["ticker"] for t in accepted if t["action"] == "BUY"]
+        self.assertEqual(bought, ["HIGH"])
+
+    def test_ledger_only_no_pending_orders_tracked(self):
+        """JP枠は発注が無いため、約定結果待ちのpending_orders概念が一切登場しないこと。"""
+        seller = _jp_lot("SELLER", "SELLER-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[seller], cash_jpy=0.0)
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 500.0, "qty": 100,
+                     "cost": 50_000.0, "lot_size": 100, "name": None}]
+        market_prices = {"SELLER": 500.0}
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp", return_value={"BUY": 2, "SELLER": -1}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row"):
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        self.assertNotIn("pending_orders", state)
+        self.assertEqual(len(accepted), 2)
+        self.assertEqual(state["cash_jpy"], 0.0)  # 売却50,000円を得て同額を即買付
+
+
+class TestSwapSellTriggersJpReentryRule(unittest.TestCase):
+    """スワップ売却も損切りと同じ15%/10営業日の再エントリー制限の対象になること（2026-10-07改訂2。
+    rsi_strategy.STOP_LOSS_LIKE_RULESは米国枠と共用のため"swap"は既に含まれている。JP枠の
+    trade_rowでrule="swap"が記録されれば自動的に対象になることを確認する）。"""
+
+    def test_swap_trade_row_blocks_reentry_like_stop_loss(self):
+        seller = _jp_lot("SELLER", "SELLER-1", avg_cost=1000.0, shares=100)
+        state = _jp_state(lots=[seller], cash_jpy=0.0)
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 500.0, "qty": 100,
+                     "cost": 50_000.0, "lot_size": 100, "name": None}]
+        market_prices = {"SELLER": 500.0}
+
+        with patch("jp_rsi_daily._compute_swap_scores_jp", return_value={"BUY": 2, "SELLER": -1}), \
+             patch("jp_rsi_daily.jp_rsi_ledger.append_trade_row"):
+            accepted = jp_rsi_daily._run_swaps_jp(
+                state, unfunded, raw_candidates=[], market_prices=market_prices,
+                trading_date="2026-10-07", log_lines=[],
+            )
+
+        sell_row = next(t for t in accepted if t["action"] == "SELL")
+        self.assertEqual(sell_row["rule"], "swap")
+
+        history = rs.latest_rule_closures([sell_row])
+        self.assertIn("SELLER", history)
+
+        candidates = [{"ticker": "SELLER", "price": 500.0}]  # 500 > 500*0.85なのでまだブロック対象
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-08")
+        self.assertEqual(allowed, [])
+        self.assertEqual([b["ticker"] for b in blocked], ["SELLER"])
 
 
 if __name__ == "__main__":

@@ -261,6 +261,8 @@
     同じ銘柄は保有中1ロットまで。開始資金 1億円。
     <strong>moomooに日本の仮想口座が存在しないため、この枠だけ実際の発注を伴わない台帳上の仮想売買</strong>
     （約定価格はその日の終値をそのまま使う）。
+    資金不足で新規候補が買えない夜は、セクター・時価総額スコア（時価総額は米国枠と逆に小型株が有利）が
+    より低い含み損ロットを売って入れ替えることがある（入れ替え）。
   </div>
 
   <section>
@@ -665,8 +667,9 @@ async function load() {
           pnlStr = `${sign}¥${pnl.toLocaleString()} (${sign}${pnlPct.toFixed(2)}%)`;
           pnlCls = pnl >= 0 ? "win" : "lose";
         }
+        const ruleLabel = t.rule === "swap" ? "入れ替え" : t.rule;
         tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
-          `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${t.rule}</td>` +
+          `<td class="num">${t.shares}</td><td class="num">¥${amt}</td><td>${ruleLabel}</td>` +
           `<td class="num ${pnlCls}">${pnlStr}</td>`;
         jpTradesBody.appendChild(tr);
       });

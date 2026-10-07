@@ -110,6 +110,59 @@ def get_splits(ticker: str) -> list[tuple[str, float]] | None:
     return [(idx.date().isoformat(), float(val)) for idx, val in splits.items() if val and float(val) > 0]
 
 
+def get_info(ticker: str) -> dict | None:
+    """yfinanceの.info辞書（sector/industry/marketCap等を含む）を返す（2026-10-07追加・
+    JP枠スワップ売却機能）。取得失敗・空の場合はNone（呼び出し側はWARNINGを出して
+    その銘柄をTier0扱いで続行する）。
+    """
+    yf_ticker = ticker_to_yf(ticker)
+    try:
+        info = yf.Ticker(yf_ticker).info
+    except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+        logger.warning("%s: yfinanceのinfo取得に失敗した: %s", yf_ticker, e)
+        return None
+    if not info:
+        logger.warning("%s: yfinanceのinfoが空", yf_ticker)
+        return None
+    return info
+
+
+def get_market_caps(tickers: list[str]) -> dict[str, float]:
+    """yfinanceのinfo['marketCap']を取得する（2026-10-07追加・JP枠スワップ売却機能）。
+    1銘柄の取得失敗は無視して続行する（get_snapshotsと同じ縮退方針）。
+    取得できた銘柄だけを含む辞書を返す（全滅してもNoneにはせず空辞書）。
+    """
+    result: dict[str, float] = {}
+    for ticker in tickers:
+        info = get_info(ticker)
+        cap = info.get("marketCap") if info else None
+        if cap is not None and cap == cap and float(cap) > 0:  # cap==capはNaN除外
+            result[ticker] = float(cap)
+    return result
+
+
+def get_sector_etf_returns(etf_codes: tuple[str, ...], lookback_trading_days: int) -> dict[str, float] | None:
+    """TOPIX-17シリーズETF（銘柄コードのみ。例: "1617"）の直近lookback_trading_days営業日
+    リターン(比率)をyfinanceから取得する（2026-10-07追加・JP枠スワップ売却機能。月初回のみ
+    呼ぶ想定）。個別ETFの取得失敗はそのETFを戻り値から省く。1件も取得できなければ空辞書
+    （呼び出し側が本数不足として扱い、既存キャッシュへフォールバックする）。
+    """
+    result: dict[str, float] = {}
+    for code in etf_codes:
+        yf_ticker = ticker_to_yf(code)
+        try:
+            hist = yf.Ticker(yf_ticker).history(period="3mo", auto_adjust=False)
+        except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+            logger.warning("get_sector_etf_returns: %s のhistory取得に失敗した: %s", yf_ticker, e)
+            continue
+        closes = hist["Close"].dropna().tolist() if not hist.empty else []
+        if len(closes) <= lookback_trading_days:
+            logger.warning("get_sector_etf_returns: %s の本数不足(%d本)", yf_ticker, len(closes))
+            continue
+        result[code] = closes[-1] / closes[-1 - lookback_trading_days] - 1.0
+    return result
+
+
 def get_dividends(ticker: str) -> list[tuple[str, float]] | None:
     """yfinanceから1株あたりの現金配当履歴を [(ex_date "YYYY-MM-DD", per_share_jpy), ...] で返す
     （2026-10-07追加・Change3）。取得失敗はNone（呼び出し側はWARNINGを出して記帳なしで続行する）。
