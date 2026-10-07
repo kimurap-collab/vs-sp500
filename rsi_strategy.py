@@ -609,12 +609,16 @@ def rank_sector_etf_tiers(etf_returns: dict[str, float]) -> dict[str, int]:
     return tiers
 
 
-def compute_market_cap_tiers(market_caps: dict[str, float]) -> dict[str, int]:
-    """米国ユニバース全体の時価総額から3分位Tier(+1/0/-1)を返す（2026-10-07追加。
-    大将「5)1」＝小型株は不利に）。
+def compute_market_cap_tiers(
+    market_caps: dict[str, float], favor_small_cap: bool = False,
+) -> dict[str, int]:
+    """時価総額から3分位Tier(+1/0/-1)を返す（2026-10-07追加。大将「5)1」＝小型株は不利に。
+    2026-10-07改訂で米国枠・日本株RSI枠の両方がfavor_small_cap=Trueの小型株有利に変更。
+    フレーム間でこの方向を変えるのはfavor_small_capのみとし、Tier計算ロジック自体は共用する）。
 
     参照実装のpandas rank(pct=True)（上位1/3超→+1・下位1/3以下→-1・それ以外→0）と同じ閾値を、
     昇順に並べた順位の百分位で近似する（タイの扱いが厳密に同一ではないが閾値は同じ）。
+    favor_small_cap=Trueのときはこの符号を反転する（小型株+1・大型株-1）。
     market_capsに無い・0以下・NaNの銘柄は戻り値に含めない（呼び出し側がdict.get(t, 0)で0扱い）。
     """
     valid = {t: v for t, v in market_caps.items() if v is not None and v == v and v > 0}
@@ -626,11 +630,12 @@ def compute_market_cap_tiers(market_caps: dict[str, float]) -> dict[str, int]:
     for rank, (ticker, _cap) in enumerate(ordered):
         pct = (rank + 1) / n
         if pct > 2 / 3:
-            tiers[ticker] = 1
+            tier = 1
         elif pct <= 1 / 3:
-            tiers[ticker] = -1
+            tier = -1
         else:
-            tiers[ticker] = 0
+            tier = 0
+        tiers[ticker] = -tier if favor_small_cap else tier
     return tiers
 
 

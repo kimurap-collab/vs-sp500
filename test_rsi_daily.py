@@ -561,6 +561,15 @@ class TestMarketCapTiersNoCaching(unittest.TestCase):
 
         self.assertEqual(result, {})
 
+    def test_small_cap_gets_plus_one_large_cap_gets_minus_one(self):
+        """2026-10-07改訂3: 米国RSI枠もJP枠と同じ小型株有利に変更。"""
+        caps = {f"T{i}": float(i) for i in range(1, 10)}  # 9銘柄: 1..9（時価総額昇順）
+        with patch("rsi_daily.broker.get_market_caps", return_value=caps):
+            tiers = rsi_daily.get_market_cap_tiers(list(caps), log_lines=[])
+
+        self.assertEqual(tiers["T1"], 1)   # 最小（小型株）は有利に
+        self.assertEqual(tiers["T9"], -1)  # 最大（大型株）は不利に
+
 
 class TestUsFrameUnaffectedByJpSwapExtension(unittest.TestCase):
     """スワップ売却を日本株RSI枠にも追加した際、米国RSI枠の既存関数は複製せず共用のまま

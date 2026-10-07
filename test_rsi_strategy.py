@@ -589,6 +589,14 @@ class TestComputeMarketCapTiers(unittest.TestCase):
         self.assertNotIn("CCC", tiers)
         self.assertNotIn("DDD", tiers)
 
+    def test_favor_small_cap_reverses_sign(self):
+        """2026-10-07改訂3: favor_small_cap=Trueで小型株+1・大型株-1に反転（米国枠・JP枠共用）。"""
+        caps = {f"T{i}": float(i) for i in range(1, 10)}  # 9銘柄: 1..9（昇順）
+        tiers = rs.compute_market_cap_tiers(caps, favor_small_cap=True)
+        self.assertEqual(tiers["T9"], -1)  # 最大（大型株）は不利に
+        self.assertEqual(tiers["T1"], 1)   # 最小（小型株）は有利に
+        self.assertEqual(tiers["T5"], 0)   # 中位は変わらず0
+
 
 class TestComputeSwapScore(unittest.TestCase):
     def test_known_sector_and_cap_sum_to_score(self):

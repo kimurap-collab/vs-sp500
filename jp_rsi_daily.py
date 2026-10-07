@@ -460,10 +460,11 @@ def get_sector_tiers_jp(trading_date: str, dry_run: bool, log_lines: list[str]) 
 def get_market_cap_tiers_jp(
     raw_candidates: list[dict[str, Any]], held_tickers: list[str], log_lines: list[str],
 ) -> dict[str, int]:
-    """JP候補ユニバース(raw_candidates)∪保有銘柄(held_tickers)の時価総額から3分位Tierを求め、
-    米国枠と符号を反転して返す（2026-10-07追加・大将「5)1」の日本株版＝小型株は時価総額Tierで
-    不利、のFableによる代替案＝小型株を有利にする。5年分のバックテストで10/10勝ち越しを確認し
-    「いけ」で承認済み）。毎晩実行しキャッシュしない（米国枠と同じ方針）。
+    """JP候補ユニバース(raw_candidates)∪保有銘柄(held_tickers)の時価総額から3分位Tierを求める
+    （2026-10-07追加・大将「5)1」の日本株版＝小型株は時価総額Tierで不利、のFableによる代替案＝
+    小型株を有利にする。5年分のバックテストで10/10勝ち越しを確認し「いけ」で承認済み。
+    2026-10-07改訂で米国枠もこの方向に揃えたため、向きはconfig.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL
+    で指定するだけで済み、米国枠との差は無くなった）。毎晩実行しキャッシュしない（米国枠と同じ方針）。
 
     時価総額データは2系統を使う:
       - raw_candidatesの"market_cap"（moomooスクリーナーが1回の呼び出しで既に返している値。
@@ -484,8 +485,9 @@ def get_market_cap_tiers_jp(
         log_lines.append(msg)
         return {}
 
-    tiers = rsi_strategy.compute_market_cap_tiers(caps)
-    return {ticker: -tier for ticker, tier in tiers.items()}  # JPは符号反転: 小型+1/大型-1
+    return rsi_strategy.compute_market_cap_tiers(
+        caps, favor_small_cap=config.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL,
+    )
 
 
 def _compute_swap_scores_jp(
@@ -496,8 +498,9 @@ def _compute_swap_scores_jp(
     dry_run: bool,
     log_lines: list[str],
 ) -> dict[str, int]:
-    """スワップ判定用スコア（セクターTier＋時価総額Tier。時価総額Tierは米国枠と符号が逆）を
-    score_tickers分まとめて計算する（2026-10-07追加）。
+    """スワップ判定用スコア（セクターTier＋時価総額Tier）を
+    score_tickers分まとめて計算する（2026-10-07追加。時価総額Tierの向きは当初米国枠と逆だったが、
+    2026-10-07改訂で米国枠もJP枠と同じ小型株有利に揃えたため差は無い）。
 
     Tierの母集団は「その夜の候補(raw_candidates)∪保有銘柄(held_tickers)」（JP枠には米国枠の
     universe.jsonに相当する固定ユニバースが無いため、moomooスクリーナーが返す当夜のRSI<=35

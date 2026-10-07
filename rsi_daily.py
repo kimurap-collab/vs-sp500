@@ -685,7 +685,8 @@ def get_sector_tiers(trade_date: str, dry_run: bool, log_lines: list[str]) -> di
 
 def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> dict[str, int]:
     """米国ユニバース全体の時価総額を取得し3分位Tier(-1/0/+1)を返す（2026-10-07追加・毎晩。
-    キャッシュしない＝呼ばれるたびmoomooから取り直す。get_market_snapshotはkline枠を消費しない）。
+    キャッシュしない＝呼ばれるたびmoomooから取り直す。get_market_snapshotはkline枠を消費しない。
+    方向は2026-10-07改訂でJP枠と同じ小型株有利に変更＝config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL）。
     """
     caps = broker.get_market_caps(universe_tickers)
     if caps is None:
@@ -696,7 +697,9 @@ def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> d
     missing = len(universe_tickers) - len(caps)
     if missing:
         logger.warning("RSI-SWAP: 時価総額が取得できなかった銘柄 %d件", missing)
-    return rsi_strategy.compute_market_cap_tiers(caps)
+    return rsi_strategy.compute_market_cap_tiers(
+        caps, favor_small_cap=config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL,
+    )
 
 
 def _compute_swap_scores(

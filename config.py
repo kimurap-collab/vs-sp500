@@ -151,6 +151,9 @@ RSI_SWAP_SECTOR_RETURN_LOOKBACK_TRADING_DAYS = 21  # 大将「一ヶ月に一度
 RSI_SWAP_SECTOR_TIERS_PATH = RSI_LEDGER_DIR / "sector_tiers.json"
 RSI_SWAP_SECTOR_MAP_PATH = RSI_LEDGER_DIR / "sector_map.json"
 RSI_SWAP_MOOMOO_BATCH_SIZE = 200  # get_owner_plate/get_market_snapshot 1回あたりの上限件数（スクリーナーと同じページサイズ）
+# 時価総額Tierの方向（2026-10-07改訂。旧値False=大型株+1/小型株-1。JP枠と同じ「小型株有利」に変更。
+# 5年バックテストで小型株有利側が10/10勝ち越し、大将「いけ」で承認。SPEC_RSI30.md「2026-10-07改訂3」参照）
+RSI_SWAP_MARKET_CAP_FAVOR_SMALL = True
 
 # --- 日本株RSI枠（2026-08-24 SPEC_RSI30.md追補。3本目の戦略枠。円建て・ベンチマーク無し） ---
 RSI_JP_LEDGER_DIR = LEDGER_DIR / "rsi_jp"
@@ -189,3 +192,5 @@ RSI_JP_SWAP_SECTOR_ETFS = (
 )  # TOPIX-17シリーズETF（NEXT FUNDS。銘柄コードのみ。yfinanceでは"{code}.T"に変換して使う）
 RSI_JP_SWAP_SECTOR_TIERS_PATH = RSI_JP_LEDGER_DIR / "sector_tiers.json"
 RSI_JP_SWAP_SECTOR_MAP_PATH = RSI_JP_LEDGER_DIR / "sector_map.json"
+# 時価総額Tierの方向: 小型株有利（元から米国枠と逆に設定。2026-10-07改訂で米国枠もこちらに揃えた）
+RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL = True
