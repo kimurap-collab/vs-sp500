@@ -26,6 +26,7 @@ brokerに触れずにルールだけを検証する。
 from __future__ import annotations
 
 import datetime as dt
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -113,6 +114,24 @@ def business_days_since(start_date: str, current_date: str) -> int:
         if d.weekday() < 5:
             count += 1
     return count
+
+
+def is_valid_price(price: float | None) -> bool:
+    """価格が判定に使える値か（None・NaN・inf・0以下はいずれも不正）。
+
+    2026-08-26にyfinanceがJP株のcloseをNaNで返し、`price < threshold`の比較が
+    常にFalseになることでdecide_profit_takesの例外発動条件を誤って満たしてしまった
+    事故の再発防止。呼び出し側（rsi_daily.py・jp_rsi_daily.py）は価格を取得したら
+    decide_*系を呼ぶ前にこれで検査し、不正ならそのロットのその日の判定を全てスキップする。
+    """
+    if price is None:
+        return False
+    try:
+        if not math.isfinite(price):
+            return False
+    except TypeError:
+        return False
+    return price > 0
 
 
 def should_enter(rsi14: float, rules: StrategyRules = US_RULES) -> bool:

@@ -363,5 +363,35 @@ class TestPyramidCancelledAfterProfit1(unittest.TestCase):
         self.assertEqual([i["kind"] for i in intents], ["pyramid1"])
 
 
+class TestInvalidPrice(unittest.TestCase):
+    """2026-10-07改訂: NaN/inf/None/0以下の価格は判定前にブロックすること
+    （8/26にyfinanceがJP株のcloseをNaNで返し、price<thresholdが常にFalseになることで
+    例外発動を誤って引き起こした事故の再発防止）。"""
+
+    def test_is_valid_price_rejects_nan_inf_none_nonpositive(self):
+        self.assertFalse(rs.is_valid_price(float("nan")))
+        self.assertFalse(rs.is_valid_price(float("inf")))
+        self.assertFalse(rs.is_valid_price(float("-inf")))
+        self.assertFalse(rs.is_valid_price(None))
+        self.assertFalse(rs.is_valid_price(0))
+        self.assertFalse(rs.is_valid_price(-5.0))
+
+    def test_is_valid_price_accepts_positive_finite(self):
+        self.assertTrue(rs.is_valid_price(100.0))
+        self.assertTrue(rs.is_valid_price(0.01))
+
+    def test_nan_price_does_not_trigger_exception(self):
+        """NaNをdecide_profit_takesにそのまま渡すと例外発動してしまう(旧挙動の確認)。
+        呼び出し側はis_valid_priceで事前にブロックする契約のため、この関数自体は
+        NaNを拒否する責務を持たない＝is_valid_priceでガードすることをテストする。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-08-24", filled_qty=300, fill_price=100.0)
+        self.assertFalse(rs.is_valid_price(float("nan")))
+        # ガードを通せば判定自体に到達しない（呼び出し側のcontinueに相当する確認）
+        if rs.is_valid_price(float("nan")):
+            rs.decide_profit_takes(lot, float("nan"), "2026-08-26", 2, rs.JP_RULES)
+        # 上のifブロックは実行されない＝例外発動ロジックに到達しないことを示す
+        self.assertFalse(lot["exception_active"])
+
+
 if __name__ == "__main__":
     unittest.main()

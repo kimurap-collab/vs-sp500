@@ -387,6 +387,9 @@ def run_jp(
             if price is None:
                 logger.warning("JP: %s の価格が取得できずロット%sの判定をスキップした", lot["ticker"], lot["lot_id"])
                 continue
+            if not rsi_strategy.is_valid_price(price):
+                logger.warning("JP: %s の価格が不正(%r)のためロット%sの判定をスキップした", lot["ticker"], price, lot["lot_id"])
+                continue
             idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot["lot_id"])
 
             stop = rsi_strategy.decide_stop_loss(state["lots"][idx], price, rsi_strategy.JP_RULES)
@@ -446,6 +449,9 @@ def run_jp(
                 continue
             price = market_prices.get(lot["ticker"])
             if price is None:
+                continue
+            if not rsi_strategy.is_valid_price(price):
+                logger.warning("JP: %s の価格が不正(%r)のためロット%sの判定をスキップした", lot["ticker"], price, lot["lot_id"])
                 continue
             idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == lot["lot_id"])
             for intent in rsi_strategy.decide_pyramid_buys(state["lots"][idx], price, rsi_strategy.JP_RULES):
