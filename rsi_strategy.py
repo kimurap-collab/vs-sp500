@@ -251,8 +251,12 @@ def decide_pyramid_buys(
     1日で複数段の閾値に同時到達した場合（大きな寄り付き）は複数件返す。
     キー名は"amount_usd"のままだが、日本株RSI枠では円建ての金額を保持する
     （new_lotのtotal_invested_usdと同じ命名の名残。intentは呼び出し元がすぐ消費する内部値）。
+
+    利確1(profit1_taken=True)を実施済みのロットは、残っている買い増し段を全てキャンセルする
+    （2026-10-07改訂。利確1で解放された現金が同日中に残っていた買い増し段へ回り、同じ初期エントリー
+    価格基準で買い戻してしまう事故の再発防止。既存ロットも次回呼び出しから自動的にこの対象になる）。
     """
-    if lot["closed"]:
+    if lot["closed"] or lot["profit1_taken"]:
         return []
     intents = []
     base = lot["initial_entry_price"]

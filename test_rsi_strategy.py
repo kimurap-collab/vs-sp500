@@ -336,5 +336,32 @@ class TestCashPriority(unittest.TestCase):
         self.assertEqual([c["ticker"] for c in selected], ["CHEAP"])
 
 
+class TestPyramidCancelledAfterProfit1(unittest.TestCase):
+    """2026-10-07改訂: 利確1実施済みのロットは残りの買い増し段を全て無視すること
+    （大将「１」＝利確1を出した銘柄は、残っている買い増しを取り消す）。"""
+
+    def test_no_pyramid_after_profit1_even_if_threshold_met(self):
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot = {**lot, "profit1_taken": True, "base_shares": 300}
+        # +2.5%の閾値は超えているが、利確1済みなので買い増しは一切出ない
+        intents = rs.decide_pyramid_buys(lot, 102.5, rs.US_RULES)
+        self.assertEqual(intents, [])
+
+    def test_existing_lot_with_profit1_taken_never_pyramids_again(self):
+        """既存ロット（コード変更前にprofit1_taken=Trueになっていたもの）も対象になること。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        lot = {
+            **lot, "profit1_taken": True, "pyramid_done": [False, False, False], "base_shares": 300,
+        }
+        intents = rs.decide_pyramid_buys(lot, 1000.0, rs.US_RULES)  # 全段の閾値を大きく超える価格
+        self.assertEqual(intents, [])
+
+    def test_pyramid_still_fires_before_profit1(self):
+        """利確1前は従来どおり買い増しが出ること（回帰防止）。"""
+        lot = rs.new_lot("TST", "TST-1", "2026-01-05", filled_qty=300, fill_price=100.0)
+        intents = rs.decide_pyramid_buys(lot, 102.5, rs.US_RULES)
+        self.assertEqual([i["kind"] for i in intents], ["pyramid1"])
+
+
 if __name__ == "__main__":
     unittest.main()
