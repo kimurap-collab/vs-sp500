@@ -196,6 +196,97 @@ def filter_blocked_entries(
     return allowed, blocked
 
 
+# 損切り系の扱いをする取引ruleの集合（2026-10-07追加。大将「１０）1」＝将来スワップ売却も損切りと
+# 同じ再エントリー制限を課す予定だが、スワップ自体は未実装・未承認のためここに名前を追加するだけで
+# 済むようにしておく。今回はstop_lossのみ）。
+STOP_LOSS_LIKE_RULES = frozenset({"stop_loss"})
+
+
+def latest_rule_closures(
+    trades: list[dict[str, Any]], rule_names: frozenset[str] = STOP_LOSS_LIKE_RULES,
+) -> dict[str, dict[str, Any]]:
+    """取引記録（trades.csv相当の行のリスト）から、銘柄ごとに直近のrule_names該当行の
+    (date, price)を抽出する（2026-10-07追加。損切り後再エントリー制限のため）。
+
+    同一銘柄に複数回該当する行があれば、日付が最も新しい行を採用する（仕様の出典:
+    「直近の損切りを使う」）。該当行が無い銘柄はキーごと含まれない。
+
+    trades: [{"ticker": str, "date": "YYYY-MM-DD", "price": str|float, "rule": str, ...}, ...]
+    """
+    latest: dict[str, dict[str, Any]] = {}
+    for row in trades:
+        if row.get("rule") not in rule_names:
+            continue
+        ticker = row["ticker"]
+        date = row["date"]
+        if ticker not in latest or date >= latest[ticker]["date"]:
+            latest[ticker] = {"date": date, "price": float(row["price"])}
+    return latest
+
+
+def adjust_stop_loss_price_for_splits(
+    price: float, sale_date: str, splits: list[tuple[str, float]], current_date: str,
+) -> float:
+    """損切り売却価格Pを、売却日より後に起きた株式分割分だけ調整する（2026-10-07追加）。
+
+    apply_split/adjust_lot_for_splitsと同じ規約（ratio=分割後の株数/分割前の株数。価格は÷ratio）。
+    売却日当日以前の分割、current_dateより後の分割は対象外。該当する分割を日付順に全て適用する。
+    """
+    adjusted = price
+    for split_date, ratio in sorted(splits):
+        if ratio <= 0 or ratio == 1:
+            continue
+        if not (sale_date < split_date <= current_date):
+            continue
+        adjusted = adjusted / ratio
+    return adjusted
+
+
+def filter_stop_loss_reentries(
+    candidates: list[dict[str, Any]],
+    stop_loss_history: dict[str, dict[str, Any]],
+    current_date: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """損切り後の再エントリー制限（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照）。
+
+    銘柄Tが直近でSTOP_LOSS_LIKE_RULES該当ルールによりクローズされていた場合、新規エントリーを
+    許可するのは次のいずれかを満たす時のみ（仕様の出典: 大将「q1) 日米ともに15%ルール」
+    「1)じゃあ10営業日でいいや。」）:
+      (a) candidateの価格（frozen候補の価格・prior close） <= 損切り価格P×(1+RSI_STOP_LOSS_REENTRY_DISCOUNT_PCT)
+          （=P×0.85）。candidateはRSI候補リストに載っている時点でRSI<=エントリー閾値を満たしている。
+      (b) 損切り日からRSI_STOP_LOSS_REENTRY_TRADING_DAYS（10）営業日以上経過（経過後は無条件で通常候補）。
+
+    どちらも満たさない銘柄はその夜は見送り、ブロック理由の詳細を返す（呼び出し側がINFOログに使う）。
+    stop_loss_historyに無い銘柄（損切り履歴なし）はそのまま許可する。
+
+    stop_loss_history: latest_rule_closures()の戻り値（{ticker: {"date", "price"}}）。
+    呼び出し側が株式分割調整済みのpriceを渡すこと（分割情報の取得はbroker呼び出しを伴うため、
+    この純粋関数の外・呼び出し側がadjust_stop_loss_price_for_splitsを使って調整する）。
+
+    戻り値: (許可された候補リスト,
+             ブロックされた候補の詳細リスト[{"ticker", "threshold", "stop_loss_price",
+             "stop_loss_date", "trading_days_elapsed"}])
+    """
+    allowed: list[dict[str, Any]] = []
+    blocked: list[dict[str, Any]] = []
+    for c in candidates:
+        sl = stop_loss_history.get(c["ticker"])
+        if sl is None:
+            allowed.append(c)
+            continue
+        threshold = sl["price"] * (1 + config.RSI_STOP_LOSS_REENTRY_DISCOUNT_PCT)
+        days_elapsed = business_days_since(sl["date"], current_date)
+        if c["price"] <= threshold + 1e-9 or days_elapsed >= config.RSI_STOP_LOSS_REENTRY_TRADING_DAYS:
+            allowed.append(c)
+            continue
+        blocked.append({
+            "ticker": c["ticker"], "threshold": threshold,
+            "stop_loss_price": sl["price"], "stop_loss_date": sl["date"],
+            "trading_days_elapsed": days_elapsed,
+        })
+    return allowed, blocked
+
+
 def new_lot(
     ticker: str, lot_id: str, entry_date: str, filled_qty: int, fill_price: float, lot_size: int = 1,
     name: str | None = None,

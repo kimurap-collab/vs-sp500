@@ -213,6 +213,21 @@ class TestJpRulesShareUsBehaviorRatios(unittest.TestCase):
         self.assertEqual(allowed, [])
         self.assertEqual(blocked, ["6367"])
 
+    def test_stop_loss_reentry_block_reuses_shared_function(self):
+        """filter_stop_loss_reentriesも通貨非依存の共有関数のため、JP枠（円建て）でも
+        米国枠と同じ挙動になる（2026-10-07追加）。"""
+        history = {"5334": {"date": "2026-09-28", "price": 3829.0}}  # 分割調整済み(7658/2)
+        candidates = [{"ticker": "5334", "price": 3300.0}]  # 3829*0.85=3254.65を上回る
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-07")
+
+        self.assertEqual(allowed, [])
+        self.assertEqual([b["ticker"] for b in blocked], ["5334"])
+
+        allowed2, blocked2 = rs.filter_stop_loss_reentries(candidates, history, "2026-10-12")
+        self.assertEqual([c["ticker"] for c in allowed2], ["5334"])
+        self.assertEqual(blocked2, [])
+
 
 class TestJpCashPriority(unittest.TestCase):
     """検証2d: 現金不足時にRSIが低い順で選ばれること（JP_RULES・lot_size込み）。"""

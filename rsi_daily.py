@@ -539,6 +539,34 @@ def adjust_lots_for_splits(state: dict[str, Any], trade_date: str, log_lines: li
     state["lots"] = new_lots
 
 
+def _split_adjusted_stop_loss_history(
+    stop_loss_history: dict[str, dict[str, Any]], trade_date: str, log_lines: list[str],
+) -> dict[str, dict[str, Any]]:
+    """損切り後の再エントリー制限で使う売却価格Pを、売却日より後の株式分割があれば調整する
+    （2026-10-07追加）。分割情報はmoomooのget_rehab（adjust_lots_for_splitsと同じ取得元）。
+    取得に失敗した銘柄はWARNINGを出し、分割調整なし（元の価格のまま）で続行する（実行は止めない）。
+    """
+    if not stop_loss_history:
+        return stop_loss_history
+    tickers = sorted(stop_loss_history.keys())
+    splits_by_ticker = broker.get_splits(tickers)
+    if splits_by_ticker is None:
+        logger.warning("RSI: moomooから分割情報が取得できず、損切り再エントリー判定は分割調整なしで続行する")
+        log_lines.append("[RSI-1] 警告: 損切り再エントリー判定の分割情報取得に失敗（分割調整なしで続行）")
+        splits_by_ticker = {}
+    adjusted: dict[str, dict[str, Any]] = {}
+    for ticker, sl in stop_loss_history.items():
+        if ticker not in splits_by_ticker:
+            logger.warning("RSI: %s の分割情報が取得できず、損切り再エントリー判定は分割調整なしで続行する", ticker)
+            adjusted[ticker] = sl
+            continue
+        new_price = rsi_strategy.adjust_stop_loss_price_for_splits(
+            sl["price"], sl["date"], splits_by_ticker[ticker], trade_date,
+        )
+        adjusted[ticker] = {**sl, "price": new_price}
+    return adjusted
+
+
 def credit_dividends(state: dict[str, Any], log_lines: list[str]) -> None:
     """保有中・過去保有ロットの配当をcash_usdへ記帳する（2026-10-07追加・Change3）。
 
@@ -649,12 +677,35 @@ def run(
         f"[RSI-1] 候補{len(rsi_candidates)}銘柄(basis={rsi_basis})・保有{len(held_tickers)}銘柄・価格取得{len(market)}銘柄"
     )
 
+    # 損切り後の再エントリー制限（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照）。
+    # candidateの価格はfrozen候補の価格（c["price"]・prior close）を使う。執行用に再取得した
+    # market[...]["close"]ではない（大将「q1) 1」＝RSI通常候補であることに加え価格条件を見る）。
+    stop_loss_history_all = rsi_strategy.latest_rule_closures(rsi_ledger.read_trade_rows())
+    candidate_tickers_today = {c["ticker"] for c in rsi_candidates}
+    stop_loss_history = {t: sl for t, sl in stop_loss_history_all.items() if t in candidate_tickers_today}
+    stop_loss_history = _split_adjusted_stop_loss_history(stop_loss_history, trade_date, log_lines)
+    sl_check_candidates = [
+        {"ticker": c["ticker"], "price": c["price"]} for c in rsi_candidates if c["ticker"] in stop_loss_history
+    ]
+    _, sl_blocked = rsi_strategy.filter_stop_loss_reentries(sl_check_candidates, stop_loss_history, trade_date)
+    sl_blocked_tickers = {b["ticker"] for b in sl_blocked}
+    for b in sl_blocked:
+        logger.info(
+            "RSI新規エントリー見送り(損切り後の再エントリー制限): %s 候補価格が閾値%.4f(損切り価格%.4f×0.85)"
+            "を上回り、損切り日%sから%d営業日しか経過していない",
+            b["ticker"], b["threshold"], b["stop_loss_price"], b["stop_loss_date"], b["trading_days_elapsed"],
+        )
+    if sl_blocked_tickers:
+        log_lines.append(
+            f"[RSI-1] 新規エントリー見送り(損切り後の再エントリー制限): {', '.join(sorted(sl_blocked_tickers))}"
+        )
+
     # 新規エントリー候補から、保有中・利確前の銘柄を抑止する（2026-08-19改修1。大将「１だな」）。
     # dry-runでも現金が余った理由が追えるよう、実行判断（do_trade）とは独立に必ず計算・ログする。
     raw_entry_candidates = [
         {"ticker": c["ticker"], "rsi14": c["rsi14"], "price": market[c["ticker"]]["close"], "name": c.get("name")}
         for c in rsi_candidates
-        if c["ticker"] in market
+        if c["ticker"] in market and c["ticker"] not in sl_blocked_tickers
     ]
     entry_candidates, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(raw_entry_candidates, state["lots"])
     for ticker in blocked_entry_tickers:

@@ -130,6 +130,10 @@ RSI_ENTRY_AMOUNT_USD = 30_000.0
 RSI_PYRAMID_TRIGGERS = (0.025, 0.05, 0.075)
 RSI_PYRAMID_AMOUNTS_USD = (15_000.0, 7_500.0, 7_500.0)
 RSI_STOP_LOSS_PCT = -0.08  # 初期エントリー価格から-8%で全株売却（2026-09-28復活。米国・日本株RSI枠共通）
+# 損切り後の再エントリー制限（2026-10-07追加。米国・日本株RSI枠共通。大将「q1) 日米ともに15%ルール」）。
+# 損切り価格Pに対しP×(1+PCT)=P×0.85以下の候補のみ再エントリーを許可。この日数が経てば無条件で解禁。
+RSI_STOP_LOSS_REENTRY_DISCOUNT_PCT = -0.15
+RSI_STOP_LOSS_REENTRY_TRADING_DAYS = 10
 # moomooスクリーナーを1リクエストで収めるための時価総額の足切り
 # （S&P500/NASDAQ100の全構成銘柄はこれを上回る）
 RSI_SCREENER_MIN_MARKET_CAP_USD = 1_000_000_000.0

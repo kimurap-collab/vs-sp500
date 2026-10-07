@@ -393,5 +393,91 @@ class TestInvalidPrice(unittest.TestCase):
         self.assertFalse(lot["exception_active"])
 
 
+class TestStopLossReentry(unittest.TestCase):
+    """2026-10-07追加: 損切り後の再エントリー制限（SPEC_RSI30.md「2026-10-07改訂」）。
+
+    仕様: 損切り価格Pで直近クローズされた銘柄は、(a) candidate価格<=P×0.85 か
+    (b) 損切り日から10営業日以上経過 のいずれかを満たさない限り新規エントリーを見送る。
+    """
+
+    def test_latest_rule_closures_picks_most_recent_stop_loss(self):
+        trades = [
+            {"ticker": "AAA", "date": "2026-01-10", "price": "100.0", "rule": "stop_loss"},
+            {"ticker": "AAA", "date": "2026-03-01", "price": "90.0", "rule": "stop_loss"},
+            {"ticker": "BBB", "date": "2026-02-01", "price": "50.0", "rule": "profit1"},
+        ]
+        history = rs.latest_rule_closures(trades)
+        self.assertEqual(history, {"AAA": {"date": "2026-03-01", "price": 90.0}})
+
+    def test_blocked_within_10_trading_days_when_price_above_threshold(self):
+        history = {"TST": {"date": "2026-09-28", "price": 100.0}}
+        candidates = [{"ticker": "TST", "price": 90.0}]  # P×0.85=85なので90は上回る
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-01")
+
+        self.assertEqual(allowed, [])
+        self.assertEqual(len(blocked), 1)
+        self.assertEqual(blocked[0]["ticker"], "TST")
+        self.assertAlmostEqual(blocked[0]["threshold"], 85.0)
+
+    def test_allowed_when_price_at_or_below_85_percent_of_stop_loss_price(self):
+        history = {"TST": {"date": "2026-09-28", "price": 100.0}}
+        candidates = [{"ticker": "TST", "price": 85.0}]  # ちょうど閾値
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-01")
+
+        self.assertEqual([c["ticker"] for c in allowed], ["TST"])
+        self.assertEqual(blocked, [])
+
+    def test_allowed_after_10_trading_days_regardless_of_price(self):
+        history = {"TST": {"date": "2026-09-28", "price": 100.0}}
+        candidates = [{"ticker": "TST", "price": 99.0}]  # 閾値85を大きく上回る
+
+        # 2026-09-28から10営業日後（土日のみ・祝日考慮なし）= 2026-10-12
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-12")
+
+        self.assertEqual([c["ticker"] for c in allowed], ["TST"])
+        self.assertEqual(blocked, [])
+
+    def test_still_blocked_one_trading_day_before_10_elapsed(self):
+        history = {"TST": {"date": "2026-09-28", "price": 100.0}}
+        candidates = [{"ticker": "TST", "price": 99.0}]
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-09")
+
+        self.assertEqual(allowed, [])
+        self.assertEqual([b["ticker"] for b in blocked], ["TST"])
+
+    def test_ticker_without_stop_loss_history_passes_through(self):
+        candidates = [{"ticker": "MSFT", "price": 300.0}]
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, {}, "2026-10-01")
+
+        self.assertEqual([c["ticker"] for c in allowed], ["MSFT"])
+        self.assertEqual(blocked, [])
+
+    def test_adjust_stop_loss_price_for_splits_applies_split_after_sale(self):
+        # 1:2分割(ratio=2.0)が売却日より後に起きた場合、価格は÷2
+        adjusted = rs.adjust_stop_loss_price_for_splits(
+            price=7658.0, sale_date="2026-09-28", splits=[("2026-09-29", 2.0)], current_date="2026-10-07",
+        )
+        self.assertAlmostEqual(adjusted, 3829.0)
+
+    def test_adjust_stop_loss_price_for_splits_ignores_split_before_sale(self):
+        adjusted = rs.adjust_stop_loss_price_for_splits(
+            price=100.0, sale_date="2026-09-28", splits=[("2026-09-20", 2.0)], current_date="2026-10-07",
+        )
+        self.assertAlmostEqual(adjusted, 100.0)
+
+    def test_split_adjusted_price_changes_the_85_percent_threshold(self):
+        history = {"5334": {"date": "2026-09-28", "price": 3829.0}}  # 分割調整済み(7658/2)
+        candidates = [{"ticker": "5334", "price": 3300.0}]  # 3829*0.85=3254.65なので3300は上回る
+
+        allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-01")
+
+        self.assertEqual(allowed, [])
+        self.assertAlmostEqual(blocked[0]["threshold"], 3254.65, places=2)
+
+
 if __name__ == "__main__":
     unittest.main()

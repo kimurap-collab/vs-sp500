@@ -319,6 +319,25 @@ def adjust_lots_for_splits_jp(state: dict[str, Any], trading_date: str, log_line
     state["lots"] = new_lots
 
 
+def _split_adjusted_stop_loss_history_jp(
+    stop_loss_history: dict[str, dict[str, Any]], trading_date: str, log_lines: list[str],
+) -> dict[str, dict[str, Any]]:
+    """損切り後の再エントリー制限で使う売却価格Pを、売却日より後の株式分割があれば調整する
+    （2026-10-07追加）。分割情報はyfinance（adjust_lots_for_splits_jpと同じ取得元）。
+    取得に失敗した銘柄はWARNINGを出し、分割調整なし（元の価格のまま）で続行する（実行は止めない）。
+    """
+    adjusted: dict[str, dict[str, Any]] = {}
+    for ticker, sl in stop_loss_history.items():
+        splits = jp_market.get_splits(ticker)
+        if splits is None:
+            logger.warning("JP: %s の分割情報が取得できず、損切り再エントリー判定は分割調整なしで続行する", ticker)
+            adjusted[ticker] = sl
+            continue
+        new_price = rsi_strategy.adjust_stop_loss_price_for_splits(sl["price"], sl["date"], splits, trading_date)
+        adjusted[ticker] = {**sl, "price": new_price}
+    return adjusted
+
+
 def credit_dividends_jp(state: dict[str, Any], log_lines: list[str]) -> None:
     """保有中・過去保有ロットの配当をcash_jpyへ記帳する（2026-10-07追加・Change3）。
 
@@ -403,7 +422,27 @@ def run_jp(
     lot_sizes = jp_lotsize.get_lot_sizes()
     company_tickers = jp_lotsize.get_company_tickers()
 
-    raw_entry_candidates = [c for c in raw_candidates if c["ticker"] in market_prices]
+    # 損切り後の再エントリー制限（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照）。
+    # raw_candidatesの"price"はfrozen候補の価格（prior close）そのものなので分割調整だけすればよい。
+    stop_loss_history_all = rsi_strategy.latest_rule_closures(jp_rsi_ledger.read_trade_rows())
+    candidate_tickers_today = {c["ticker"] for c in raw_candidates}
+    stop_loss_history = {t: sl for t, sl in stop_loss_history_all.items() if t in candidate_tickers_today}
+    stop_loss_history = _split_adjusted_stop_loss_history_jp(stop_loss_history, trading_date, log_lines)
+    sl_check_candidates = [
+        {"ticker": c["ticker"], "price": c["price"]} for c in raw_candidates if c["ticker"] in stop_loss_history
+    ]
+    _, sl_blocked = rsi_strategy.filter_stop_loss_reentries(sl_check_candidates, stop_loss_history, trading_date)
+    sl_blocked_tickers = {b["ticker"] for b in sl_blocked}
+    for b in sl_blocked:
+        log_lines.append(
+            f"[JP-1] 新規エントリー見送り(損切り後の再エントリー制限): {b['ticker']} "
+            f"候補価格が閾値{b['threshold']:.2f}(損切り価格{b['stop_loss_price']:.2f}×0.85)を上回り、"
+            f"損切り日{b['stop_loss_date']}から{b['trading_days_elapsed']}営業日しか経過していない"
+        )
+
+    raw_entry_candidates = [
+        c for c in raw_candidates if c["ticker"] in market_prices and c["ticker"] not in sl_blocked_tickers
+    ]
     entry_candidates0, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(raw_entry_candidates, state["lots"])
     company_candidates, non_company_tickers = filter_non_company_entries(entry_candidates0, company_tickers)
     entry_candidates, no_lotsize = build_entry_candidates(company_candidates, lot_sizes)
