@@ -28,6 +28,7 @@ JP_TRADES_CSV_HEADER = [
     "realized_pnl", "realized_pnl_pct",
 ]
 JP_HISTORY_CSV_HEADER = ["date", "nav_jpy", "principal_jpy", "diff_jpy", "diff_pct", "cash_ratio", "open_lots"]
+JP_DIVIDENDS_CSV_HEADER = ["date", "ticker", "lot_id", "shares", "per_share", "amount", "source"]
 
 
 def load_portfolio() -> dict[str, Any]:
@@ -69,6 +70,28 @@ def append_history_row(row: dict[str, Any]) -> None:
         writer = csv.DictWriter(f, fieldnames=JP_HISTORY_CSV_HEADER)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def append_dividend_row(row: dict[str, Any]) -> None:
+    """配当の記帳（ledger/rsi_jp/dividends.csv。2026-10-07追加・Change3）。trades.csvには行を追加しない。"""
+    config.RSI_JP_LEDGER_DIR.mkdir(parents=True, exist_ok=True)
+    is_new = not config.RSI_JP_DIVIDENDS_CSV_PATH.exists()
+    with open(config.RSI_JP_DIVIDENDS_CSV_PATH, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=JP_DIVIDENDS_CSV_HEADER)
+        if is_new:
+            writer.writeheader()
+        writer.writerow({k: row.get(k, "") for k in JP_DIVIDENDS_CSV_HEADER})
+
+
+def read_dividend_rows() -> list[dict[str, Any]]:
+    if not config.RSI_JP_DIVIDENDS_CSV_PATH.exists():
+        return []
+    with open(config.RSI_JP_DIVIDENDS_CSV_PATH, encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def compute_total_dividends_jpy() -> float:
+    return round(sum(float(r["amount"]) for r in read_dividend_rows()), 0)
 
 
 def read_history_rows() -> list[dict[str, Any]]:

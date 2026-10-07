@@ -108,3 +108,19 @@ def get_splits(ticker: str) -> list[tuple[str, float]] | None:
     if splits is None:
         return None
     return [(idx.date().isoformat(), float(val)) for idx, val in splits.items() if val and float(val) > 0]
+
+
+def get_dividends(ticker: str) -> list[tuple[str, float]] | None:
+    """yfinanceから1株あたりの現金配当履歴を [(ex_date "YYYY-MM-DD", per_share_jpy), ...] で返す
+    （2026-10-07追加・Change3）。取得失敗はNone（呼び出し側はWARNINGを出して記帳なしで続行する）。
+    配当が1件も無い銘柄は空リスト。
+    """
+    yf_ticker = ticker_to_yf(ticker)
+    try:
+        dividends = yf.Ticker(yf_ticker).dividends
+    except Exception as e:  # noqa: BLE001 - yfinance内部の例外型は不定
+        logger.warning("%s: yfinanceの配当情報の取得に失敗した: %s", yf_ticker, e)
+        return None
+    if dividends is None:
+        return None
+    return [(idx.date().isoformat(), float(val)) for idx, val in dividends.items() if val and float(val) > 0]

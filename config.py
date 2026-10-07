@@ -112,6 +112,7 @@ RSI_LEDGER_DIR = LEDGER_DIR / "rsi"
 RSI_PORTFOLIO_PATH = RSI_LEDGER_DIR / "portfolio.json"
 RSI_TRADES_CSV_PATH = RSI_LEDGER_DIR / "trades.csv"
 RSI_HISTORY_CSV_PATH = RSI_LEDGER_DIR / "history.csv"
+RSI_DIVIDENDS_CSV_PATH = RSI_LEDGER_DIR / "dividends.csv"  # 2026-10-07追加（Change3・配当記帳）
 RSI_UNIVERSE_PATH = BASE_DIR / "universe.json"
 # 寄り前(現地20:00)に確定させた候補のキャッシュ（2026-08-19改修1）。発注しない専用ジョブが書く
 RSI_FROZEN_CANDIDATES_PATH = RSI_LEDGER_DIR / "frozen_candidates.json"
@@ -145,6 +146,7 @@ RSI_JP_LEDGER_DIR = LEDGER_DIR / "rsi_jp"
 RSI_JP_PORTFOLIO_PATH = RSI_JP_LEDGER_DIR / "portfolio.json"
 RSI_JP_TRADES_CSV_PATH = RSI_JP_LEDGER_DIR / "trades.csv"
 RSI_JP_HISTORY_CSV_PATH = RSI_JP_LEDGER_DIR / "history.csv"
+RSI_JP_DIVIDENDS_CSV_PATH = RSI_JP_LEDGER_DIR / "dividends.csv"  # 2026-10-07追加（Change3・配当記帳）
 RSI_JP_FROZEN_CANDIDATES_PATH = RSI_JP_LEDGER_DIR / "frozen_candidates.json"
 RSI_JP_LOTSIZE_CACHE_PATH = BASE_DIR / "jp_lotsize.json"
 RSI_JP_LOTSIZE_REFRESH_DAY_OF_MONTH = 1  # lot_sizeキャッシュ更新は月初のみ（universe.jsonと同じ規約）

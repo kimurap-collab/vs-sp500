@@ -445,7 +445,8 @@ async function load() {
   const rsi = data.rsi;
   if (rsi && rsi.start_date) {
     document.getElementById("rsi-updated").textContent =
-      "開始日: " + rsi.start_date + "（保有ロット数: " + (rsi.open_lots || 0) + "）";
+      "開始日: " + rsi.start_date + "（保有ロット数: " + (rsi.open_lots || 0) + "・累計配当: $" +
+      (rsi.dividends_total_usd || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + "）";
 
     const rsiDiffUsd = rsi.diff_usd;
     const rsiWin = rsiDiffUsd >= 0;
@@ -563,7 +564,8 @@ async function load() {
   const rsiJp = data.rsi_jp;
   if (rsiJp && rsiJp.start_date) {
     document.getElementById("rsi-jp-updated").textContent =
-      "開始日: " + rsiJp.start_date + "（保有ロット数: " + (rsiJp.open_lots || 0) + "）";
+      "開始日: " + rsiJp.start_date + "（保有ロット数: " + (rsiJp.open_lots || 0) + "・累計配当: ¥" +
+      (rsiJp.dividends_total_jpy || 0).toLocaleString() + "）";
 
     const jpDiff = rsiJp.diff_jpy;
     const jpWin = jpDiff >= 0;

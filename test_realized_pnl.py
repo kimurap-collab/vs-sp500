@@ -152,6 +152,7 @@ class TestUsRsiStopLossRealizedPnl(unittest.TestCase):
             with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_frozen), \
                  patch("rsi_daily.screen_rsi_candidates", return_value=[]), \
                  patch("rsi_daily.broker.get_splits", return_value={"TST": []}), \
+                 patch("rsi_daily.broker.get_dividends", return_value={"TST": []}), \
                  patch("rsi_daily.fetch_market_data", return_value={"TST": {"close": 90.0, "date": "2026-09-29"}}), \
                  patch("rsi_daily.broker.get_cash", side_effect=[0.0, 100 * 90.0]), \
                  patch("rsi_daily.broker.place_market_order", return_value=FILLED_STOP), \
@@ -183,6 +184,7 @@ class TestJpRsiProfitTakeRealizedPnl(unittest.TestCase):
         snaps = {"1234": JpSnapshot("1234", 120.12, "2026-09-29")}  # avg_cost*1.20*1.001超
         with patch("jp_rsi_daily.jp_market.get_splits", return_value=[]), \
              patch("jp_rsi_daily.jp_market.get_snapshots", return_value=snaps), \
+             patch("jp_rsi_daily.jp_market.get_dividends", return_value=[]), \
              patch("jp_rsi_daily.get_jp_candidates", return_value=[]), \
              patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={}), \
              patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value=set()), \

@@ -206,6 +206,53 @@ def get_splits(tickers: list[str]) -> dict[str, list[tuple[str, float]]] | None:
     return _run_with_timeout(_call)
 
 
+def _cash_dividend_from_rehab_row(row: dict[str, Any]) -> float:
+    """get_rehabの1行から1株あたりの現金配当額を返す（per_cash_div + special_dividend。
+    分割・併合だけの行や配当の無い行は0になる。NaN判定はNaN!=NaNを使う）。
+    """
+    total = 0.0
+    for key in ("per_cash_div", "special_dividend"):
+        value = row.get(key)
+        if value is None or value != value:  # NaN判定
+            continue
+        total += float(value)
+    return total
+
+
+def get_dividends(tickers: list[str]) -> dict[str, list[tuple[str, float]]] | None:
+    """moomooのget_rehab（復権情報）から1株あたりの現金配当履歴を取得する（2026-10-07追加・Change3）。
+
+    get_splitsと同じctx・タイムアウトラッパーを使う（charter v1.6「基本データ…moomooにしなさいよ」）。
+    戻り値: {ticker: [(ex_div_date "YYYY-MM-DD", per_share_jpy_or_usd), ...]}（配当が無い行・0以下は含めない）。
+    接続失敗・タイムアウトはNone。個別銘柄の取得失敗はその銘柄を戻り値に含めない（呼び出し側でWARNING）。
+    """
+    if not tickers:
+        return {}
+
+    def _call() -> dict[str, list[tuple[str, float]]]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            result: dict[str, list[tuple[str, float]]] = {}
+            for ticker in tickers:
+                ret, data = ctx.get_rehab(ticker_to_code(ticker))
+                if ret != 0:
+                    logger.warning("get_rehab失敗(dividend): %s %s", ticker, data)
+                    continue
+                dividends: list[tuple[str, float]] = []
+                for row in data.to_dict(orient="records"):
+                    amount = _cash_dividend_from_rehab_row(row)
+                    if amount > 0:
+                        dividends.append((str(row["ex_div_date"])[:10], amount))
+                result[ticker] = dividends
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call)
+
+
 def place_market_order(ticker: str, qty: int, side: str) -> dict[str, Any] | None:
     """成行注文を出し、可能なら約定まで待つ（最大ORDER_FILL_TIMEOUT_SEC秒）。
 

@@ -97,6 +97,7 @@ class TestRunJpAdjustsSplitsBeforeDecisions(unittest.TestCase):
         snaps = {"3099": JpSnapshot("3099", 1618.0, "2026-09-29"), "9065": JpSnapshot("9065", 1567.0, "2026-09-29")}
         with patch("jp_rsi_daily.jp_market.get_splits", side_effect=splits_side_effect), \
              patch("jp_rsi_daily.jp_market.get_snapshots", return_value=snaps), \
+             patch("jp_rsi_daily.jp_market.get_dividends", return_value=[]), \
              patch("jp_rsi_daily.get_jp_candidates", return_value=[]), \
              patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={}), \
              patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value=set()), \

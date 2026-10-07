@@ -21,6 +21,7 @@ from typing import Any, Callable
 
 import broker
 import config
+import dividends
 import jp_rsi_daily
 import rsi_ledger
 import rsi_strategy
@@ -538,6 +539,36 @@ def adjust_lots_for_splits(state: dict[str, Any], trade_date: str, log_lines: li
     state["lots"] = new_lots
 
 
+def credit_dividends(state: dict[str, Any], log_lines: list[str]) -> None:
+    """保有中・過去保有ロットの配当をcash_usdへ記帳する（2026-10-07追加・Change3）。
+
+    moomooのget_rehab（per_cash_div + special_dividend）から配当履歴を取得し、未記帳の
+    (ticker, ex_date, lot_id)だけをledger/rsi/dividends.csvへ追記してcash_usdに加算する。
+    呼び出し側（run_rsi_dayのdry_runガード）がdry-runでは呼ばない前提（ファイルI/Oを含むため）。
+    取得失敗時はWARNINGを出して記帳なしで続行する（実行は止めない）。
+    """
+    held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
+    if not held_tickers:
+        return
+    dividends_by_ticker = broker.get_dividends(held_tickers)
+    if dividends_by_ticker is None:
+        logger.warning("RSI: moomooから配当情報が取得できず、配当記帳なしで続行する")
+        log_lines.append("[RSI-0] 警告: 配当情報の取得に失敗（配当記帳なしで続行）")
+        return
+    existing_keys = {(r["ticker"], r["date"], r["lot_id"]) for r in rsi_ledger.read_dividend_rows()}
+    trades = rsi_ledger.read_trade_rows()
+    new_rows = dividends.compute_new_dividend_credits(
+        state["lots"], trades, dividends_by_ticker, existing_keys, source="moomoo",
+    )
+    for row in new_rows:
+        rsi_ledger.append_dividend_row(row)
+        state["cash_usd"] += row["amount"]
+        log_lines.append(
+            f"[RSI-DIV] {row['ticker']} lot={row['lot_id']} {row['date']} "
+            f"{row['shares']}株×${row['per_share']:.4f} = ${row['amount']:.2f}"
+        )
+
+
 def compute_snapshot_only(
     rsi_state: dict[str, Any], voo_snap: TickerSnapshot,
 ) -> tuple[float, float, dict[str, TickerSnapshot]]:
@@ -596,6 +627,11 @@ def run(
     # いずれの経路でも、重複銘柄（保有中の再エントリー候補）は保有側の値を優先する。
     # 判定（損切り・利確・買い増し）とNAV計算の前に株式分割を反映する（2026-10-01）
     adjust_lots_for_splits(state, trade_date, log_lines)
+
+    # 配当記帳（2026-10-07追加・Change3）。ファイルI/Oを含むためdry-runでは呼ばない
+    # （daily_run.py全体の「dry-runはledger/配下を一切変更しない」契約を保つ）。
+    if not dry_run:
+        credit_dividends(state, log_lines)
 
     held_tickers = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(state)})
     rsi_candidates, rsi_basis = get_rsi_candidates()

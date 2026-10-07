@@ -37,6 +37,7 @@ from typing import Any, Callable
 
 import broker
 import config
+import dividends
 import jp_lotsize
 import jp_market
 import jp_rsi_ledger
@@ -318,6 +319,38 @@ def adjust_lots_for_splits_jp(state: dict[str, Any], trading_date: str, log_line
     state["lots"] = new_lots
 
 
+def credit_dividends_jp(state: dict[str, Any], log_lines: list[str]) -> None:
+    """保有中・過去保有ロットの配当をcash_jpyへ記帳する（2026-10-07追加・Change3）。
+
+    yfinance（この枠は価格もyfinance）から配当履歴を取得し、未記帳の
+    (ticker, ex_date, lot_id)だけをledger/rsi_jp/dividends.csvへ追記してcash_jpyに加算する。
+    呼び出し側（run_jpのdry_runガード）がdry-runでは呼ばない前提（ファイルI/Oを含むため）。
+    個別銘柄の取得失敗はWARNINGを出して記帳なしで続行する（実行は止めない）。
+    """
+    held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
+    if not held_tickers:
+        return
+    dividends_by_ticker: dict[str, list[tuple[str, float]]] = {}
+    for ticker in held_tickers:
+        divs = jp_market.get_dividends(ticker)
+        if divs is None:
+            logger.warning("JP: %s の配当情報が取得できず、配当記帳なしで続行する", ticker)
+            continue
+        dividends_by_ticker[ticker] = divs
+    existing_keys = {(r["ticker"], r["date"], r["lot_id"]) for r in jp_rsi_ledger.read_dividend_rows()}
+    trades = jp_rsi_ledger.read_trade_rows()
+    new_rows = dividends.compute_new_dividend_credits(
+        state["lots"], trades, dividends_by_ticker, existing_keys, source="yfinance",
+    )
+    for row in new_rows:
+        jp_rsi_ledger.append_dividend_row(row)
+        state["cash_jpy"] += row["amount"]
+        log_lines.append(
+            f"[JP-DIV] {row['ticker']} lot={row['lot_id']} {row['date']} "
+            f"{row['shares']}株×¥{row['per_share']:.2f} = ¥{row['amount']:.0f}"
+        )
+
+
 def compute_snapshot_only_jp(jp_state: dict[str, Any]) -> tuple[float, dict[str, JpSnapshot]]:
     """保有銘柄の価格だけを取得してNAVを計算する（--report-only・異常停止時用）。"""
     held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(jp_state)})
@@ -352,6 +385,11 @@ def run_jp(
 
     # 判定（損切り・利確・買い増し）とNAV計算の前に株式分割を反映する（2026-10-01）
     adjust_lots_for_splits_jp(state, trading_date, log_lines)
+
+    # 配当記帳（2026-10-07追加・Change3）。ファイルI/Oを含むためdry-runでは呼ばない
+    # （daily_run.py全体の「dry-runはledger/配下を一切変更しない」契約を保つ）。
+    if not dry_run:
+        credit_dividends_jp(state, log_lines)
 
     held_tickers = sorted({lot["ticker"] for lot in jp_rsi_ledger.open_lots(state)})
     raw_candidates = [] if already_processed_today else get_jp_candidates()
