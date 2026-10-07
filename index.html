@@ -186,6 +186,8 @@
     残り25%は無期限保有。損切り-8%（初期エントリー価格比・全株売却）。
     損切り後の再エントリーは売却価格×0.85以下になるか10営業日経過するまで見送り。
     同じ銘柄は保有中1ロットまで（利確済みなら再エントリー可）。対象は S&amp;P500+NASDAQ100 構成銘柄。
+    資金不足で新規候補が買えない夜は、セクター・時価総額スコアがより低い含み損ロットを売って
+    入れ替えることがある（入れ替え）。
     開始資金 $500,000
   </div>
 
@@ -551,8 +553,9 @@ async function load() {
           pnlStr = `${sign}$${pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${sign}${pnlPct.toFixed(2)}%)`;
           pnlCls = pnl >= 0 ? "win" : "lose";
         }
+        const ruleLabel = t.rule === "swap" ? "入れ替え" : t.rule;
         tr.innerHTML = `<td>${t.date}</td><td>${t.action}</td><td>${t.ticker}${t.name ? " " + t.name : ""}</td>` +
-          `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${t.rule}</td>` +
+          `<td class="num">${t.shares}</td><td class="num">$${amt}</td><td>${ruleLabel}</td>` +
           `<td class="num ${pnlCls}">${pnlStr}</td>`;
         rsiTradesBody.appendChild(tr);
       });

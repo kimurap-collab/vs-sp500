@@ -139,6 +139,35 @@ def should_enter(rsi14: float, rules: StrategyRules = US_RULES) -> bool:
     return rsi14 <= rules.entry_rsi_threshold
 
 
+def _select_entries_core(
+    candidates: list[dict[str, Any]], available_cash: float, rules: StrategyRules,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """select_entries_within_cash/select_entries_with_unfundedの共通本体（2026-10-07追加・
+    スワップ売却。資金不足で見送った候補も合わせて集められるよう選定ループを1箇所に集約した。
+    既存のselect_entries_within_cashの挙動・戻り値は一切変えていない）。
+
+    戻り値: (選ばれた候補（"qty"付き）, 資金不足で見送った候補（"qty"・"cost"付き）)。
+    qty<=0（lot_size起因）で見送った候補はどちらにも含めない（資金不足ではないため）。
+    """
+    remaining = available_cash
+    selected: list[dict[str, Any]] = []
+    unfunded: list[dict[str, Any]] = []
+    for c in sorted(candidates, key=lambda x: x["rsi14"]):
+        lot_size = c.get("lot_size", 1)
+        qty = qty_for_amount(rules.entry_amount, c["price"], lot_size)
+        if qty <= 0 and rules.min_one_lot_entry:
+            qty = lot_size
+        if qty <= 0:
+            continue
+        cost = qty * c["price"]
+        if cost > remaining + 1e-9:
+            unfunded.append({**c, "qty": qty, "cost": cost})
+            continue
+        selected.append({**c, "qty": qty})
+        remaining -= cost
+    return selected, unfunded
+
+
 def select_entries_within_cash(
     candidates: list[dict[str, Any]], available_cash: float, rules: StrategyRules = US_RULES,
 ) -> list[dict[str, Any]]:
@@ -157,21 +186,20 @@ def select_entries_within_cash(
 
     戻り値: 選ばれた候補に "qty" を付加したリスト（RSI昇順）。
     """
-    remaining = available_cash
-    selected: list[dict[str, Any]] = []
-    for c in sorted(candidates, key=lambda x: x["rsi14"]):
-        lot_size = c.get("lot_size", 1)
-        qty = qty_for_amount(rules.entry_amount, c["price"], lot_size)
-        if qty <= 0 and rules.min_one_lot_entry:
-            qty = lot_size
-        if qty <= 0:
-            continue
-        cost = qty * c["price"]
-        if cost > remaining + 1e-9:
-            continue
-        selected.append({**c, "qty": qty})
-        remaining -= cost
+    selected, _unfunded = _select_entries_core(candidates, available_cash, rules)
     return selected
+
+
+def select_entries_with_unfunded(
+    candidates: list[dict[str, Any]], available_cash: float, rules: StrategyRules = US_RULES,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """select_entries_within_cashと同じ選定に加え、資金不足で見送った候補も返す
+    （2026-10-07追加・スワップ売却機能。米国RSI枠がスワップ対象を特定するために使う）。
+
+    戻り値: (select_entries_within_cashと同じ選択結果, 資金不足で見送った候補のリスト
+    （各要素は候補dictに"qty"・"cost"を付加したもの。RSI昇順で遭遇した順）)。
+    """
+    return _select_entries_core(candidates, available_cash, rules)
 
 
 def filter_blocked_entries(
@@ -196,10 +224,9 @@ def filter_blocked_entries(
     return allowed, blocked
 
 
-# 損切り系の扱いをする取引ruleの集合（2026-10-07追加。大将「１０）1」＝将来スワップ売却も損切りと
-# 同じ再エントリー制限を課す予定だが、スワップ自体は未実装・未承認のためここに名前を追加するだけで
-# 済むようにしておく。今回はstop_lossのみ）。
-STOP_LOSS_LIKE_RULES = frozenset({"stop_loss"})
+# 損切り系の扱いをする取引ruleの集合（2026-10-07追加。大将「１０）1」＝スワップ売却も損切りと
+# 同じ再エントリー制限を課す。スワップ売却の実装に伴い"swap"を追加した）。
+STOP_LOSS_LIKE_RULES = frozenset({"stop_loss", "swap"})
 
 
 def latest_rule_closures(
@@ -483,12 +510,18 @@ def apply_profit2_fill(lot: dict[str, Any], filled_qty: int) -> dict[str, Any]:
     return new_lot
 
 
-def apply_stop_loss_fill(lot: dict[str, Any], filled_qty: int, current_date: str) -> dict[str, Any]:
+def apply_stop_loss_fill(
+    lot: dict[str, Any], filled_qty: int, current_date: str, reason: str = "stop_loss",
+) -> dict[str, Any]:
+    """全株売却（stop_loss）の約定を反映する。reasonはclosed_reasonにそのまま記録する
+    （2026-10-07追加・スワップ売却。スワップ売却も全株売却という点で損切りと同じ形のため
+    このまま流用し、reason="swap"を渡す）。
+    """
     new_lot = dict(lot)
     new_lot["shares"] = lot["shares"] - filled_qty
     if new_lot["shares"] <= 0:
         new_lot["closed"] = True
-        new_lot["closed_reason"] = "stop_loss"
+        new_lot["closed_reason"] = reason
         new_lot["closed_date"] = current_date
     return new_lot
 
@@ -543,6 +576,184 @@ def adjust_lot_for_splits(
         lot = apply_split(lot, split_date, ratio)
         applied.append((split_date, ratio))
     return lot, applied
+
+
+# ---------------------------------------------------------------------------
+# スワップ売却（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照。米国RSI枠のみ）。
+# 資金不足で見送った新規エントリー候補を、保有ロットの入れ替え売りで拾えないか判定する。
+# スコア計算（セクター・時価総額のTier取得）・moomoo呼び出し・ファイルI/Oはrsi_daily.py側が
+# 担い、ここでは純粋な判定ロジックだけを持つ（モジュール冒頭のdocstring方針どおり）。
+# ---------------------------------------------------------------------------
+
+def rank_sector_etf_tiers(etf_returns: dict[str, float]) -> dict[str, int]:
+    """SPDRセクターETF（11本）の直近リターンから3分位Tier(+1/0/-1)を返す（2026-10-07追加）。
+
+    参照実装（/private/tmp/.../scratchpad/backtest_swap/swap.py tiers()関数）と同じ分割方式:
+    リターン降順に並べ、上位グループ+1・中位グループ0・下位グループ-1（11本→4/4/3。
+    np.array_split(range(11), 3)と同じ、余りは前方のグループから1つずつ積む）。
+    etf_returnsに無いETFは戻り値に含めない（呼び出し側がdict.get(etf, 0)で0として扱う）。
+    """
+    ordered = sorted(etf_returns.items(), key=lambda kv: -kv[1])
+    n = len(ordered)
+    if n == 0:
+        return {}
+    base, extra = divmod(n, 3)
+    sizes = [base + (1 if i < extra else 0) for i in range(3)]
+    tiers: dict[str, int] = {}
+    idx = 0
+    for group_i, size in enumerate(sizes):
+        tier_value = 1 - group_i  # 1グループ目→+1, 2グループ目→0, 3グループ目→-1
+        for etf, _ret in ordered[idx:idx + size]:
+            tiers[etf] = tier_value
+        idx += size
+    return tiers
+
+
+def compute_market_cap_tiers(market_caps: dict[str, float]) -> dict[str, int]:
+    """米国ユニバース全体の時価総額から3分位Tier(+1/0/-1)を返す（2026-10-07追加。
+    大将「5)1」＝小型株は不利に）。
+
+    参照実装のpandas rank(pct=True)（上位1/3超→+1・下位1/3以下→-1・それ以外→0）と同じ閾値を、
+    昇順に並べた順位の百分位で近似する（タイの扱いが厳密に同一ではないが閾値は同じ）。
+    market_capsに無い・0以下・NaNの銘柄は戻り値に含めない（呼び出し側がdict.get(t, 0)で0扱い）。
+    """
+    valid = {t: v for t, v in market_caps.items() if v is not None and v == v and v > 0}
+    if not valid:
+        return {}
+    ordered = sorted(valid.items(), key=lambda kv: kv[1])  # 時価総額の昇順
+    n = len(ordered)
+    tiers: dict[str, int] = {}
+    for rank, (ticker, _cap) in enumerate(ordered):
+        pct = (rank + 1) / n
+        if pct > 2 / 3:
+            tiers[ticker] = 1
+        elif pct <= 1 / 3:
+            tiers[ticker] = -1
+        else:
+            tiers[ticker] = 0
+    return tiers
+
+
+def compute_swap_score(
+    ticker: str,
+    sector_of: dict[str, str | None],
+    sector_tiers: dict[str, int],
+    mcap_tiers: dict[str, int],
+) -> int:
+    """銘柄1件のスワップ判定用スコア = セクターTier + 時価総額Tier（-2〜+2）（2026-10-07追加）。
+
+    sector_of: {ticker: ETFティッカー文字列 | None}（セクター不明はNone）。
+    セクター不明・sector_tiersに無いETF・mcap_tiersに無い銘柄はいずれもTier 0として扱う
+    （仕様「Unknown sector/cap → 0」）。
+    """
+    etf = sector_of.get(ticker)
+    sector_tier = sector_tiers.get(etf, 0) if etf else 0
+    mcap_tier = mcap_tiers.get(ticker, 0)
+    return sector_tier + mcap_tier
+
+
+def select_swap_sell_candidates(
+    lots: list[dict[str, Any]], prices: dict[str, float],
+) -> list[dict[str, Any]]:
+    """スワップ売却の対象ロットを選び、含み損が深い順に並べて返す（2026-10-07追加）。
+
+    対象: 未クローズ・伸ばす玉でない（profit1_taken/profit2_takenの両方が真のロットは除外。
+    大将「伸ばす玉は売らないは正解。損してるやつから選択を。」）・価格が取得できている・
+    price < avg_cost（含み損）。最低保有期間は無い（大将「3)1」）。
+
+    戻り値の各要素はロットのコピーに "price"（判定に使った価格）と "loss_ratio"（price/avg_cost。
+    小さいほど深い含み損）を加えたもの。下げ幅が大きい順（大将「4)購入からの下げ幅が高いものから」）
+    に並べる。同率はticker→lot_idの順（決定性のため）。
+    """
+    candidates: list[dict[str, Any]] = []
+    for lot in lots:
+        if lot.get("closed"):
+            continue
+        if _is_runner_only(lot):
+            continue
+        price = prices.get(lot["ticker"])
+        if not is_valid_price(price):
+            continue
+        if price >= lot["avg_cost"]:
+            continue
+        candidates.append({**lot, "price": price, "loss_ratio": price / lot["avg_cost"]})
+    candidates.sort(key=lambda lot: (lot["loss_ratio"], lot["ticker"], lot["lot_id"]))
+    return candidates
+
+
+def decide_swaps(
+    unfunded_candidates: list[dict[str, Any]],
+    sell_candidates: list[dict[str, Any]],
+    scores: dict[str, int],
+    available_cash: float,
+) -> list[dict[str, Any]]:
+    """資金不足の新規エントリー候補を、保有ロットの入れ替え売りで拾えるか判定する（2026-10-07追加）。
+
+    参照実装（backtest_swap/swap.py run()内のswapロジック）と同じアルゴリズム。状態は変更せず
+    「その夜に行うべきスワップ」の計画だけを返す（実際の発注はrsi_daily.pyがこの戻り値を使って
+    逐次実行する。約定価格はこの時点の見積りと異なりうるため、decide/applyを分離する既存方針に倣う）。
+
+    アルゴリズム:
+      1. 未資金化候補をスコア降順・同率はRSI昇順・同率はticker昇順で並べ、先頭(最高スコア)を選ぶ。
+      2. 現金が既に足りていれば（他のスワップで現金が増えた後等）、売却なしでそのまま買う。
+      3. 足りなければ、売却候補を下げ幅が深い順に、スコアが買い候補より厳密に低いものだけを
+         積み上げ、現金+売却見込み額が買い付け額に届くまで集める（大将「９）1」＝足りなければ
+         追加で売る）。1件でもスコア条件を満たさない・積み上げても届かない場合はこの候補を諦め、
+         それ以降の（スコアがより低い）候補も含め、この夜のスワップ判定を打ち切る（参照実装と同じ。
+         より緩い条件を満たす余地が無いと判断する）。
+      4. 選ばれた売却ロットは次の候補の判定対象からも除外する（二重に売る決定をしないため）。
+         現金は売却見込み額を加算・買付額を差し引いた値に更新し、次の候補の判定に使う。
+      5. 候補が尽きるまで1〜4を繰り返す（大将「2)3」＝1晩の件数上限は無い）。
+
+    unfunded_candidates: select_entries_with_unfundedの戻り値のunfunded部分
+    （各要素は"ticker","rsi14","price","qty","cost"を持つ）。
+    sell_candidates: select_swap_sell_candidates()の戻り値（既に下げ幅順にソート済み）。
+    scores: {ticker: int}（compute_swap_scoreの結果。無いティッカーは呼び出し側が0を補って渡すこと）。
+    available_cash: 判定開始時点の利用可能現金。
+
+    戻り値: [{"buy": 候補dict, "sells": [売却ロットdict, ...]}, ...]
+    （sellsが空のケースは、他のスワップで増えた現金だけで売却なしに買えた場合）。
+    """
+    def _sort_key(c: dict[str, Any]) -> tuple[int, float, str]:
+        return (-scores.get(c["ticker"], 0), c["rsi14"], c["ticker"])
+
+    unfunded = list(unfunded_candidates)
+    pool = list(sell_candidates)
+    cash = available_cash
+    decisions: list[dict[str, Any]] = []
+
+    while unfunded:
+        unfunded.sort(key=_sort_key)
+        buy = unfunded[0]
+        buy_score = scores.get(buy["ticker"], 0)
+        cost = buy["cost"]
+
+        if cost <= cash + 1e-9:
+            unfunded.pop(0)
+            cash -= cost
+            decisions.append({"buy": buy, "sells": []})
+            continue
+
+        chosen: list[dict[str, Any]] = []
+        projected_cash = cash
+        for sell in pool:
+            if not buy_score > scores.get(sell["ticker"], 0):
+                break
+            chosen.append(sell)
+            projected_cash += sell["shares"] * sell["price"]
+            if projected_cash >= cost - 1e-9:
+                break
+
+        if not chosen or projected_cash < cost - 1e-9:
+            break  # 上位候補が資金化できない → この夜のスワップ判定を打ち切る（参照実装と同じ）
+
+        for sell in chosen:
+            pool.remove(sell)
+        unfunded.pop(0)
+        cash = projected_cash - cost
+        decisions.append({"buy": buy, "sells": chosen})
+
+    return decisions
 
 
 # ---------------------------------------------------------------------------

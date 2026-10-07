@@ -145,6 +145,13 @@ RSI_EXCEPTION_WINDOW_TRADING_DAYS = 15  # 初期エントリーからこの営�
 RSI_EXCEPTION_HOLD_CALENDAR_DAYS = 56   # 例外発動時、初期エントリーからこの暦日数まで利確を停止（8週間）
 RSI_UNIVERSE_REFRESH_DAY_OF_MONTH = 1   # ユニバース更新は月初のみ（この日以降で当月未更新なら更新）
 
+# --- スワップ売却（2026-10-07追加。資金不足の新規候補を保有ロットの入れ替え売りで拾う。米国RSI枠のみ） ---
+RSI_SWAP_SECTOR_ETFS = ("XLK", "XLF", "XLV", "XLE", "XLI", "XLY", "XLP", "XLU", "XLB", "XLRE", "XLC")
+RSI_SWAP_SECTOR_RETURN_LOOKBACK_TRADING_DAYS = 21  # 大将「一ヶ月に一度だけチェックを…だから１ヶ月」
+RSI_SWAP_SECTOR_TIERS_PATH = RSI_LEDGER_DIR / "sector_tiers.json"
+RSI_SWAP_SECTOR_MAP_PATH = RSI_LEDGER_DIR / "sector_map.json"
+RSI_SWAP_MOOMOO_BATCH_SIZE = 200  # get_owner_plate/get_market_snapshot 1回あたりの上限件数（スクリーナーと同じページサイズ）
+
 # --- 日本株RSI枠（2026-08-24 SPEC_RSI30.md追補。3本目の戦略枠。円建て・ベンチマーク無し） ---
 RSI_JP_LEDGER_DIR = LEDGER_DIR / "rsi_jp"
 RSI_JP_PORTFOLIO_PATH = RSI_JP_LEDGER_DIR / "portfolio.json"

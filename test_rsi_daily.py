@@ -392,5 +392,185 @@ class TestSendFreezeFailureAlert(unittest.TestCase):
         self.assertEqual(os.environ.get("VS_SP500_DEFER_TELEGRAM"), "1")
 
 
+# ---------------------------------------------------------------------------
+# スワップ売却（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照）
+# ---------------------------------------------------------------------------
+
+def _open_lot(ticker, lot_id, avg_cost, shares):
+    return {
+        "lot_id": lot_id, "ticker": ticker, "name": None,
+        "initial_entry_date": "2026-09-01", "initial_entry_price": avg_cost,
+        "pyramid_done": [False, False, False], "shares": shares, "lot_size": 1,
+        "total_invested_usd": shares * avg_cost, "avg_cost": avg_cost,
+        "profit1_taken": False, "profit2_taken": False, "base_shares": None,
+        "exception_active": False, "exception_deadline_date": None,
+        "closed": False, "closed_reason": None, "closed_date": None,
+    }
+
+
+class TestExecuteSwapDecisionsNoBuyWhenSellUnfilled(unittest.TestCase):
+    def test_partial_sell_blocks_buy_and_tracks_pending_with_swap_rule(self):
+        lot = _open_lot("SELL", "SELL-1", avg_cost=100.0, shares=200)
+        state = _rsi_state(lots=[lot], cash_usd=0.0)
+        decisions = [{
+            "buy": {"ticker": "BUY", "rsi14": 10.0, "price": 50.0, "qty": 600, "cost": 30_000.0, "name": None},
+            "sells": [{**lot, "price": 50.0, "loss_ratio": 0.5}],
+        }]
+
+        with patch("rsi_daily.broker.get_cash", side_effect=[0.0, 5_000.0]), \
+             patch("rsi_daily.broker.place_market_order", return_value={
+                 "order_id": "9", "status": "SUBMITTED", "filled_qty": 100, "avg_price": 50.0,
+             }), \
+             patch("rsi_daily.rsi_ledger.append_trade_row") as mock_append:
+            accepted = rsi_daily._execute_swap_decisions(
+                state, decisions, scores={"BUY": 2, "SELL": -1}, rsi_basis="prev_close",
+                market_us="AFTERNOON", trade_date="2026-10-07", log_lines=[],
+            )
+
+        # 一部約定(PARTIAL_OPEN)のため、売りのtrade_rowだけが記録され買いは発生しない
+        self.assertEqual(len(accepted), 1)
+        self.assertEqual(accepted[0]["action"], "SELL")
+        self.assertEqual(accepted[0]["rule"], "swap")
+        self.assertFalse(any(t["action"] == "BUY" for t in accepted))
+        mock_append.assert_called_once()
+        self.assertEqual(len(state["pending_orders"]), 1)
+        self.assertEqual(state["pending_orders"][0]["rule"], "swap")
+        self.assertEqual(state["pending_orders"][0]["side"], "SELL")
+
+    def test_full_swap_success_records_swap_sell_and_entry_buy(self):
+        lot = _open_lot("SELL", "SELL-1", avg_cost=100.0, shares=600)
+        state = _rsi_state(lots=[lot], cash_usd=0.0)
+        decisions = [{
+            "buy": {"ticker": "BUY", "rsi14": 10.0, "price": 50.0, "qty": 600, "cost": 30_000.0, "name": None},
+            "sells": [{**lot, "price": 50.0, "loss_ratio": 0.5}],
+        }]
+
+        with patch("rsi_daily.broker.get_cash", side_effect=[0.0, 30_000.0, 30_000.0, 0.0]), \
+             patch("rsi_daily.broker.place_market_order", side_effect=[
+                 {"order_id": "9", "status": "FILLED_ALL", "filled_qty": 600, "avg_price": 50.0},
+                 {"order_id": "10", "status": "FILLED_ALL", "filled_qty": 600, "avg_price": 50.0},
+             ]), \
+             patch("rsi_daily.rsi_ledger.append_trade_row"):
+            accepted = rsi_daily._execute_swap_decisions(
+                state, decisions, scores={"BUY": 2, "SELL": -1}, rsi_basis="prev_close",
+                market_us="AFTERNOON", trade_date="2026-10-07", log_lines=[],
+            )
+
+        self.assertEqual(len(accepted), 2)
+        sell_row, buy_row = accepted
+        self.assertEqual(sell_row["action"], "SELL")
+        self.assertEqual(sell_row["rule"], "swap")
+        self.assertIn("realized_pnl", sell_row)
+        self.assertEqual(buy_row["action"], "BUY")
+        self.assertEqual(buy_row["rule"], "entry")  # 買いは通常の新規ロットと同じrule
+        self.assertEqual(len(state["lots"]), 2)  # 旧ロット(クローズ)＋新ロット
+        self.assertTrue(state["lots"][0]["closed"])
+        self.assertEqual(state["lots"][0]["closed_reason"], "swap")
+
+
+class TestSectorMapMonthlyCaching(unittest.TestCase):
+    def test_cache_reused_within_same_month(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            with patch.object(config, "RSI_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_owner_plates", return_value={"AAPL": ["Software"]}) as mock_plates:
+                first = rsi_daily.get_sector_map(["AAPL"], "2026-10-07", dry_run=False, log_lines=[])
+                second = rsi_daily.get_sector_map(["AAPL"], "2026-10-20", dry_run=False, log_lines=[])
+
+            mock_plates.assert_called_once()  # 同じ月の2回目は呼ばない
+            self.assertEqual(first, second)
+            self.assertEqual(first["AAPL"], "XLK")
+            self.assertTrue(fake_path.exists())
+
+    def test_different_month_triggers_refresh(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            fake_path.write_text(json.dumps({"month": "2026-09", "map": {"AAPL": "XLK"}}), encoding="utf-8")
+            with patch.object(config, "RSI_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_owner_plates", return_value={"AAPL": ["Banks"]}) as mock_plates:
+                result = rsi_daily.get_sector_map(["AAPL"], "2026-10-07", dry_run=False, log_lines=[])
+
+            mock_plates.assert_called_once()
+            self.assertEqual(result["AAPL"], "XLF")
+
+    def test_dry_run_does_not_write_cache_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            with patch.object(config, "RSI_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_owner_plates", return_value={"AAPL": ["Software"]}):
+                result = rsi_daily.get_sector_map(["AAPL"], "2026-10-07", dry_run=True, log_lines=[])
+
+            self.assertEqual(result["AAPL"], "XLK")
+            self.assertFalse(fake_path.exists())  # dry-runはledger/配下を一切変更しない
+
+    def test_fetch_failure_falls_back_to_unknown_without_crashing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_map.json"
+            with patch.object(config, "RSI_SWAP_SECTOR_MAP_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_owner_plates", return_value=None):
+                result = rsi_daily.get_sector_map(["AAPL"], "2026-10-07", dry_run=False, log_lines=[])
+
+            self.assertIsNone(result.get("AAPL"))
+
+
+class TestSectorTiersMonthlyCaching(unittest.TestCase):
+    def test_cache_reused_within_same_month(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_tiers.json"
+            returns = {etf: 0.01 * i for i, etf in enumerate(config.RSI_SWAP_SECTOR_ETFS)}
+            with patch.object(config, "RSI_SWAP_SECTOR_TIERS_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_sector_etf_returns", return_value=returns) as mock_returns:
+                first = rsi_daily.get_sector_tiers("2026-10-07", dry_run=False, log_lines=[])
+                second = rsi_daily.get_sector_tiers("2026-10-20", dry_run=False, log_lines=[])
+
+            mock_returns.assert_called_once()
+            self.assertEqual(first, second)
+
+    def test_dry_run_does_not_write_cache_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_tiers.json"
+            returns = {etf: 0.01 * i for i, etf in enumerate(config.RSI_SWAP_SECTOR_ETFS)}
+            with patch.object(config, "RSI_SWAP_SECTOR_TIERS_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_sector_etf_returns", return_value=returns):
+                rsi_daily.get_sector_tiers("2026-10-07", dry_run=True, log_lines=[])
+
+            self.assertFalse(fake_path.exists())
+
+    def test_insufficient_etf_returns_falls_back_without_crashing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "sector_tiers.json"
+            with patch.object(config, "RSI_SWAP_SECTOR_TIERS_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_sector_etf_returns", return_value={"XLK": 0.01}):
+                result = rsi_daily.get_sector_tiers("2026-10-07", dry_run=False, log_lines=[])
+
+            self.assertEqual(result, {})
+            self.assertFalse(fake_path.exists())
+
+
+class TestMarketCapTiersNoCaching(unittest.TestCase):
+    def test_always_calls_broker_fresh_each_time(self):
+        with patch("rsi_daily.broker.get_market_caps", return_value={"AAA": 1.0, "BBB": 2.0}) as mock_caps:
+            rsi_daily.get_market_cap_tiers(["AAA", "BBB"], log_lines=[])
+            rsi_daily.get_market_cap_tiers(["AAA", "BBB"], log_lines=[])
+
+        self.assertEqual(mock_caps.call_count, 2)  # ナイトリー・キャッシュを持たない
+
+    def test_fetch_failure_returns_empty_dict_without_crashing(self):
+        with patch("rsi_daily.broker.get_market_caps", return_value=None):
+            result = rsi_daily.get_market_cap_tiers(["AAA"], log_lines=[])
+
+        self.assertEqual(result, {})
+
+
+class TestJpFrameUnaffectedBySwapFeature(unittest.TestCase):
+    """スワップ売却は米国RSI枠のみ（日本株RSI枠は無変更）。jp_rsi_daily.pyがスワップ関連の
+    新規関数を一切参照していないことをソース上で確認する（2026-10-07追加）。"""
+
+    def test_jp_rsi_daily_does_not_reference_swap_functions(self):
+        source = (config.BASE_DIR / "jp_rsi_daily.py").read_text(encoding="utf-8")
+        for forbidden in ("decide_swaps", "select_swap_sell_candidates", "_run_swaps", "get_sector_map"):
+            self.assertNotIn(forbidden, source)
+
+
 if __name__ == "__main__":
     unittest.main()

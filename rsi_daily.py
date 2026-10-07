@@ -25,6 +25,7 @@ import dividends
 import jp_rsi_daily
 import rsi_ledger
 import rsi_strategy
+import sector_map
 import universe
 from market import TickerSnapshot
 
@@ -597,6 +598,312 @@ def credit_dividends(state: dict[str, Any], log_lines: list[str]) -> None:
         )
 
 
+def _month_key(date_str: str) -> str:
+    return date_str[:7]  # "YYYY-MM"
+
+
+def get_sector_map(
+    universe_tickers: list[str], trade_date: str, dry_run: bool, log_lines: list[str],
+) -> dict[str, str | None]:
+    """ticker→SPDRセクターETF（不明はNone）のマッピングをledger/rsi/sector_map.jsonにキャッシュする
+    （2026-10-07追加・スワップ売却機能）。universe.jsonと同じ月次周期（当月分のキャッシュが
+    無ければ更新。「資金不足の候補がある夜」にだけ呼ばれるため、universe.json更新と厳密に
+    同じ日とは限らない＝「その月で初めてスワップ判定が必要になった日」に更新される）。
+
+    dry_run=Trueの場合、更新が必要でもファイルへは書かず（dry-runはledger/配下を変更しない
+    契約を守るため）、その場で取得した値をそのまま返す（プレビュー用。次回の本番実行時に
+    改めて取得・保存される）。moomoo取得に失敗した場合は既存キャッシュ（無ければ全銘柄unknown）
+    で続行する（実行は止めない）。
+    """
+    path = config.RSI_SWAP_SECTOR_MAP_PATH
+    month = _month_key(trade_date)
+    cache: dict[str, Any] | None = None
+    if path.exists():
+        try:
+            cache = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            logger.warning("sector_map.json読み込み失敗: %s", e)
+            cache = None
+    if cache is not None and cache.get("month") == month:
+        return cache["map"]
+
+    plates = broker.get_owner_plates(universe_tickers)
+    if plates is None:
+        msg = "[RSI-SWAP] 警告: sector_map更新に失敗（get_owner_plate）。既存キャッシュ(無ければ全銘柄unknown)で続行"
+        logger.warning(msg)
+        log_lines.append(msg)
+        return (cache or {}).get("map", {t: None for t in universe_tickers})
+
+    new_map = {t: sector_map.classify_industry_labels(plates.get(t, [])) for t in universe_tickers}
+    if dry_run:
+        log_lines.append(f"[RSI-SWAP] [dry-run] sector_map更新対象だが保存はスキップ（{len(universe_tickers)}銘柄・{month}）")
+        return new_map
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"month": month, "map": new_map}, ensure_ascii=False, indent=2), encoding="utf-8")
+    log_lines.append(f"[RSI-SWAP] sector_map更新完了: {len(universe_tickers)}銘柄 ({month})")
+    return new_map
+
+
+def get_sector_tiers(trade_date: str, dry_run: bool, log_lines: list[str]) -> dict[str, int]:
+    """SPDRセクターETF11本の直近リターンから月次のセクターTier(-1/0/+1)を
+    ledger/rsi/sector_tiers.jsonにキャッシュする（2026-10-07追加・スワップ売却機能）。
+
+    dry_run=Trueの場合はget_sector_mapと同じ方針（更新が必要でもファイルへは書かずその場の値を返す）。
+    """
+    path = config.RSI_SWAP_SECTOR_TIERS_PATH
+    month = _month_key(trade_date)
+    cache: dict[str, Any] | None = None
+    if path.exists():
+        try:
+            cache = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            logger.warning("sector_tiers.json読み込み失敗: %s", e)
+            cache = None
+    if cache is not None and cache.get("month") == month:
+        return cache["tiers"]
+
+    returns = broker.get_sector_etf_returns(
+        config.RSI_SWAP_SECTOR_ETFS, config.RSI_SWAP_SECTOR_RETURN_LOOKBACK_TRADING_DAYS,
+    )
+    if returns is None or len(returns) < len(config.RSI_SWAP_SECTOR_ETFS):
+        msg = "[RSI-SWAP] 警告: セクターTier更新に失敗（ETFリターン取得不足）。既存キャッシュ(無ければ全セクター0)で続行"
+        logger.warning(msg)
+        log_lines.append(msg)
+        return (cache or {}).get("tiers", {})
+
+    tiers = rsi_strategy.rank_sector_etf_tiers(returns)
+    if dry_run:
+        log_lines.append(f"[RSI-SWAP] [dry-run] セクターTier更新対象だが保存はスキップ（{month}）: {tiers}")
+        return tiers
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"month": month, "tiers": tiers}, ensure_ascii=False, indent=2), encoding="utf-8")
+    log_lines.append(f"[RSI-SWAP] セクターTier更新完了({month}): {tiers}")
+    return tiers
+
+
+def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> dict[str, int]:
+    """米国ユニバース全体の時価総額を取得し3分位Tier(-1/0/+1)を返す（2026-10-07追加・毎晩。
+    キャッシュしない＝呼ばれるたびmoomooから取り直す。get_market_snapshotはkline枠を消費しない）。
+    """
+    caps = broker.get_market_caps(universe_tickers)
+    if caps is None:
+        msg = "[RSI-SWAP] 警告: 時価総額の取得に失敗。Tierは全銘柄0として扱う"
+        logger.warning(msg)
+        log_lines.append(msg)
+        return {}
+    missing = len(universe_tickers) - len(caps)
+    if missing:
+        logger.warning("RSI-SWAP: 時価総額が取得できなかった銘柄 %d件", missing)
+    return rsi_strategy.compute_market_cap_tiers(caps)
+
+
+def _compute_swap_scores(
+    tickers: list[str], trade_date: str, dry_run: bool, log_lines: list[str],
+) -> dict[str, int]:
+    """スワップ判定に使うスコア（セクターTier+時価総額Tier）を対象ティッカー分まとめて計算する
+    （2026-10-07追加）。セクターマップ・セクターTierは月次キャッシュ、時価総額Tierは毎晩
+    ユニバース全体を取り直す（いずれもSPEC_RSI30.md「2026-10-07改訂」のスワップ売却仕様どおり）。
+    """
+    universe_tickers = universe.get_universe()
+    sector_of = get_sector_map(universe_tickers, trade_date, dry_run, log_lines)
+    sector_tiers = get_sector_tiers(trade_date, dry_run, log_lines)
+    mcap_tiers = get_market_cap_tiers(universe_tickers, log_lines)
+    return {
+        t: rsi_strategy.compute_swap_score(t, sector_of, sector_tiers, mcap_tiers) for t in tickers
+    }
+
+
+def _run_swaps(
+    state: dict[str, Any],
+    unfunded_entries: list[dict[str, Any]],
+    market_prices: dict[str, float],
+    rsi_basis: str,
+    market_us: str | None,
+    trade_date: str,
+    log_lines: list[str],
+) -> list[dict[str, Any]]:
+    """資金不足の新規エントリー候補を、保有ロットの入れ替え売りで拾えるか判定し発注する
+    （2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」スワップ売却。do_trade=Trueの時のみ呼ばれる＝
+    moomoo呼び出し・ファイル書き込みを行ってよい）。
+    """
+    sell_candidates = rsi_strategy.select_swap_sell_candidates(state["lots"], market_prices)
+    if not sell_candidates:
+        log_lines.append(f"[RSI-SWAP] 資金不足候補{len(unfunded_entries)}件だが売却可能なロットが無く入れ替え不可")
+        return []
+
+    tickers = sorted({c["ticker"] for c in unfunded_entries} | {lot["ticker"] for lot in sell_candidates})
+    scores = _compute_swap_scores(tickers, trade_date, dry_run=False, log_lines=log_lines)
+    cash = rsi_ledger.compute_available_cash(state, market_prices)
+    decisions = rsi_strategy.decide_swaps(unfunded_entries, sell_candidates, scores, cash)
+    if not decisions:
+        log_lines.append(f"[RSI-SWAP] 資金不足候補{len(unfunded_entries)}件だが入れ替え条件を満たさず見送り")
+        return []
+
+    return _execute_swap_decisions(state, decisions, scores, rsi_basis, market_us, trade_date, log_lines)
+
+
+def _execute_swap_decisions(
+    state: dict[str, Any],
+    decisions: list[dict[str, Any]],
+    scores: dict[str, int],
+    rsi_basis: str,
+    market_us: str | None,
+    trade_date: str,
+    log_lines: list[str],
+) -> list[dict[str, Any]]:
+    """decide_swapsが決めたスワップ計画を実際に発注する（2026-10-07追加）。
+
+    各決定について売りを先に全件発注し、全て全量約定(FULL)した場合のみ買いを行う（仕様「売りが
+    約定しない夜は買わない」）。1件でも売りが全量約定しなければ、この決定もそれ以降の決定
+    （他候補のスワップ）も中止する（decide_swapsの計画全体が売却見込み額の積み上げを前提に
+    しているため、途中で崩れた時点でそれ以降の計画も前提が崩れている）。未決分は
+    pending_ordersへ積み、既存のsettle_pending_ordersが次回実行時に解決する。
+    """
+    accepted: list[dict[str, Any]] = []
+    for decision in decisions:
+        buy = decision["buy"]
+        sold_rows: list[dict[str, Any]] = []
+        all_sells_full = True
+
+        for sell in decision["sells"]:
+            fill, cash_delta = _execute_order(sell["ticker"], int(sell["shares"]), "SELL", market_us)
+            if fill is None:
+                logger.warning("RSIスワップ売却発注失敗: %s lot=%s", sell["ticker"], sell["lot_id"])
+                all_sells_full = False
+                break
+
+            outcome = broker.classify_fill(int(sell["shares"]), fill)
+            filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+            if filled_qty > 0:
+                idx = next(i for i, x in enumerate(state["lots"]) if x["lot_id"] == sell["lot_id"])
+                lot_avg_cost = state["lots"][idx]["avg_cost"]
+                realized_pnl, realized_pnl_pct = rsi_strategy.compute_realized_pnl(
+                    lot_avg_cost, avg_price, filled_qty,
+                )
+                state["cash_usd"] += cash_delta
+                state["lots"][idx] = rsi_strategy.apply_stop_loss_fill(
+                    state["lots"][idx], filled_qty, trade_date, reason="swap",
+                )
+                trade_row = {
+                    "date": trade_date, "action": "SELL", "ticker": sell["ticker"],
+                    "shares": filled_qty, "price": round(avg_price, 4),
+                    "amount_usd": round(filled_qty * avg_price, 2),
+                    "rule": "swap", "lot_id": sell["lot_id"],
+                    "note": f"入れ替え買い{buy['ticker']}のため(score={scores.get(sell['ticker'], 0)})",
+                    "realized_pnl": realized_pnl, "realized_pnl_pct": realized_pnl_pct,
+                    "name": state["lots"][idx].get("name"),
+                }
+                rsi_ledger.append_trade_row(trade_row)
+                accepted.append(trade_row)
+                sold_rows.append(sell)
+
+            if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+                state.setdefault("pending_orders", [])
+                state["pending_orders"].append({
+                    "order_id": fill["order_id"], "ticker": sell["ticker"], "side": "SELL",
+                    "qty": int(sell["shares"]), "submitted_date": trade_date,
+                    "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                    "rule": "swap", "lot_id": sell["lot_id"],
+                })
+            if outcome != "FULL":
+                all_sells_full = False
+                break
+
+        if not all_sells_full:
+            logger.info("RSIスワップ中止: %s の入れ替え買いは見送り（売りが全量約定しなかった）", buy["ticker"])
+            log_lines.append(f"[RSI-SWAP] {buy['ticker']}の入れ替え中止（売りが未達のため今夜は買わない）")
+            break  # 仕様: 計画全体の前提が崩れるため、以降の決定も試みない
+
+        fill, cash_delta = _execute_order(buy["ticker"], int(buy["qty"]), "BUY", market_us)
+        if fill is None:
+            logger.warning("RSIスワップ買い発注失敗: %s", buy["ticker"])
+            log_lines.append(f"[RSI-SWAP] {buy['ticker']}の入れ替え買い発注に失敗した")
+            break
+
+        outcome = broker.classify_fill(int(buy["qty"]), fill)
+        filled_qty, avg_price = fill["filled_qty"], fill["avg_price"]
+
+        if outcome == "NONE_TERMINAL":
+            logger.warning("RSIスワップ買い: 注文が約定せず終端した %s", buy["ticker"])
+            log_lines.append(f"[RSI-SWAP] {buy['ticker']}の入れ替え買いが約定しなかった")
+            continue
+
+        lot_id = _new_lot_id(buy["ticker"], trade_date, state["lots"], state.get("pending_orders"))
+        if filled_qty > 0:
+            state["cash_usd"] += cash_delta
+            new_lot = rsi_strategy.new_lot(buy["ticker"], lot_id, trade_date, filled_qty, avg_price, name=buy.get("name"))
+            state["lots"].append(new_lot)
+            trade_row = {
+                "date": trade_date, "action": "BUY", "ticker": buy["ticker"],
+                "shares": filled_qty, "price": round(avg_price, 4),
+                "amount_usd": round(filled_qty * avg_price, 2),
+                "rule": "entry", "lot_id": lot_id,
+                "note": f"RSI14={buy['rsi14']:.1f} basis={rsi_basis} 入れ替え(score={scores.get(buy['ticker'], 0)})",
+                "name": buy.get("name"),
+            }
+            rsi_ledger.append_trade_row(trade_row)
+            accepted.append(trade_row)
+            sold_desc = ", ".join(
+                f"{s['ticker']}(score={scores.get(s['ticker'], 0)},含み損{(s['price'] / s['avg_cost'] - 1) * 100:.1f}%)"
+                for s in sold_rows
+            ) or "(売却なし)"
+            log_lines.append(
+                f"[RSI-SWAP] 入れ替え成立: {buy['ticker']}(score={scores.get(buy['ticker'], 0)}) ← 売却: {sold_desc}"
+            )
+
+        if outcome in ("PARTIAL_OPEN", "NONE_OPEN"):
+            state.setdefault("pending_orders", [])
+            state["pending_orders"].append({
+                "order_id": fill["order_id"], "ticker": buy["ticker"], "side": "BUY",
+                "qty": int(buy["qty"]), "submitted_date": trade_date,
+                "applied_qty": filled_qty, "applied_value_usd": filled_qty * avg_price,
+                "rule": "entry", "est_price": buy["price"], "name": buy.get("name"),
+            })
+        elif outcome == "PARTIAL_TERMINAL":
+            logger.warning(
+                "RSIスワップ買い: 一部約定(%d/%d株)のまま終端した %s lot=%s",
+                filled_qty, buy["qty"], buy["ticker"], lot_id,
+            )
+
+    return accepted
+
+
+def _preview_swaps(
+    state: dict[str, Any],
+    unfunded_entries: list[dict[str, Any]],
+    market_prices: dict[str, float],
+    trade_date: str,
+    log_lines: list[str],
+) -> None:
+    """dry-run専用: 今夜もし売買するならどのスワップが決まるかをログに残すだけの関数
+    （2026-10-07追加。発注・台帳変更・ファイル書き込みは一切行わない）。
+    """
+    sell_candidates = rsi_strategy.select_swap_sell_candidates(state["lots"], market_prices)
+    if not sell_candidates:
+        log_lines.append(f"[RSI-SWAP] [dry-run] 資金不足候補{len(unfunded_entries)}件だが売却可能なロットが無く入れ替え不可")
+        return
+
+    tickers = sorted({c["ticker"] for c in unfunded_entries} | {lot["ticker"] for lot in sell_candidates})
+    scores = _compute_swap_scores(tickers, trade_date, dry_run=True, log_lines=log_lines)
+    cash = rsi_ledger.compute_available_cash(state, market_prices)
+    decisions = rsi_strategy.decide_swaps(unfunded_entries, sell_candidates, scores, cash)
+    if not decisions:
+        log_lines.append(f"[RSI-SWAP] [dry-run] 資金不足候補{len(unfunded_entries)}件だが入れ替え条件を満たさず見送り予定")
+        return
+
+    for decision in decisions:
+        buy = decision["buy"]
+        sold_desc = ", ".join(
+            f"{s['ticker']}(score={scores.get(s['ticker'], 0)})" for s in decision["sells"]
+        ) or "(売却なし)"
+        log_lines.append(
+            f"[RSI-SWAP] [dry-run予告] {buy['ticker']}(score={scores.get(buy['ticker'], 0)}) ← 売却: {sold_desc}"
+        )
+
+
 def compute_snapshot_only(
     rsi_state: dict[str, Any], voo_snap: TickerSnapshot,
 ) -> tuple[float, float, dict[str, TickerSnapshot]]:
@@ -712,6 +1019,14 @@ def run(
         logger.info("RSI新規エントリー見送り(保有中のため): %s", ticker)
     if blocked_entry_tickers:
         log_lines.append(f"[RSI-1] 新規エントリー見送り(保有中のため): {', '.join(blocked_entry_tickers)}")
+
+    # dry-run専用のスワップ売却プレビュー（2026-10-07追加）。do_trade=Falseのため本番実行では
+    # 通らない経路（下のdo_trade内で改めて正式に判定・発注する）。ファイル書き込みは行わない。
+    if dry_run:
+        preview_cash = rsi_ledger.compute_available_cash(state, market_prices)
+        _, preview_unfunded = rsi_strategy.select_entries_with_unfunded(entry_candidates, preview_cash)
+        if preview_unfunded:
+            _preview_swaps(state, preview_unfunded, market_prices, trade_date, log_lines)
 
     do_trade = can_trade and not already_processed_today and not dry_run
 
@@ -911,7 +1226,7 @@ def run(
                     )
 
         # --- 3. 新規エントリー（RSIが低い順。現金が足りる分だけ。保有中・利確前は抑止済み） ---
-        selected = rsi_strategy.select_entries_within_cash(
+        selected, unfunded_entries = rsi_strategy.select_entries_with_unfunded(
             entry_candidates, rsi_ledger.compute_available_cash(state, market_prices),
         )
         for cand in selected:
@@ -958,8 +1273,16 @@ def run(
                     filled_qty, cand["qty"], cand["ticker"], lot_id,
                 )
 
+        # --- 4. スワップ売却（資金不足の候補を保有ロットの入れ替え売りで拾う。2026-10-07追加。
+        #     市場が開いていない場合は_execute_order内部のガードが各注文を自然に見送る） ---
+        if unfunded_entries:
+            swap_trades = _run_swaps(
+                state, unfunded_entries, market_prices, rsi_basis, market_us, trade_date, log_lines,
+            )
+            accepted_trades.extend(swap_trades)
+
         state["last_processed_date"] = trade_date
-        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（pending決済/損切り/利確/買い増し/新規エントリー込み）")
+        log_lines.append(f"[RSI-2] 約定{len(accepted_trades)}件（pending決済/損切り/利確/買い増し/新規エントリー/スワップ込み）")
     else:
         reason = "dry-run" if dry_run else ("休場/処理済み" if already_processed_today else "売買停止中")
         log_lines.append(f"[RSI-2] 売買スキップ（{reason}）")

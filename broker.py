@@ -8,6 +8,7 @@ timeout付きjoinで見切りをつける（signal.alarmでは止められない
 """
 from __future__ import annotations
 
+import datetime as dt
 import logging
 import socket
 import threading
@@ -247,6 +248,176 @@ def get_dividends(tickers: list[str]) -> dict[str, list[tuple[str, float]]] | No
                         dividends.append((str(row["ex_div_date"])[:10], amount))
                 result[ticker] = dividends
             return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call)
+
+
+_OWNER_PLATE_MIN_CALL_INTERVAL_SEC = 3.5  # moomoo実機確認(2026-10-07): 本APIは最大10回/30秒の
+# レート制限がある（"Get Stock's Sector request failed due to high frequency. Maximum 10 times
+# per 30 seconds."）。30/10=3.0秒に少し余裕を持たせた間隔を呼び出し間に必ず空ける。
+_OWNER_PLATE_CHUNK_SIZE = 10  # 1回あたりの件数（REIT等「ETF type」扱いの銘柄が均等に紛れており、
+# config.RSI_SWAP_MOOMOO_BATCH_SIZE(200)では実機確認(2026-10-07)でほぼ確実に1件は混入してバッチ
+# 全体がret!=0になるため、この専用の小さいチャンクサイズで呼ぶ）。
+_OWNER_PLATE_RATE_LIMIT_RETRY_WAIT_SEC = 31.0  # レート制限に当たった場合、ウィンドウが流れるまで待つ
+
+
+def get_owner_plates(tickers: list[str]) -> dict[str, list[str]] | None:
+    """moomooのget_owner_plateから各銘柄のINDUSTRY分類名リストを取得する（2026-10-07追加。
+    スワップ売却のセクター分類に使う。sector_map.classify_industry_labelsへそのまま渡す値）。
+
+    CONCEPT/OTHER分類は使わずINDUSTRYのみ採用する。本APIは最大10回/30秒のレート制限がある
+    （実機確認: "Get Stock's Sector request failed due to high frequency."）ため全呼び出しの
+    間隔を3.5秒空ける。さらにREIT銘柄の一部（AMT・PLD・O等）がmoomoo側で"ETF type"として
+    分類され、1銘柄でも混じるとそのリクエスト全体がret!=0になる実績があり（実機確認: "Get
+    Stock's Sector interface does not support ETFs type."）、この手の銘柄は普遍的に分布している
+    ためconfig.RSI_SWAP_MOOMOO_BATCH_SIZE(200)の大きなバッチでは毎回失敗する。そのため
+    _OWNER_PLATE_CHUNK_SIZE件ずつの小さいチャンクで直接呼ぶ（二分探索での原因銘柄特定は
+    呼び出し回数がレート制限と掛け合わさり非現実的な時間になるため行わない）。
+    失敗したチャンクは丸ごと諦める（=その銘柄群はセクター不明→Tier0として扱われる。
+    「Unknown sector → 0」仕様どおりの劣化。REIT等は本来XLREだが判定できず中立0になる）。
+    518銘柄規模で数分かかる想定だが月1回しか呼ばないため許容する。
+    """
+    if not tickers:
+        return {}
+
+    def _call() -> dict[str, list[str]]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            result: dict[str, list[str]] = {t: [] for t in tickers}
+            last_call_at: list[float] = [0.0]
+
+            def _call_owner_plate(chunk: list[str]):
+                wait = _OWNER_PLATE_MIN_CALL_INTERVAL_SEC - (time.monotonic() - last_call_at[0])
+                if wait > 0:
+                    time.sleep(wait)
+                last_call_at[0] = time.monotonic()
+                ret, data = ctx.get_owner_plate([ticker_to_code(t) for t in chunk])
+                if ret == 0 or "frequency" not in str(data).lower():
+                    return ret, data
+                logger.warning(
+                    "get_owner_plates: レート制限のため%.0f秒待って再試行", _OWNER_PLATE_RATE_LIMIT_RETRY_WAIT_SEC,
+                )
+                time.sleep(_OWNER_PLATE_RATE_LIMIT_RETRY_WAIT_SEC)
+                last_call_at[0] = time.monotonic()
+                return ctx.get_owner_plate([ticker_to_code(t) for t in chunk])
+
+            for i in range(0, len(tickers), _OWNER_PLATE_CHUNK_SIZE):
+                chunk = tickers[i:i + _OWNER_PLATE_CHUNK_SIZE]
+                ret, data = _call_owner_plate(chunk)
+                if ret != 0:
+                    logger.warning("get_owner_plates: %d件を分類できず除外する: %s", len(chunk), data)
+                    continue
+                for row in data.to_dict(orient="records"):
+                    if str(row.get("plate_type")) != "INDUSTRY":
+                        continue
+                    ticker = code_to_ticker(str(row["code"]))
+                    if ticker in result:
+                        result[ticker].append(str(row["plate_name"]))
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call, timeout=300.0)
+
+
+def get_sector_etf_returns(etfs: tuple[str, ...], lookback_trading_days: int) -> dict[str, float] | None:
+    """SPDRセクターETFの直近lookback_trading_days営業日リターン(%刻みではなく比率)を
+    request_history_klineで取得する（2026-10-07追加。月初回のみ呼ぶ想定＝kline取得枠は
+    僅かしか消費しない）。個別ETFの取得失敗はそのETFを戻り値から省く（呼び出し側がWARNING）。
+    接続失敗・タイムアウトはNone。
+    """
+    def _call() -> dict[str, float]:
+        from moomoo import AuType, KLType, OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            # 土日・休場を見込んだ余裕を持たせてから末尾lookback_trading_days+1本だけ使う
+            lookback_days_calendar = int(lookback_trading_days * 1.6) + 10
+            start = (dt.date.today() - dt.timedelta(days=lookback_days_calendar)).isoformat()
+            end = dt.date.today().isoformat()
+            result: dict[str, float] = {}
+            for etf in etfs:
+                ret, data, _ = ctx.request_history_kline(
+                    ticker_to_code(etf), start=start, end=end, ktype=KLType.K_DAY, autype=AuType.QFQ,
+                )
+                if ret != 0:
+                    logger.warning("get_sector_etf_returns: %s のkline取得失敗: %s", etf, data)
+                    continue
+                closes = data["close"].astype(float).tolist()
+                if len(closes) <= lookback_trading_days:
+                    logger.warning("get_sector_etf_returns: %s の本数不足(%d本)", etf, len(closes))
+                    continue
+                result[etf] = closes[-1] / closes[-1 - lookback_trading_days] - 1.0
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call, timeout=CALL_TIMEOUT_SEC * 3)
+
+
+def get_market_caps(tickers: list[str]) -> dict[str, float] | None:
+    """get_market_snapshotのtotal_market_val（時価総額）を全銘柄分取得する（2026-10-07追加。
+    毎晩実行する想定。日足取得枠(kline quota)は消費しない）。
+    config.RSI_SWAP_MOOMOO_BATCH_SIZE件ずつバッチで呼ぶ。接続失敗・タイムアウトはNone。
+    """
+    if not tickers:
+        return {}
+
+    def _call() -> dict[str, float]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            result: dict[str, float] = {}
+
+            def _fetch_chunk(chunk: list[str]) -> None:
+                # 1銘柄でもmoomooが認識できない(例: 上場廃止・改称直後で未反映)だとバッチ全体が
+                # ret!=0になる実績があるため（2026-10-07実機確認: "Unknown stock. PSKY"）、
+                # 失敗したバッチは半分に割って再試行し、原因銘柄だけを特定して除外する。
+                codes = [ticker_to_code(t) for t in chunk]
+                ret, data = ctx.get_market_snapshot(codes)
+                if ret == 0:
+                    for row in data.to_dict(orient="records"):
+                        ticker = code_to_ticker(str(row["code"]))
+                        cap = row.get("total_market_val")
+                        if cap is not None and cap == cap and float(cap) > 0:  # cap==capはNaN除外
+                            result[ticker] = float(cap)
+                    return
+                if len(chunk) == 1:
+                    logger.warning("get_market_caps: %s の時価総額を取得できず除外する: %s", chunk[0], data)
+                    return
+                mid = len(chunk) // 2
+                _fetch_chunk(chunk[:mid])
+                _fetch_chunk(chunk[mid:])
+
+            batch = config.RSI_SWAP_MOOMOO_BATCH_SIZE
+            for i in range(0, len(tickers), batch):
+                _fetch_chunk(tickers[i:i + batch])
+            return result
+        finally:
+            ctx.close()
+
+    return _run_with_timeout(_call, timeout=CALL_TIMEOUT_SEC * 3)
+
+
+def get_history_kl_quota() -> tuple[int, int] | None:
+    """moomooの日足取得枠(kline quota)の使用量を返す (used, remain)（2026-10-07追加。
+    スワップ機能のセクターTier計算が消費するkline枠を報告するための運用確認用）。失敗時None。
+    """
+    def _call() -> tuple[int, int]:
+        from moomoo import OpenQuoteContext
+
+        ctx = OpenQuoteContext(host=config.MOOMOO_HOST, port=config.MOOMOO_PORT)
+        try:
+            ret, data = ctx.get_history_kl_quota(get_detail=False)
+            if ret != 0:
+                raise RuntimeError(f"get_history_kl_quota失敗: {data}")
+            used, remain = data[0], data[1]
+            return int(used), int(remain)
         finally:
             ctx.close()
 

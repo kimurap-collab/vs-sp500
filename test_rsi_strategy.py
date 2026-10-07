@@ -479,5 +479,253 @@ class TestStopLossReentry(unittest.TestCase):
         self.assertAlmostEqual(blocked[0]["threshold"], 3254.65, places=2)
 
 
+# ---------------------------------------------------------------------------
+# スワップ売却（2026-10-07追加。SPEC_RSI30.md「2026-10-07改訂」参照）
+# ---------------------------------------------------------------------------
+
+def _swap_lot(ticker, lot_id, avg_cost, shares, profit1=False, profit2=False):
+    lot = rs.new_lot(ticker, lot_id, "2026-09-01", filled_qty=shares, fill_price=avg_cost)
+    lot["profit1_taken"] = profit1
+    lot["profit2_taken"] = profit2
+    return lot
+
+
+class TestSelectEntriesWithUnfunded(unittest.TestCase):
+    def test_matches_select_entries_within_cash_for_selected(self):
+        candidates = [
+            {"ticker": "AAA", "rsi14": 10.0, "price": 100.0},
+            {"ticker": "BBB", "rsi14": 20.0, "price": 100.0},
+        ]
+        selected_old = rs.select_entries_within_cash(candidates, 35_000.0)
+        selected_new, unfunded = rs.select_entries_with_unfunded(candidates, 35_000.0)
+        self.assertEqual(selected_old, selected_new)
+        self.assertEqual([c["ticker"] for c in selected_new], ["AAA"])
+        self.assertEqual([c["ticker"] for c in unfunded], ["BBB"])
+        self.assertEqual(unfunded[0]["cost"], unfunded[0]["qty"] * 100.0)
+
+    def test_no_unfunded_when_all_affordable(self):
+        candidates = [{"ticker": "AAA", "rsi14": 10.0, "price": 100.0}]
+        _selected, unfunded = rs.select_entries_with_unfunded(candidates, 1_000_000.0)
+        self.assertEqual(unfunded, [])
+
+
+class TestSelectSwapSellCandidates(unittest.TestCase):
+    def test_runners_are_never_sold(self):
+        """大将「伸ばす玉は売らないは正解」: profit1・profit2両方済みのロットは含み損でも対象外。"""
+        runner = _swap_lot("AAA", "AAA-1", avg_cost=100.0, shares=50, profit1=True, profit2=True)
+        loser = _swap_lot("BBB", "BBB-1", avg_cost=100.0, shares=100)
+        prices = {"AAA": 50.0, "BBB": 80.0}
+
+        result = rs.select_swap_sell_candidates([runner, loser], prices)
+
+        self.assertEqual([lot["ticker"] for lot in result], ["BBB"])
+
+    def test_only_losing_lots_are_included(self):
+        winner = _swap_lot("AAA", "AAA-1", avg_cost=100.0, shares=50)
+        loser = _swap_lot("BBB", "BBB-1", avg_cost=100.0, shares=50)
+        prices = {"AAA": 120.0, "BBB": 90.0}
+
+        result = rs.select_swap_sell_candidates([winner, loser], prices)
+
+        self.assertEqual([lot["ticker"] for lot in result], ["BBB"])
+
+    def test_sorted_by_deepest_loss_first(self):
+        """大将「購入からの下げ幅が高いものから」: loss_ratio(price/avg_cost)が小さい順。"""
+        mild = _swap_lot("AAA", "AAA-1", avg_cost=100.0, shares=50)   # -10%
+        deep = _swap_lot("BBB", "BBB-1", avg_cost=100.0, shares=50)   # -30%
+        prices = {"AAA": 90.0, "BBB": 70.0}
+
+        result = rs.select_swap_sell_candidates([mild, deep], prices)
+
+        self.assertEqual([lot["ticker"] for lot in result], ["BBB", "AAA"])
+
+    def test_no_minimum_holding_period_all_losers_regardless_of_age(self):
+        """大将「3)1」＝最低保有期間は無い。エントリー直後のロットでも対象になる。"""
+        lot = rs.new_lot("AAA", "AAA-1", "2026-10-07", filled_qty=10, fill_price=100.0)
+        result = rs.select_swap_sell_candidates([lot], {"AAA": 90.0})
+        self.assertEqual([x["ticker"] for x in result], ["AAA"])
+
+    def test_closed_and_missing_price_lots_excluded(self):
+        closed = _swap_lot("AAA", "AAA-1", avg_cost=100.0, shares=50)
+        closed["closed"] = True
+        no_price = _swap_lot("BBB", "BBB-1", avg_cost=100.0, shares=50)
+
+        result = rs.select_swap_sell_candidates([closed, no_price], {})
+
+        self.assertEqual(result, [])
+
+
+class TestRankSectorEtfTiers(unittest.TestCase):
+    def test_eleven_etfs_split_four_four_three_by_return_desc(self):
+        returns = {
+            "XLK": 0.10, "XLF": 0.09, "XLV": 0.08, "XLE": 0.07,   # top4 → +1
+            "XLI": 0.05, "XLY": 0.04, "XLP": 0.03, "XLU": 0.02,   # mid4 → 0
+            "XLB": 0.00, "XLRE": -0.01, "XLC": -0.02,             # bottom3 → -1
+        }
+        tiers = rs.rank_sector_etf_tiers(returns)
+        self.assertEqual(tiers["XLK"], 1)
+        self.assertEqual(tiers["XLE"], 1)
+        self.assertEqual(tiers["XLI"], 0)
+        self.assertEqual(tiers["XLU"], 0)
+        self.assertEqual(tiers["XLB"], -1)
+        self.assertEqual(tiers["XLC"], -1)
+
+    def test_empty_returns_empty_dict(self):
+        self.assertEqual(rs.rank_sector_etf_tiers({}), {})
+
+
+class TestComputeMarketCapTiers(unittest.TestCase):
+    def test_top_third_plus_one_bottom_third_minus_one(self):
+        caps = {f"T{i}": float(i) for i in range(1, 10)}  # 9銘柄: 1..9（昇順）
+        tiers = rs.compute_market_cap_tiers(caps)
+        self.assertEqual(tiers["T9"], 1)   # 最大
+        self.assertEqual(tiers["T1"], -1)  # 最小
+        self.assertEqual(tiers["T5"], 0)   # 中位
+
+    def test_unknown_or_invalid_caps_excluded_from_result(self):
+        caps = {"AAA": 100.0, "BBB": None, "CCC": float("nan"), "DDD": 0.0, "EEE": 200.0}
+        tiers = rs.compute_market_cap_tiers(caps)
+        self.assertNotIn("BBB", tiers)
+        self.assertNotIn("CCC", tiers)
+        self.assertNotIn("DDD", tiers)
+
+
+class TestComputeSwapScore(unittest.TestCase):
+    def test_known_sector_and_cap_sum_to_score(self):
+        score = rs.compute_swap_score(
+            "AAPL", sector_of={"AAPL": "XLK"}, sector_tiers={"XLK": 1}, mcap_tiers={"AAPL": 1},
+        )
+        self.assertEqual(score, 2)
+
+    def test_unknown_sector_treated_as_zero(self):
+        score = rs.compute_swap_score(
+            "ZZZ", sector_of={"ZZZ": None}, sector_tiers={"XLK": 1}, mcap_tiers={"ZZZ": 1},
+        )
+        self.assertEqual(score, 1)
+
+    def test_unknown_market_cap_treated_as_zero(self):
+        score = rs.compute_swap_score(
+            "AAPL", sector_of={"AAPL": "XLK"}, sector_tiers={"XLK": 1}, mcap_tiers={},
+        )
+        self.assertEqual(score, 1)
+
+    def test_ticker_entirely_absent_from_sector_map_is_zero_zero(self):
+        score = rs.compute_swap_score("ZZZ", sector_of={}, sector_tiers={"XLK": 1}, mcap_tiers={})
+        self.assertEqual(score, 0)
+
+
+class TestDecideSwaps(unittest.TestCase):
+    def test_highest_score_candidate_chosen_first(self):
+        """スコアが高い候補から順に処理されること（同率はRSI昇順）。"""
+        unfunded = [
+            {"ticker": "LOW", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+            {"ticker": "HIGH", "rsi14": 20.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+        ]
+        sells = rs.select_swap_sell_candidates(
+            [_swap_lot("SELL", "SELL-1", avg_cost=100.0, shares=1000)], {"SELL": 50.0},
+        )
+        scores = {"LOW": 0, "HIGH": 2, "SELL": -2}
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        self.assertEqual(decisions[0]["buy"]["ticker"], "HIGH")
+
+    def test_tie_score_breaks_by_lowest_rsi(self):
+        unfunded = [
+            {"ticker": "A", "rsi14": 30.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+            {"ticker": "B", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+        ]
+        sells = rs.select_swap_sell_candidates(
+            [_swap_lot("SELL", "SELL-1", avg_cost=100.0, shares=1000)], {"SELL": 50.0},
+        )
+        scores = {"A": 1, "B": 1, "SELL": -2}
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        self.assertEqual(decisions[0]["buy"]["ticker"], "B")
+
+    def test_sell_must_have_strictly_lower_score_than_buy(self):
+        """スコアが買い候補と同点以上の保有ロットはスワップ対象にならない（厳密に低いことが条件）。"""
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0}]
+        sells = rs.select_swap_sell_candidates(
+            [_swap_lot("SELL", "SELL-1", avg_cost=100.0, shares=1000)], {"SELL": 50.0},
+        )
+        scores = {"BUY": 0, "SELL": 0}  # 同点 → 対象外
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        self.assertEqual(decisions, [])
+
+    def test_multiple_sells_accumulated_until_entry_amount_covered(self):
+        """1件では$30,000に届かない損失ロットを複数売って資金を作る（大将「９）1」）。"""
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0}]
+        lot1 = _swap_lot("S1", "S1-1", avg_cost=100.0, shares=100)   # 価格50 → $5,000
+        lot2 = _swap_lot("S2", "S2-1", avg_cost=100.0, shares=100)   # 価格50 → $5,000
+        lot3 = _swap_lot("S3", "S3-1", avg_cost=100.0, shares=400)   # 価格50 → $20,000
+        prices = {"S1": 50.0, "S2": 60.0, "S3": 70.0}  # 下げ幅順: S1(最深) < S2 < S3
+        sells = rs.select_swap_sell_candidates([lot1, lot2, lot3], prices)
+        scores = {"BUY": 2, "S1": -1, "S2": -1, "S3": -1}
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        self.assertEqual(len(decisions), 1)
+        sold_tickers = {s["ticker"] for s in decisions[0]["sells"]}
+        self.assertEqual(sold_tickers, {"S1", "S2", "S3"})  # 3件積み上げて初めて$30,000に届く
+
+    def test_insufficient_even_with_all_qualifying_sells_does_nothing(self):
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0}]
+        sells = rs.select_swap_sell_candidates(
+            [_swap_lot("S1", "S1-1", avg_cost=100.0, shares=50)], {"S1": 50.0},  # $2,500しか作れない
+        )
+        scores = {"BUY": 2, "S1": -1}
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        self.assertEqual(decisions, [])
+
+    def test_stops_entirely_once_top_candidate_cannot_be_funded(self):
+        """最上位候補が資金化できなければ、それ以降の(スコアが低い)候補も試みず打ち切る
+        （参照実装 backtest_swap/swap.py run() の break と同じ挙動）。"""
+        unfunded = [
+            {"ticker": "HIGH", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+            {"ticker": "LOW", "rsi14": 10.0, "price": 10.0, "qty": 300, "cost": 3_000.0},
+        ]
+        # LOWより売却候補のスコアが低いロットは無い(HIGHの判定失敗で即break)ため、
+        # LOWだけなら本来資金化できる売却ロットをあえて用意する
+        sells = rs.select_swap_sell_candidates(
+            [_swap_lot("S1", "S1-1", avg_cost=100.0, shares=200)], {"S1": 50.0},  # $10,000
+        )
+        scores = {"HIGH": 2, "LOW": 1, "S1": 0}  # S1(0)はHIGH(2)より低いがLOW(1)より低くはない… 条件はHIGH側
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        # HIGHは$10,000しか作れず$30,000に届かないため失敗 → LOWも試されず終了
+        self.assertEqual(decisions, [])
+
+    def test_buy_without_sells_when_cash_already_sufficient(self):
+        unfunded = [{"ticker": "BUY", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0}]
+
+        decisions = rs.decide_swaps(unfunded, [], {"BUY": 1}, available_cash=30_000.0)
+
+        self.assertEqual(len(decisions), 1)
+        self.assertEqual(decisions[0]["sells"], [])
+
+    def test_sold_lot_not_reused_across_decisions(self):
+        """1回のスワップで使ったロットは、次の候補の判定からも除外される。"""
+        unfunded = [
+            {"ticker": "A", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+            {"ticker": "B", "rsi14": 10.0, "price": 100.0, "qty": 300, "cost": 30_000.0},
+        ]
+        lot1 = _swap_lot("S1", "S1-1", avg_cost=100.0, shares=600)  # 価格50 → $30,000ちょうど
+        sells = rs.select_swap_sell_candidates([lot1], {"S1": 50.0})
+        scores = {"A": 2, "B": 2, "S1": -1}
+
+        decisions = rs.decide_swaps(unfunded, sells, scores, available_cash=0.0)
+
+        # Aがsells1件で資金化 → Bの判定ではS1がもう無いので資金化できず打ち切り
+        self.assertEqual(len(decisions), 1)
+        self.assertEqual(decisions[0]["buy"]["ticker"], "A")
+
+
 if __name__ == "__main__":
     unittest.main()
