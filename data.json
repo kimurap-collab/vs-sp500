@@ -1,22 +1,22 @@
 {
-  "updated_at": "2026-10-08 03:00 JST",
+  "updated_at": "2026-10-09 03:00 JST",
   "start_date": "2026-08-05",
-  "nav_usd": 64586.15,
-  "bench_usd": 63951.99,
-  "diff_usd": 634.16,
-  "diff_pct": 0.99,
+  "nav_usd": 64083.54,
+  "bench_usd": 63533.94,
+  "diff_usd": 549.6,
+  "diff_pct": 0.87,
   "principal_usd": 63343.06,
-  "principal_diff_usd": 1243.09,
-  "principal_diff_pct": 1.96,
+  "principal_diff_usd": 740.48,
+  "principal_diff_pct": 1.17,
   "mode": "normal",
   "holdings": [
     {
       "ticker": "QQQ",
       "name": "ナスダック100 ETF",
       "shares": 21.0,
-      "value_usd": 15894.69,
-      "weight_pct": 24.61,
-      "price": 756.89,
+      "value_usd": 15665.79,
+      "weight_pct": 24.45,
+      "price": 745.99,
       "avg_cost": 717.3,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/QQQ",
@@ -27,9 +27,9 @@
       "ticker": "XLV",
       "name": "米国ヘルスケアセクター ETF",
       "shares": 18.0,
-      "value_usd": 3053.7,
-      "weight_pct": 4.73,
-      "price": 169.65,
+      "value_usd": 3011.4,
+      "weight_pct": 4.7,
+      "price": 167.3,
       "avg_cost": 164.16,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/XLV",
@@ -40,9 +40,9 @@
       "ticker": "GLD",
       "name": "金 ETF",
       "shares": 12.0,
-      "value_usd": 4521.18,
-      "weight_pct": 7.0,
-      "price": 376.765,
+      "value_usd": 4545.72,
+      "weight_pct": 7.09,
+      "price": 378.81,
       "avg_cost": 389.64,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/GLD",
@@ -53,9 +53,9 @@
       "ticker": "VOO",
       "name": "S&P500 ETF",
       "shares": 47.0,
-      "value_usd": 33576.8,
-      "weight_pct": 51.99,
-      "price": 714.4,
+      "value_usd": 33357.31,
+      "weight_pct": 52.05,
+      "price": 709.73,
       "avg_cost": 704.539,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/VOO",
@@ -66,9 +66,9 @@
       "ticker": "EWJ",
       "name": "MSCI日本株 ETF",
       "shares": 33.0,
-      "value_usd": 3244.39,
-      "weight_pct": 5.02,
-      "price": 98.315,
+      "value_usd": 3207.93,
+      "weight_pct": 5.01,
+      "price": 97.21,
       "avg_cost": 96.49,
       "currency": "USD",
       "link": "https://finance.yahoo.com/quote/EWJ",
@@ -237,6 +237,11 @@
       "date": "2026-10-07",
       "nav": 64586.15,
       "bench": 63951.99
+    },
+    {
+      "date": "2026-10-08",
+      "nav": 64083.54,
+      "bench": 63533.94
     }
   ],
   "trades": [
@@ -436,20 +441,20 @@
     },
     {
       "month": "2026-10",
-      "nav": 64586.15,
-      "bench": 63951.99,
+      "nav": 64083.54,
+      "bench": 63533.94,
       "result": "win"
     }
   ],
   "rsi": {
     "start_date": "2026-08-14",
-    "nav_usd": 481181.18,
-    "bench_usd": 500553.53,
-    "diff_usd": -19372.35,
-    "diff_pct": -3.87,
+    "nav_usd": 480290.61,
+    "bench_usd": 497281.44,
+    "diff_usd": -16990.83,
+    "diff_pct": -3.42,
     "principal_usd": 500000.0,
-    "principal_diff_usd": -18818.82,
-    "principal_diff_pct": -3.76,
+    "principal_diff_usd": -19709.39,
+    "principal_diff_pct": -3.94,
     "cash_usd": 458.04,
     "open_lots": 12,
     "dividends_total_usd": 790.9,
@@ -458,121 +463,145 @@
         "ticker": "CDNS",
         "name": "Cadence Design Systems",
         "shares": 181.0,
-        "value_usd": 64952.76,
-        "weight_pct": 13.5,
-        "price": 358.855,
+        "value_usd": 63165.4,
+        "weight_pct": 13.15,
+        "price": 348.9801,
         "avg_cost": 327.9549,
-        "link": "https://finance.yahoo.com/quote/CDNS"
+        "link": "https://finance.yahoo.com/quote/CDNS",
+        "size_label": "大",
+        "market_cap_100m_usd": 959.6
       },
       {
         "ticker": "WMT",
         "name": "Walmart",
         "shares": 500.0,
-        "value_usd": 54116.3,
-        "weight_pct": 11.25,
-        "price": 108.2326,
+        "value_usd": 55445.0,
+        "weight_pct": 11.54,
+        "price": 110.89,
         "avg_cost": 104.5608,
-        "link": "https://finance.yahoo.com/quote/WMT"
+        "link": "https://finance.yahoo.com/quote/WMT",
+        "size_label": "大",
+        "market_cap_100m_usd": 8799.3
       },
       {
         "ticker": "DTE",
         "name": "DTE Energy",
         "shares": 422.0,
-        "value_usd": 54089.85,
-        "weight_pct": 11.24,
-        "price": 128.175,
+        "value_usd": 53851.42,
+        "weight_pct": 11.21,
+        "price": 127.61,
         "avg_cost": 124.0897,
-        "link": "https://finance.yahoo.com/quote/DTE"
+        "link": "https://finance.yahoo.com/quote/DTE",
+        "size_label": "中",
+        "market_cap_100m_usd": 265.4
       },
       {
         "ticker": "LUV",
         "name": "Southwest Airlines",
         "shares": 1274.0,
-        "value_usd": 53310.53,
-        "weight_pct": 11.08,
-        "price": 41.845,
+        "value_usd": 52514.28,
+        "weight_pct": 10.93,
+        "price": 41.22,
         "avg_cost": 41.1246,
-        "link": "https://finance.yahoo.com/quote/LUV"
+        "link": "https://finance.yahoo.com/quote/LUV",
+        "size_label": "小",
+        "market_cap_100m_usd": 201.7
       },
       {
         "ticker": "STLD",
         "name": "Steel Dynamics",
         "shares": 198.0,
-        "value_usd": 46767.6,
-        "weight_pct": 9.72,
-        "price": 236.2,
+        "value_usd": 46823.04,
+        "weight_pct": 9.75,
+        "price": 236.48,
         "avg_cost": 226.5583,
-        "link": "https://finance.yahoo.com/quote/STLD"
-      },
-      {
-        "ticker": "DVA",
-        "name": "DaVita",
-        "shares": 169.0,
-        "value_usd": 30065.1,
-        "weight_pct": 6.25,
-        "price": 177.9,
-        "avg_cost": 177.64,
-        "link": "https://finance.yahoo.com/quote/DVA"
+        "link": "https://finance.yahoo.com/quote/STLD",
+        "size_label": "中",
+        "market_cap_100m_usd": 338.3
       },
       {
         "ticker": "GIS",
         "name": "General Mills",
         "shares": 941.0,
-        "value_usd": 29975.56,
-        "weight_pct": 6.23,
-        "price": 31.855,
+        "value_usd": 30577.79,
+        "weight_pct": 6.37,
+        "price": 32.495,
         "avg_cost": 31.9,
-        "link": "https://finance.yahoo.com/quote/GIS"
+        "link": "https://finance.yahoo.com/quote/GIS",
+        "size_label": "小",
+        "market_cap_100m_usd": 173.8
+      },
+      {
+        "ticker": "DVA",
+        "name": "DaVita",
+        "shares": 169.0,
+        "value_usd": 30176.64,
+        "weight_pct": 6.28,
+        "price": 178.56,
+        "avg_cost": 177.64,
+        "link": "https://finance.yahoo.com/quote/DVA",
+        "size_label": "小",
+        "market_cap_100m_usd": 113.6
       },
       {
         "ticker": "FIS",
         "name": "Fidelity National Information Services",
         "shares": 880.0,
-        "value_usd": 29968.4,
-        "weight_pct": 6.23,
-        "price": 34.055,
+        "value_usd": 30082.8,
+        "weight_pct": 6.26,
+        "price": 34.185,
         "avg_cost": 34.155,
-        "link": "https://finance.yahoo.com/quote/FIS"
+        "link": "https://finance.yahoo.com/quote/FIS",
+        "size_label": "小",
+        "market_cap_100m_usd": 176.1
       },
       {
         "ticker": "CNP",
         "name": "CenterPoint Energy",
         "shares": 771.0,
-        "value_usd": 29810.72,
-        "weight_pct": 6.2,
-        "price": 38.665,
+        "value_usd": 29679.64,
+        "weight_pct": 6.18,
+        "price": 38.495,
         "avg_cost": 38.885,
-        "link": "https://finance.yahoo.com/quote/CNP"
+        "link": "https://finance.yahoo.com/quote/CNP",
+        "size_label": "中",
+        "market_cap_100m_usd": 253.5
       },
       {
         "ticker": "TJX",
         "name": "TJX Companies",
         "shares": 212.0,
-        "value_usd": 29561.28,
-        "weight_pct": 6.14,
-        "price": 139.44,
+        "value_usd": 29416.06,
+        "weight_pct": 6.12,
+        "price": 138.755,
         "avg_cost": 141.48,
-        "link": "https://finance.yahoo.com/quote/TJX"
-      },
-      {
-        "ticker": "NI",
-        "name": "NiSource",
-        "shares": 715.0,
-        "value_usd": 29129.1,
-        "weight_pct": 6.05,
-        "price": 40.74,
-        "avg_cost": 41.915,
-        "link": "https://finance.yahoo.com/quote/NI"
+        "link": "https://finance.yahoo.com/quote/TJX",
+        "size_label": "大",
+        "market_cap_100m_usd": 1527.2
       },
       {
         "ticker": "O",
         "name": "Realty Income",
         "shares": 541.0,
-        "value_usd": 28975.96,
-        "weight_pct": 6.02,
-        "price": 53.56,
+        "value_usd": 29168.01,
+        "weight_pct": 6.07,
+        "price": 53.915,
         "avg_cost": 55.355,
-        "link": "https://finance.yahoo.com/quote/O"
+        "link": "https://finance.yahoo.com/quote/O",
+        "size_label": null,
+        "market_cap_100m_usd": null
+      },
+      {
+        "ticker": "NI",
+        "name": "NiSource",
+        "shares": 715.0,
+        "value_usd": 28932.48,
+        "weight_pct": 6.02,
+        "price": 40.465,
+        "avg_cost": 41.915,
+        "link": "https://finance.yahoo.com/quote/NI",
+        "size_label": "小",
+        "market_cap_100m_usd": 194.1
       }
     ],
     "history": [
@@ -710,6 +739,11 @@
         "date": "2026-10-07",
         "nav": 481181.18,
         "bench": 500553.53
+      },
+      {
+        "date": "2026-10-08",
+        "nav": 480290.61,
+        "bench": 497281.44
       }
     ],
     "trades": [
@@ -1317,321 +1351,1281 @@
       },
       {
         "month": "2026-10",
-        "nav": 481181.18,
-        "bench": 500553.53,
+        "nav": 480290.61,
+        "bench": 497281.44,
         "result": "lose"
       }
-    ]
+    ],
+    "candidates": [
+      {
+        "ticker": "GIS",
+        "name": "General Mills",
+        "rsi14": 28.618,
+        "size_label": "小",
+        "market_cap_100m": 173.8,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "MGM",
+        "name": "MGM Resorts International",
+        "rsi14": 14.154,
+        "size_label": "小",
+        "market_cap_100m": 76.2,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "LVS",
+        "name": "Las Vegas Sands",
+        "rsi14": 19.061,
+        "size_label": "小",
+        "market_cap_100m": 233.3,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "PNR",
+        "name": "Pentair",
+        "rsi14": 24.305,
+        "size_label": "小",
+        "market_cap_100m": 82.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "WYNN",
+        "name": "Wynn Resorts",
+        "rsi14": 24.398,
+        "size_label": "小",
+        "market_cap_100m": 77.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "RF",
+        "name": "Regions Financial",
+        "rsi14": 25.56,
+        "size_label": "小",
+        "market_cap_100m": 229.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "DOC",
+        "name": "Healthpeak Properties",
+        "rsi14": 25.703,
+        "size_label": "小",
+        "market_cap_100m": 128.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "TXT",
+        "name": "Textron",
+        "rsi14": 26.403,
+        "size_label": "小",
+        "market_cap_100m": 126.3,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "CHTR",
+        "name": "Charter Communications",
+        "rsi14": 27.696,
+        "size_label": "小",
+        "market_cap_100m": 131.6,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "HRL",
+        "name": "Hormel Foods",
+        "rsi14": 28.304,
+        "size_label": "小",
+        "market_cap_100m": 107.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "IP",
+        "name": "International Paper",
+        "rsi14": 28.775,
+        "size_label": "小",
+        "market_cap_100m": 167.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "LDOS",
+        "name": "Leidos",
+        "rsi14": 28.899,
+        "size_label": "小",
+        "market_cap_100m": 148.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "EFX",
+        "name": "Equifax",
+        "rsi14": 29.098,
+        "size_label": "小",
+        "market_cap_100m": 170.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "SNA",
+        "name": "Snap-on",
+        "rsi14": 29.683,
+        "size_label": "小",
+        "market_cap_100m": 186.3,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "FICO",
+        "name": "Fair Isaac",
+        "rsi14": 29.976,
+        "size_label": "小",
+        "market_cap_100m": 152.2,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "KEY",
+        "name": "KeyCorp",
+        "rsi14": 30.018,
+        "size_label": "小",
+        "market_cap_100m": 213.3,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "MKC",
+        "name": "McCormick & Co",
+        "rsi14": 30.343,
+        "size_label": "小",
+        "market_cap_100m": 123.7,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "LULU",
+        "name": "Lululemon Athletica",
+        "rsi14": 31.525,
+        "size_label": "小",
+        "market_cap_100m": 103.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "COO",
+        "name": "Cooper Companies",
+        "rsi14": 31.759,
+        "size_label": "小",
+        "market_cap_100m": 103.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "INCY",
+        "name": "Incyte",
+        "rsi14": 32.262,
+        "size_label": "小",
+        "market_cap_100m": 230.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "GEN",
+        "name": "Gen Digital",
+        "rsi14": 32.605,
+        "size_label": "小",
+        "market_cap_100m": 136.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "ALB",
+        "name": "Albemarle",
+        "rsi14": 32.97,
+        "size_label": "小",
+        "market_cap_100m": 119.3,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "ALGN",
+        "name": "Align Technology",
+        "rsi14": 33.245,
+        "size_label": "小",
+        "market_cap_100m": 98.9,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "PAYX",
+        "name": "Paychex",
+        "rsi14": 33.321,
+        "size_label": "中",
+        "market_cap_100m": 369.1,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "JBHT",
+        "name": "JB Hunt Transport Services",
+        "rsi14": 33.359,
+        "size_label": "小",
+        "market_cap_100m": 211.7,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "BG",
+        "name": "Bunge",
+        "rsi14": 33.582,
+        "size_label": "小",
+        "market_cap_100m": 208.7,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "AOS",
+        "name": "A.O. Smith",
+        "rsi14": 33.714,
+        "size_label": "小",
+        "market_cap_100m": 76.7,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "CHRW",
+        "name": "C.H. Robinson Worldwide",
+        "rsi14": 33.997,
+        "size_label": "小",
+        "market_cap_100m": 163.2,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "PFG",
+        "name": "Principal Financial",
+        "rsi14": 34.739,
+        "size_label": "小",
+        "market_cap_100m": 235.2,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "PCAR",
+        "name": "PACCAR Inc",
+        "rsi14": 17.697,
+        "size_label": "中",
+        "market_cap_100m": 572.1,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "WY",
+        "name": "Weyerhaeuser Co",
+        "rsi14": 19.137,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "VTR",
+        "name": "Ventas Inc",
+        "rsi14": 21.453,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "O",
+        "name": "Realty Income",
+        "rsi14": 22.685,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "FRT",
+        "name": "Federal Realty Investment Trust",
+        "rsi14": 22.691,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "FER",
+        "name": "Ferrovial SE",
+        "rsi14": 24.117,
+        "size_label": "中",
+        "market_cap_100m": 361.6,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "MAA",
+        "name": "Mid-America Apartment Communities Inc",
+        "rsi14": 25.314,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "LHX",
+        "name": "L3Harris Technologies",
+        "rsi14": 25.39,
+        "size_label": "中",
+        "market_cap_100m": 438.7,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "REG",
+        "name": "Regency Centers Corp",
+        "rsi14": 25.539,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "KIM",
+        "name": "Kimco Realty Corp",
+        "rsi14": 25.733,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "KHC",
+        "name": "The Kraft Heinz",
+        "rsi14": 25.758,
+        "size_label": "中",
+        "market_cap_100m": 267.0,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "SPG",
+        "name": "Simon Property",
+        "rsi14": 26.426,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "INVH",
+        "name": "Invitation Homes Inc",
+        "rsi14": 27.286,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "NOC",
+        "name": "Northrop Grumman",
+        "rsi14": 27.462,
+        "size_label": "中",
+        "market_cap_100m": 686.8,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "MOS",
+        "name": "The Mosaic",
+        "rsi14": 27.768,
+        "size_label": "小",
+        "market_cap_100m": 63.1,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "VICI",
+        "name": "VICI Properties",
+        "rsi14": 27.904,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "AON",
+        "name": "Aon PLC",
+        "rsi14": 28.41,
+        "size_label": "中",
+        "market_cap_100m": 585.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "PLD",
+        "name": "Prologis",
+        "rsi14": 28.649,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "ALL",
+        "name": "Allstate",
+        "rsi14": 29.488,
+        "size_label": "中",
+        "market_cap_100m": 584.0,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "CFG",
+        "name": "Citizens Financial",
+        "rsi14": 29.596,
+        "size_label": "中",
+        "market_cap_100m": 267.7,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "GL",
+        "name": "Globe Life",
+        "rsi14": 30.119,
+        "size_label": "小",
+        "market_cap_100m": 127.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "CPRT",
+        "name": "Copart",
+        "rsi14": 30.351,
+        "size_label": "中",
+        "market_cap_100m": 252.9,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "CMG",
+        "name": "Chipotle Mexican Grill",
+        "rsi14": 31.231,
+        "size_label": "中",
+        "market_cap_100m": 418.2,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "CPT",
+        "name": "Camden Property Trust",
+        "rsi14": 31.292,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "AXON",
+        "name": "Axon Enterprise",
+        "rsi14": 31.321,
+        "size_label": "中",
+        "market_cap_100m": 336.2,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "HSY",
+        "name": "Hershey",
+        "rsi14": 31.42,
+        "size_label": "中",
+        "market_cap_100m": 327.5,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "BSX",
+        "name": "Boston Scientific",
+        "rsi14": 31.822,
+        "size_label": "中",
+        "market_cap_100m": 602.1,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "NTRS",
+        "name": "Northern Trust",
+        "rsi14": 32.009,
+        "size_label": "中",
+        "market_cap_100m": 307.8,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "ARES",
+        "name": "Ares Management",
+        "rsi14": 32.234,
+        "size_label": "中",
+        "market_cap_100m": 263.0,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "SW",
+        "name": "Smurfit WestRock",
+        "rsi14": 32.393,
+        "size_label": "小",
+        "market_cap_100m": 216.8,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "AMP",
+        "name": "Ameriprise Financial",
+        "rsi14": 32.436,
+        "size_label": "中",
+        "market_cap_100m": 440.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "BXP",
+        "name": "BXP Inc",
+        "rsi14": 32.47,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "APO",
+        "name": "Apollo Global Management",
+        "rsi14": 32.549,
+        "size_label": "中",
+        "market_cap_100m": 676.7,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "UDR",
+        "name": "UDR Inc",
+        "rsi14": 32.664,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "ARE",
+        "name": "Alexandria Real Estate Equities Inc",
+        "rsi14": 32.731,
+        "size_label": null,
+        "market_cap_100m": null,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "AWK",
+        "name": "American Water Works",
+        "rsi14": 32.915,
+        "size_label": "中",
+        "market_cap_100m": 254.8,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "CBRE",
+        "name": "CBRE Group",
+        "rsi14": 33.189,
+        "size_label": "中",
+        "market_cap_100m": 375.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "FITB",
+        "name": "Fifth Third Bancorp",
+        "rsi14": 33.236,
+        "size_label": "中",
+        "market_cap_100m": 460.1,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "CRH",
+        "name": "CRH PLC",
+        "rsi14": 33.364,
+        "size_label": "中",
+        "market_cap_100m": 543.3,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "HBAN",
+        "name": "Huntington Bancshares",
+        "rsi14": 33.735,
+        "size_label": "中",
+        "market_cap_100m": 309.3,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "F",
+        "name": "Ford Motor",
+        "rsi14": 34.011,
+        "size_label": "中",
+        "market_cap_100m": 485.3,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "STT",
+        "name": "State Street",
+        "rsi14": 34.026,
+        "size_label": "中",
+        "market_cap_100m": 479.9,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "PRU",
+        "name": "Prudential Financial",
+        "rsi14": 34.08,
+        "size_label": "中",
+        "market_cap_100m": 392.0,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "EXPE",
+        "name": "Expedia",
+        "rsi14": 34.406,
+        "size_label": "中",
+        "market_cap_100m": 324.4,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "WTW",
+        "name": "Willis Towers Watson",
+        "rsi14": 34.523,
+        "size_label": "中",
+        "market_cap_100m": 275.3,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "NKE",
+        "name": "Nike",
+        "rsi14": 34.565,
+        "size_label": "中",
+        "market_cap_100m": 513.7,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "RTX",
+        "name": "RTX Corp",
+        "rsi14": 19.286,
+        "size_label": "大",
+        "market_cap_100m": 2478.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "GD",
+        "name": "General Dynamics",
+        "rsi14": 21.107,
+        "size_label": "大",
+        "market_cap_100m": 890.3,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "PEP",
+        "name": "PepsiCo",
+        "rsi14": 22.197,
+        "size_label": "大",
+        "market_cap_100m": 1729.5,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "rsi14": 23.713,
+        "size_label": "大",
+        "market_cap_100m": 3714.9,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "PNC",
+        "name": "PNC Financial Services",
+        "rsi14": 24.252,
+        "size_label": "大",
+        "market_cap_100m": 874.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "MCD",
+        "name": "McDonald's",
+        "rsi14": 24.893,
+        "size_label": "大",
+        "market_cap_100m": 1675.2,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "CMCSA",
+        "name": "Comcast",
+        "rsi14": 24.967,
+        "size_label": "大",
+        "market_cap_100m": 750.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "TFC",
+        "name": "Truist Financial",
+        "rsi14": 27.702,
+        "size_label": "中",
+        "market_cap_100m": 561.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "BKNG",
+        "name": "Booking Holdings",
+        "rsi14": 27.863,
+        "size_label": "大",
+        "market_cap_100m": 1193.5,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "USB",
+        "name": "U.S. Bancorp",
+        "rsi14": 28.11,
+        "size_label": "大",
+        "market_cap_100m": 884.8,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "BX",
+        "name": "Blackstone",
+        "rsi14": 28.682,
+        "size_label": "大",
+        "market_cap_100m": 895.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "MTB",
+        "name": "M&T Bank",
+        "rsi14": 29.463,
+        "size_label": "中",
+        "market_cap_100m": 312.6,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "KKR",
+        "name": "KKR & Co",
+        "rsi14": 30.048,
+        "size_label": "大",
+        "market_cap_100m": 795.9,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "GS",
+        "name": "Goldman Sachs",
+        "rsi14": 30.076,
+        "size_label": "大",
+        "market_cap_100m": 2565.3,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "SCHW",
+        "name": "Charles Schwab",
+        "rsi14": 30.348,
+        "size_label": "大",
+        "market_cap_100m": 1673.1,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "MS",
+        "name": "Morgan Stanley",
+        "rsi14": 30.43,
+        "size_label": "大",
+        "market_cap_100m": 2934.1,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "LMT",
+        "name": "Lockheed Martin",
+        "rsi14": 30.491,
+        "size_label": "大",
+        "market_cap_100m": 1168.7,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "LOW",
+        "name": "Lowe's Companies",
+        "rsi14": 31.964,
+        "size_label": "大",
+        "market_cap_100m": 1058.5,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "UPS",
+        "name": "United Parcel Service",
+        "rsi14": 32.843,
+        "size_label": "大",
+        "market_cap_100m": 796.9,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "GE",
+        "name": "GE Aerospace",
+        "rsi14": 32.974,
+        "size_label": "大",
+        "market_cap_100m": 3171.1,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "WELL",
+        "name": "Welltower",
+        "rsi14": 33.262,
+        "size_label": "大",
+        "market_cap_100m": 1616.8,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "HD",
+        "name": "Home Depot",
+        "rsi14": 33.41,
+        "size_label": "大",
+        "market_cap_100m": 2942.9,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "SLB",
+        "name": "SLB Ltd",
+        "rsi14": 33.689,
+        "size_label": "大",
+        "market_cap_100m": 725.5,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "VZ",
+        "name": "Verizon",
+        "rsi14": 34.309,
+        "size_label": "大",
+        "market_cap_100m": 1928.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "BNY",
+        "name": "Bank of New York Mellon",
+        "rsi14": 24.445,
+        "size_label": "大",
+        "market_cap_100m": 971.6,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan",
+        "rsi14": 33.811,
+        "size_label": "大",
+        "market_cap_100m": 8786.5,
+        "sector_label": "弱",
+        "score": -2
+      }
+    ],
+    "candidates_as_of": "2026-10-08T12:00:09.070207+00:00"
   },
   "rsi_jp": {
     "start_date": "2026-08-24",
-    "nav_jpy": 105515620.0,
+    "nav_jpy": 102746670.0,
     "principal_jpy": 100000000.0,
-    "diff_jpy": 5515620.0,
-    "diff_pct": 5.52,
-    "cash_jpy": 249670.0,
-    "open_lots": 30,
+    "diff_jpy": 2746670.0,
+    "diff_pct": 2.75,
+    "cash_jpy": 17570.0,
+    "open_lots": 29,
     "dividends_total_jpy": 720700.0,
     "holdings": [
       {
         "ticker": "9983",
         "name": "Fast Retailing",
         "shares": 100.0,
-        "value_jpy": 7478000.0,
-        "weight_pct": 7.09,
-        "price": 74780.0,
+        "value_jpy": 7480000.0,
+        "weight_pct": 7.28,
+        "price": 74800.0,
         "avg_cost": 71540.0,
-        "link": "https://finance.yahoo.co.jp/quote/9983"
+        "link": "https://finance.yahoo.co.jp/quote/9983",
+        "size_label": "大",
+        "market_cap_100m_jpy": 229524.6
       },
       {
-        "ticker": "268A",
-        "name": "Rigaku Holdings",
-        "shares": 3300.0,
-        "value_jpy": 6144600.0,
-        "weight_pct": 5.82,
-        "price": 1862.0,
-        "avg_cost": 1734.03,
-        "link": "https://finance.yahoo.co.jp/quote/268A"
+        "ticker": "4368",
+        "name": "Fuso Chemical",
+        "shares": 1800.0,
+        "value_jpy": 6066000.0,
+        "weight_pct": 5.9,
+        "price": 3370.0,
+        "avg_cost": 3171.67,
+        "link": "https://finance.yahoo.co.jp/quote/4368",
+        "size_label": "中",
+        "market_cap_100m_jpy": 3565.3
       },
       {
         "ticker": "3099",
         "name": "Isetan Mitsukoshi Holdings",
         "shares": 3400.0,
-        "value_jpy": 5939800.0,
-        "weight_pct": 5.63,
-        "price": 1747.0,
+        "value_jpy": 5882000.0,
+        "weight_pct": 5.72,
+        "price": 1730.0,
         "avg_cost": 1652.44,
-        "link": "https://finance.yahoo.co.jp/quote/3099"
+        "link": "https://finance.yahoo.co.jp/quote/3099",
+        "size_label": "大",
+        "market_cap_100m_jpy": 12005.6
       },
       {
-        "ticker": "3905",
-        "name": "Datasection",
-        "shares": 3200.0,
-        "value_jpy": 5817600.0,
-        "weight_pct": 5.51,
-        "price": 1818.0,
-        "avg_cost": 1751.38,
-        "link": "https://finance.yahoo.co.jp/quote/3905"
+        "ticker": "268A",
+        "name": "Rigaku Holdings",
+        "shares": 3300.0,
+        "value_jpy": 5877300.0,
+        "weight_pct": 5.72,
+        "price": 1781.0,
+        "avg_cost": 1734.03,
+        "link": "https://finance.yahoo.co.jp/quote/268A",
+        "size_label": "中",
+        "market_cap_100m_jpy": 4035.2
       },
       {
         "ticker": "4047",
         "name": "Kanto Denka Kogyo",
         "shares": 2200.0,
-        "value_jpy": 5530800.0,
-        "weight_pct": 5.24,
-        "price": 2514.0,
+        "value_jpy": 5361400.0,
+        "weight_pct": 5.22,
+        "price": 2437.0,
         "avg_cost": 2376.82,
-        "link": "https://finance.yahoo.co.jp/quote/4047"
+        "link": "https://finance.yahoo.co.jp/quote/4047",
+        "size_label": "小",
+        "market_cap_100m_jpy": 1397.7
       },
       {
-        "ticker": "4368",
-        "name": "Fuso Chemical",
-        "shares": 1400.0,
-        "value_jpy": 4865000.0,
-        "weight_pct": 4.61,
-        "price": 3475.0,
-        "avg_cost": 3115.0,
-        "link": "https://finance.yahoo.co.jp/quote/4368"
+        "ticker": "3905",
+        "name": "Datasection",
+        "shares": 3200.0,
+        "value_jpy": 5299200.0,
+        "weight_pct": 5.16,
+        "price": 1656.0,
+        "avg_cost": 1751.38,
+        "link": "https://finance.yahoo.co.jp/quote/3905",
+        "size_label": "小",
+        "market_cap_100m_jpy": 620.4
       },
       {
         "ticker": "6235",
         "name": "Optorun",
         "shares": 1600.0,
-        "value_jpy": 4563200.0,
-        "weight_pct": 4.32,
-        "price": 2852.0,
+        "value_jpy": 4408000.0,
+        "weight_pct": 4.29,
+        "price": 2755.0,
         "avg_cost": 2677.5,
-        "link": "https://finance.yahoo.co.jp/quote/6235"
+        "link": "https://finance.yahoo.co.jp/quote/6235",
+        "size_label": "小",
+        "market_cap_100m_jpy": 1099.1
       },
       {
         "ticker": "7966",
         "name": "LINTEC",
         "shares": 700.0,
-        "value_jpy": 4214000.0,
-        "weight_pct": 3.99,
-        "price": 6020.0,
+        "value_jpy": 4053000.0,
+        "weight_pct": 3.94,
+        "price": 5790.0,
         "avg_cost": 5480.0,
-        "link": "https://finance.yahoo.co.jp/quote/7966"
+        "link": "https://finance.yahoo.co.jp/quote/7966",
+        "size_label": "中",
+        "market_cap_100m_jpy": 3476.0
+      },
+      {
+        "ticker": "6101",
+        "name": "Tsugami",
+        "shares": 700.0,
+        "value_jpy": 3906000.0,
+        "weight_pct": 3.8,
+        "price": 5580.0,
+        "avg_cost": 5187.14,
+        "link": "https://finance.yahoo.co.jp/quote/6101",
+        "size_label": "中",
+        "market_cap_100m_jpy": 2583.1
       },
       {
         "ticker": "6479",
         "name": "Minebea Mitsumi",
         "shares": 1000.0,
-        "value_jpy": 3847000.0,
-        "weight_pct": 3.65,
-        "price": 3847.0,
+        "value_jpy": 3680000.0,
+        "weight_pct": 3.58,
+        "price": 3680.0,
         "avg_cost": 3388.6,
-        "link": "https://finance.yahoo.co.jp/quote/6479"
+        "link": "https://finance.yahoo.co.jp/quote/6479",
+        "size_label": "大",
+        "market_cap_100m_jpy": 14778.7
+      },
+      {
+        "ticker": "6506",
+        "name": "YASKAWA Electric",
+        "shares": 700.0,
+        "value_jpy": 3352300.0,
+        "weight_pct": 3.26,
+        "price": 4789.0,
+        "avg_cost": 4541.29,
+        "link": "https://finance.yahoo.co.jp/quote/6506",
+        "size_label": "大",
+        "market_cap_100m_jpy": 12421.1
       },
       {
         "ticker": "5332",
         "name": "TOTO",
         "shares": 500.0,
-        "value_jpy": 3125500.0,
-        "weight_pct": 2.96,
-        "price": 6251.0,
+        "value_jpy": 3026500.0,
+        "weight_pct": 2.95,
+        "price": 6053.0,
         "avg_cost": 5909.0,
-        "link": "https://finance.yahoo.co.jp/quote/5332"
+        "link": "https://finance.yahoo.co.jp/quote/5332",
+        "size_label": "大",
+        "market_cap_100m_jpy": 9954.3
       },
       {
         "ticker": "7220",
         "name": "Musashi Seimitsu Industry",
         "shares": 1000.0,
-        "value_jpy": 3090000.0,
-        "weight_pct": 2.93,
-        "price": 3090.0,
+        "value_jpy": 3020000.0,
+        "weight_pct": 2.94,
+        "price": 3020.0,
         "avg_cost": 2803.0,
-        "link": "https://finance.yahoo.co.jp/quote/7220"
+        "link": "https://finance.yahoo.co.jp/quote/7220",
+        "size_label": "中",
+        "market_cap_100m_jpy": 1979.3
       },
       {
         "ticker": "6845",
         "name": "Azbil",
         "shares": 2000.0,
-        "value_jpy": 2985000.0,
-        "weight_pct": 2.83,
-        "price": 1492.5,
+        "value_jpy": 2953000.0,
+        "weight_pct": 2.87,
+        "price": 1476.5,
         "avg_cost": 1466.0,
-        "link": "https://finance.yahoo.co.jp/quote/6845"
-      },
-      {
-        "ticker": "6506",
-        "name": "YASKAWA Electric",
-        "shares": 600.0,
-        "value_jpy": 2967600.0,
-        "weight_pct": 2.81,
-        "price": 4946.0,
-        "avg_cost": 4500.0,
-        "link": "https://finance.yahoo.co.jp/quote/6506"
-      },
-      {
-        "ticker": "9412",
-        "name": "SKY Perfect JSAT",
-        "shares": 1500.0,
-        "value_jpy": 2917500.0,
-        "weight_pct": 2.76,
-        "price": 1945.0,
-        "avg_cost": 1993.0,
-        "link": "https://finance.yahoo.co.jp/quote/9412"
-      },
-      {
-        "ticker": "6361",
-        "name": "Ebara",
-        "shares": 600.0,
-        "value_jpy": 2900400.0,
-        "weight_pct": 2.75,
-        "price": 4834.0,
-        "avg_cost": 4688.0,
-        "link": "https://finance.yahoo.co.jp/quote/6361"
-      },
-      {
-        "ticker": "6101",
-        "name": "Tsugami",
-        "shares": 500.0,
-        "value_jpy": 2900000.0,
-        "weight_pct": 2.75,
-        "price": 5800.0,
-        "avg_cost": 5030.0,
-        "link": "https://finance.yahoo.co.jp/quote/6101"
-      },
-      {
-        "ticker": "4980",
-        "name": "Dexerials",
-        "shares": 800.0,
-        "value_jpy": 2891200.0,
-        "weight_pct": 2.74,
-        "price": 3614.0,
-        "avg_cost": 2954.19,
-        "link": "https://finance.yahoo.co.jp/quote/4980"
+        "link": "https://finance.yahoo.co.jp/quote/6845",
+        "size_label": "大",
+        "market_cap_100m_jpy": 7343.1
       },
       {
         "ticker": "9143",
         "name": "SG Holdings",
         "shares": 2000.0,
-        "value_jpy": 2871000.0,
-        "weight_pct": 2.72,
-        "price": 1435.5,
+        "value_jpy": 2883000.0,
+        "weight_pct": 2.81,
+        "price": 1441.5,
         "avg_cost": 1467.0,
-        "link": "https://finance.yahoo.co.jp/quote/9143"
+        "link": "https://finance.yahoo.co.jp/quote/9143",
+        "size_label": "大",
+        "market_cap_100m_jpy": 8602.0
+      },
+      {
+        "ticker": "4980",
+        "name": "Dexerials",
+        "shares": 800.0,
+        "value_jpy": 2851200.0,
+        "weight_pct": 2.77,
+        "price": 3564.0,
+        "avg_cost": 2954.19,
+        "link": "https://finance.yahoo.co.jp/quote/4980",
+        "size_label": "大",
+        "market_cap_100m_jpy": 5970.1
+      },
+      {
+        "ticker": "6361",
+        "name": "Ebara",
+        "shares": 600.0,
+        "value_jpy": 2830800.0,
+        "weight_pct": 2.76,
+        "price": 4718.0,
+        "avg_cost": 4688.0,
+        "link": "https://finance.yahoo.co.jp/quote/6361",
+        "size_label": "大",
+        "market_cap_100m_jpy": 21485.5
       },
       {
         "ticker": "3591",
         "name": "Wacoal Holdings",
         "shares": 800.0,
-        "value_jpy": 2847200.0,
-        "weight_pct": 2.7,
-        "price": 3559.0,
+        "value_jpy": 2826400.0,
+        "weight_pct": 2.75,
+        "price": 3533.0,
         "avg_cost": 3559.0,
-        "link": "https://finance.yahoo.co.jp/quote/3591"
+        "link": "https://finance.yahoo.co.jp/quote/3591",
+        "size_label": "中",
+        "market_cap_100m_jpy": 1854.8
       },
       {
-        "ticker": "6707",
-        "name": "Sanken Electric",
-        "shares": 400.0,
-        "value_jpy": 2836000.0,
-        "weight_pct": 2.69,
-        "price": 7090.0,
-        "avg_cost": 7398.0,
-        "link": "https://finance.yahoo.co.jp/quote/6707"
+        "ticker": "9412",
+        "name": "SKY Perfect JSAT",
+        "shares": 1500.0,
+        "value_jpy": 2818500.0,
+        "weight_pct": 2.74,
+        "price": 1879.0,
+        "avg_cost": 1993.0,
+        "link": "https://finance.yahoo.co.jp/quote/9412",
+        "size_label": "大",
+        "market_cap_100m_jpy": 5593.4
       },
       {
         "ticker": "6841",
         "name": "Yokogawa Electric",
         "shares": 600.0,
-        "value_jpy": 2800200.0,
-        "weight_pct": 2.65,
-        "price": 4667.0,
+        "value_jpy": 2739000.0,
+        "weight_pct": 2.67,
+        "price": 4565.0,
         "avg_cost": 4672.0,
-        "link": "https://finance.yahoo.co.jp/quote/6841"
-      },
-      {
-        "ticker": "6013",
-        "name": "Takuma",
-        "shares": 900.0,
-        "value_jpy": 2704500.0,
-        "weight_pct": 2.56,
-        "price": 3005.0,
-        "avg_cost": 3065.0,
-        "link": "https://finance.yahoo.co.jp/quote/6013"
+        "link": "https://finance.yahoo.co.jp/quote/6841",
+        "size_label": "大",
+        "market_cap_100m_jpy": 11353.8
       },
       {
         "ticker": "9715",
         "name": "transcosmos",
         "shares": 800.0,
         "value_jpy": 2688000.0,
-        "weight_pct": 2.55,
+        "weight_pct": 2.62,
         "price": 3360.0,
         "avg_cost": 3360.0,
-        "link": "https://finance.yahoo.co.jp/quote/9715"
+        "link": "https://finance.yahoo.co.jp/quote/9715",
+        "size_label": "小",
+        "market_cap_100m_jpy": 1473.8
       },
       {
         "ticker": "4928",
         "name": "Noevir Holdings",
         "shares": 600.0,
-        "value_jpy": 2676000.0,
-        "weight_pct": 2.54,
-        "price": 4460.0,
+        "value_jpy": 2673000.0,
+        "weight_pct": 2.6,
+        "price": 4455.0,
         "avg_cost": 4460.0,
-        "link": "https://finance.yahoo.co.jp/quote/4928"
+        "link": "https://finance.yahoo.co.jp/quote/4928",
+        "size_label": "小",
+        "market_cap_100m_jpy": 1521.7
+      },
+      {
+        "ticker": "6013",
+        "name": "Takuma",
+        "shares": 900.0,
+        "value_jpy": 2632500.0,
+        "weight_pct": 2.56,
+        "price": 2925.0,
+        "avg_cost": 3065.0,
+        "link": "https://finance.yahoo.co.jp/quote/6013",
+        "size_label": "中",
+        "market_cap_100m_jpy": 2101.6
       },
       {
         "ticker": "1979",
         "name": "Taikisha",
         "shares": 700.0,
-        "value_jpy": 2674000.0,
-        "weight_pct": 2.53,
-        "price": 3820.0,
+        "value_jpy": 2621500.0,
+        "weight_pct": 2.55,
+        "price": 3745.0,
         "avg_cost": 3900.0,
-        "link": "https://finance.yahoo.co.jp/quote/1979"
+        "link": "https://finance.yahoo.co.jp/quote/1979",
+        "size_label": "中",
+        "market_cap_100m_jpy": 2341.3
       },
       {
         "ticker": "7944",
         "name": "Roland",
         "shares": 700.0,
-        "value_jpy": 2576000.0,
-        "weight_pct": 2.44,
-        "price": 3680.0,
+        "value_jpy": 2551500.0,
+        "weight_pct": 2.48,
+        "price": 3645.0,
         "avg_cost": 3775.0,
-        "link": "https://finance.yahoo.co.jp/quote/7944"
+        "link": "https://finance.yahoo.co.jp/quote/7944",
+        "size_label": "小",
+        "market_cap_100m_jpy": 962.6
       },
       {
         "ticker": "9065",
         "name": "Sankyu",
         "shares": 1500.0,
-        "value_jpy": 2373000.0,
-        "weight_pct": 2.25,
-        "price": 1582.0,
+        "value_jpy": 2380500.0,
+        "weight_pct": 2.32,
+        "price": 1587.0,
         "avg_cost": 1612.8,
-        "link": "https://finance.yahoo.co.jp/quote/9065"
+        "link": "https://finance.yahoo.co.jp/quote/9065",
+        "size_label": "中",
+        "market_cap_100m_jpy": 3979.0
       },
       {
         "ticker": "4966",
         "name": "C. Uyemura",
         "shares": 100.0,
-        "value_jpy": 2214000.0,
-        "weight_pct": 2.1,
-        "price": 22140.0,
+        "value_jpy": 2112000.0,
+        "weight_pct": 2.06,
+        "price": 21120.0,
         "avg_cost": 19050.0,
-        "link": "https://finance.yahoo.co.jp/quote/4966"
+        "link": "https://finance.yahoo.co.jp/quote/4966",
+        "size_label": "中",
+        "market_cap_100m_jpy": 3371.7
       },
       {
         "ticker": "6367",
         "name": "Daikin Industries",
         "shares": 100.0,
-        "value_jpy": 2107000.0,
-        "weight_pct": 2.0,
-        "price": 21070.0,
+        "value_jpy": 2099000.0,
+        "weight_pct": 2.04,
+        "price": 20990.0,
         "avg_cost": 20855.0,
-        "link": "https://finance.yahoo.co.jp/quote/6367"
+        "link": "https://finance.yahoo.co.jp/quote/6367",
+        "size_label": "大",
+        "market_cap_100m_jpy": 58422.8
       },
       {
         "ticker": "4099",
         "name": "Shikoku Kasei Holdings",
         "shares": 650.0,
-        "value_jpy": 1721850.0,
-        "weight_pct": 1.63,
-        "price": 2649.0,
+        "value_jpy": 1657500.0,
+        "weight_pct": 1.61,
+        "price": 2550.0,
         "avg_cost": 2191.0,
-        "link": "https://finance.yahoo.co.jp/quote/4099"
+        "link": "https://finance.yahoo.co.jp/quote/4099",
+        "size_label": "中",
+        "market_cap_100m_jpy": 2205.7
       }
     ],
     "history": [
@@ -1734,9 +2728,84 @@
         "date": "2026-10-07",
         "nav": 105515620.0,
         "principal": 100000000.0
+      },
+      {
+        "date": "2026-10-08",
+        "nav": 102746670.0,
+        "principal": 100000000.0
       }
     ],
     "trades": [
+      {
+        "date": "2026-10-08",
+        "action": "BUY",
+        "ticker": "6506",
+        "shares": "100",
+        "price": "4789.0",
+        "amount_jpy": "478900.0",
+        "rule": "pyramid2",
+        "lot_id": "6506-2026-09-03-1",
+        "note": "moomoo発注なし・台帳のみの仮想売買",
+        "name": "YASKAWA Electric",
+        "realized_pnl": "",
+        "realized_pnl_pct": ""
+      },
+      {
+        "date": "2026-10-08",
+        "action": "BUY",
+        "ticker": "6101",
+        "shares": "200",
+        "price": "5580.0",
+        "amount_jpy": "1116000.0",
+        "rule": "pyramid1",
+        "lot_id": "6101-2026-09-03-1",
+        "note": "moomoo発注なし・台帳のみの仮想売買",
+        "name": "Tsugami",
+        "realized_pnl": "",
+        "realized_pnl_pct": ""
+      },
+      {
+        "date": "2026-10-08",
+        "action": "BUY",
+        "ticker": "4368",
+        "shares": "200",
+        "price": "3370.0",
+        "amount_jpy": "674000.0",
+        "rule": "pyramid3",
+        "lot_id": "4368-2026-08-28-1",
+        "note": "moomoo発注なし・台帳のみの仮想売買",
+        "name": "Fuso Chemical",
+        "realized_pnl": "",
+        "realized_pnl_pct": ""
+      },
+      {
+        "date": "2026-10-08",
+        "action": "BUY",
+        "ticker": "4368",
+        "shares": "200",
+        "price": "3370.0",
+        "amount_jpy": "674000.0",
+        "rule": "pyramid2",
+        "lot_id": "4368-2026-08-28-1",
+        "note": "moomoo発注なし・台帳のみの仮想売買",
+        "name": "Fuso Chemical",
+        "realized_pnl": "",
+        "realized_pnl_pct": ""
+      },
+      {
+        "date": "2026-10-08",
+        "action": "SELL",
+        "ticker": "6707",
+        "shares": "400",
+        "price": "6777.0",
+        "amount_jpy": "2710800.0",
+        "rule": "stop_loss",
+        "lot_id": "6707-2026-08-25-1",
+        "note": "moomoo発注なし・台帳のみの仮想売買",
+        "name": "Sanken Electric",
+        "realized_pnl": "-248400.0",
+        "realized_pnl_pct": "-8.3942"
+      },
       {
         "date": "2026-10-07",
         "action": "BUY",
@@ -2366,78 +3435,1514 @@
         "name": "Dexerials",
         "realized_pnl": "",
         "realized_pnl_pct": ""
-      },
-      {
-        "date": "2026-08-25",
-        "action": "BUY",
-        "ticker": "6141",
-        "shares": "900",
-        "price": "3037.0",
-        "amount_jpy": "2733300.0",
-        "rule": "entry",
-        "lot_id": "6141-2026-08-25-1",
-        "note": "RSI14=34.9 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
-        "name": "Dmg Mori",
-        "realized_pnl": "",
-        "realized_pnl_pct": ""
-      },
-      {
-        "date": "2026-08-25",
-        "action": "BUY",
-        "ticker": "6707",
-        "shares": "400",
-        "price": "7398.0",
-        "amount_jpy": "2959200.0",
-        "rule": "entry",
-        "lot_id": "6707-2026-08-25-1",
-        "note": "RSI14=34.6 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
-        "name": "Sanken Electric",
-        "realized_pnl": "",
-        "realized_pnl_pct": ""
-      },
-      {
-        "date": "2026-08-25",
-        "action": "BUY",
-        "ticker": "1979",
-        "shares": "700",
-        "price": "3900.0",
-        "amount_jpy": "2730000.0",
-        "rule": "entry",
-        "lot_id": "1979-2026-08-25-1",
-        "note": "RSI14=33.5 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
-        "name": "Taikisha",
-        "realized_pnl": "",
-        "realized_pnl_pct": ""
-      },
-      {
-        "date": "2026-08-24",
-        "action": "BUY",
-        "ticker": "7532",
-        "shares": "3700",
-        "price": "810.7",
-        "amount_jpy": "2999590.0",
-        "rule": "entry",
-        "lot_id": "7532-2026-08-24-1",
-        "note": "RSI14=35.0 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
-        "name": "Pan Pacific International Holdings",
-        "realized_pnl": "",
-        "realized_pnl_pct": ""
-      },
-      {
-        "date": "2026-08-24",
-        "action": "BUY",
-        "ticker": "4047",
-        "shares": "1200",
-        "price": "2323.0",
-        "amount_jpy": "2787600.0",
-        "rule": "entry",
-        "lot_id": "4047-2026-08-24-1",
-        "note": "RSI14=34.8 lot_size=100・moomoo発注なし・台帳のみの仮想売買",
-        "name": "Kanto Denka Kogyo",
-        "realized_pnl": "",
-        "realized_pnl_pct": ""
       }
     ],
+    "candidates": [
+      {
+        "ticker": "9715",
+        "name": "transcosmos",
+        "rsi14": 28.406,
+        "size_label": "小",
+        "market_cap_100m": 1473.8,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "5943",
+        "name": "Noritz",
+        "rsi14": 28.535,
+        "size_label": "小",
+        "market_cap_100m": 1038.1,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "6804",
+        "name": "Hosiden",
+        "rsi14": 29.707,
+        "size_label": "小",
+        "market_cap_100m": 1394.1,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "4928",
+        "name": "Noevir Holdings",
+        "rsi14": 30.242,
+        "size_label": "小",
+        "market_cap_100m": 1521.7,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "4023",
+        "name": "Kureha",
+        "rsi14": 30.304,
+        "size_label": "小",
+        "market_cap_100m": 1573.5,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "7458",
+        "name": "Daiichikosho",
+        "rsi14": 30.32,
+        "size_label": "小",
+        "market_cap_100m": 1788.3,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "9672",
+        "name": "Tokyotokeiba",
+        "rsi14": 31.296,
+        "size_label": "小",
+        "market_cap_100m": 1310.2,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "3765",
+        "name": "GungHo Online Entertainment",
+        "rsi14": 33.677,
+        "size_label": "小",
+        "market_cap_100m": 1242.9,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "3865",
+        "name": "Hokuetsu",
+        "rsi14": 33.714,
+        "size_label": "小",
+        "market_cap_100m": 1384.3,
+        "sector_label": "強",
+        "score": 2
+      },
+      {
+        "ticker": "641A",
+        "name": "Nok Group",
+        "rsi14": 7.663,
+        "size_label": "中",
+        "market_cap_100m": 5234.7,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "9699",
+        "name": "Nishio Holdings",
+        "rsi14": 22.211,
+        "size_label": "小",
+        "market_cap_100m": 1138.5,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "3591",
+        "name": "Wacoal Holdings",
+        "rsi14": 22.456,
+        "size_label": "中",
+        "market_cap_100m": 1854.8,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "2874",
+        "name": "Yokorei",
+        "rsi14": 24.803,
+        "size_label": "小",
+        "market_cap_100m": 1074.9,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "9882",
+        "name": "Yellow Hat",
+        "rsi14": 25.06,
+        "size_label": "小",
+        "market_cap_100m": 1373.8,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "8585",
+        "name": "Orient",
+        "rsi14": 25.204,
+        "size_label": "小",
+        "market_cap_100m": 1335.6,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "7994",
+        "name": "Okamura",
+        "rsi14": 26.482,
+        "size_label": "中",
+        "market_cap_100m": 2179.5,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "8584",
+        "name": "Jaccs",
+        "rsi14": 27.042,
+        "size_label": "小",
+        "market_cap_100m": 1545.6,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "8276",
+        "name": "HEIWADO",
+        "rsi14": 27.292,
+        "size_label": "小",
+        "market_cap_100m": 1286.1,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "5482",
+        "name": "Aichi Steel",
+        "rsi14": 27.521,
+        "size_label": "中",
+        "market_cap_100m": 1818.2,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "8278",
+        "name": "Fuji",
+        "rsi14": 28.726,
+        "size_label": "小",
+        "market_cap_100m": 1666.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "5911",
+        "name": "Yokogawa Bridge Holdings",
+        "rsi14": 29.997,
+        "size_label": "小",
+        "market_cap_100m": 1220.7,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "8086",
+        "name": "Nipro",
+        "rsi14": 30.212,
+        "size_label": "中",
+        "market_cap_100m": 2457.9,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "7599",
+        "name": "IDOM",
+        "rsi14": 30.368,
+        "size_label": "小",
+        "market_cap_100m": 1223.9,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "7224",
+        "name": "ShinMaywa Industries",
+        "rsi14": 31.589,
+        "size_label": "小",
+        "market_cap_100m": 1268.4,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "6740",
+        "name": "Japan Display",
+        "rsi14": 31.837,
+        "size_label": "中",
+        "market_cap_100m": 1829.5,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "1879",
+        "name": "Shinnihon",
+        "rsi14": 31.856,
+        "size_label": "小",
+        "market_cap_100m": 1295.9,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "1835",
+        "name": "Totetsu Kogyo",
+        "rsi14": 31.93,
+        "size_label": "小",
+        "market_cap_100m": 1346.5,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "8074",
+        "name": "Yuasa",
+        "rsi14": 32.182,
+        "size_label": "小",
+        "market_cap_100m": 1315.0,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "1766",
+        "name": "Token",
+        "rsi14": 32.303,
+        "size_label": "小",
+        "market_cap_100m": 1690.7,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "5726",
+        "name": "OSAKA Titanium technologies",
+        "rsi14": 32.706,
+        "size_label": "小",
+        "market_cap_100m": 1018.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "5703",
+        "name": "Nippon Light Metal Holdings",
+        "rsi14": 33.329,
+        "size_label": "小",
+        "market_cap_100m": 1698.0,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "3087",
+        "name": "Doutor Nichires Holdings",
+        "rsi14": 33.408,
+        "size_label": "小",
+        "market_cap_100m": 1413.9,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "8923",
+        "name": "Tosei",
+        "rsi14": 33.565,
+        "size_label": "小",
+        "market_cap_100m": 1585.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "8698",
+        "name": "Monex Group",
+        "rsi14": 34.001,
+        "size_label": "小",
+        "market_cap_100m": 1663.4,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "8975",
+        "name": "Ichigo Office REIT Investment",
+        "rsi14": 34.02,
+        "size_label": "小",
+        "market_cap_100m": 1368.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "1663",
+        "name": "K&O Energy Group",
+        "rsi14": 34.044,
+        "size_label": "小",
+        "market_cap_100m": 1025.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "3222",
+        "name": "United Super Markets Holdings",
+        "rsi14": 34.052,
+        "size_label": "小",
+        "market_cap_100m": 1668.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "8059",
+        "name": "Daiichi Jitsugyo",
+        "rsi14": 34.056,
+        "size_label": "小",
+        "market_cap_100m": 1117.1,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "1762",
+        "name": "Takamatsu Construction Group",
+        "rsi14": 34.205,
+        "size_label": "小",
+        "market_cap_100m": 1338.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "3863",
+        "name": "Nippon Paper Industries",
+        "rsi14": 34.271,
+        "size_label": "小",
+        "market_cap_100m": 1457.8,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "1952",
+        "name": "Shin Nippon Air Technologies",
+        "rsi14": 34.371,
+        "size_label": "小",
+        "market_cap_100m": 1459.4,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "9716",
+        "name": "NOMURA",
+        "rsi14": 34.529,
+        "size_label": "小",
+        "market_cap_100m": 1410.0,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "9025",
+        "name": "Konoike Transport",
+        "rsi14": 34.538,
+        "size_label": "小",
+        "market_cap_100m": 1569.0,
+        "sector_label": "中",
+        "score": 1
+      },
+      {
+        "ticker": "6420",
+        "name": "Galilei Holdings",
+        "rsi14": 34.553,
+        "size_label": "小",
+        "market_cap_100m": 1456.4,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "4681",
+        "name": "Resorttrust",
+        "rsi14": 34.783,
+        "size_label": "中",
+        "market_cap_100m": 3733.1,
+        "sector_label": "強",
+        "score": 1
+      },
+      {
+        "ticker": "3543",
+        "name": "Komeda Holdings",
+        "rsi14": 34.838,
+        "size_label": "小",
+        "market_cap_100m": 1290.5,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "7545",
+        "name": "Nishimatsuya Chain",
+        "rsi14": 34.981,
+        "size_label": "小",
+        "market_cap_100m": 1322.2,
+        "sector_label": "—",
+        "score": 1
+      },
+      {
+        "ticker": "8987",
+        "name": "Japan Excellent",
+        "rsi14": 11.795,
+        "size_label": "小",
+        "market_cap_100m": 1601.5,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "3296",
+        "name": "NIPPON REIT Investment",
+        "rsi14": 14.885,
+        "size_label": "小",
+        "market_cap_100m": 1370.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "8934",
+        "name": "Sun Frontier Fudousan",
+        "rsi14": 18.915,
+        "size_label": "小",
+        "market_cap_100m": 1211.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "3148",
+        "name": "Create SD Holdings",
+        "rsi14": 21.969,
+        "size_label": "中",
+        "market_cap_100m": 2054.7,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "2659",
+        "name": "San A",
+        "rsi14": 23.816,
+        "size_label": "中",
+        "market_cap_100m": 1966.9,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8282",
+        "name": "K'S Holdings",
+        "rsi14": 23.896,
+        "size_label": "中",
+        "market_cap_100m": 2763.6,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8566",
+        "name": "Ricoh Leasing",
+        "rsi14": 24.154,
+        "size_label": "中",
+        "market_cap_100m": 1937.1,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "3481",
+        "name": "Mitsubishi Estate Logistics REIT Investment",
+        "rsi14": 24.222,
+        "size_label": "小",
+        "market_cap_100m": 1594.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "1860",
+        "name": "Toda",
+        "rsi14": 24.315,
+        "size_label": "中",
+        "market_cap_100m": 4242.2,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "1833",
+        "name": "Okumura",
+        "rsi14": 24.324,
+        "size_label": "中",
+        "market_cap_100m": 2022.2,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8871",
+        "name": "Goldcrest",
+        "rsi14": 24.482,
+        "size_label": "小",
+        "market_cap_100m": 1042.7,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "3186",
+        "name": "NEXTAGE",
+        "rsi14": 24.566,
+        "size_label": "中",
+        "market_cap_100m": 2129.4,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8956",
+        "name": "NTT UD Reit Investment",
+        "rsi14": 25.095,
+        "size_label": "小",
+        "market_cap_100m": 1773.6,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "8966",
+        "name": "Heiwa Real Estate REIT",
+        "rsi14": 25.467,
+        "size_label": "小",
+        "market_cap_100m": 1657.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "1861",
+        "name": "Kumagai Gumi",
+        "rsi14": 25.608,
+        "size_label": "中",
+        "market_cap_100m": 2065.6,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "9436",
+        "name": "Okinawa Cellular Telephone",
+        "rsi14": 26.015,
+        "size_label": "中",
+        "market_cap_100m": 3521.4,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "3287",
+        "name": "Hoshino Resorts REIT",
+        "rsi14": 26.405,
+        "size_label": "小",
+        "market_cap_100m": 1325.7,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "9031",
+        "name": "Nishi-Nippon Railroad",
+        "rsi14": 26.598,
+        "size_label": "中",
+        "market_cap_100m": 2212.2,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "4666",
+        "name": "Park24",
+        "rsi14": 26.957,
+        "size_label": "中",
+        "market_cap_100m": 2954.0,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8803",
+        "name": "Heiwa Real Estate",
+        "rsi14": 27.071,
+        "size_label": "小",
+        "market_cap_100m": 1562.4,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "1719",
+        "name": "HAZAMA ANDO",
+        "rsi14": 27.66,
+        "size_label": "中",
+        "market_cap_100m": 3104.5,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8511",
+        "name": "Japan Securities Finance",
+        "rsi14": 27.778,
+        "size_label": "中",
+        "market_cap_100m": 1839.3,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8425",
+        "name": "Mizuho Leasing",
+        "rsi14": 27.783,
+        "size_label": "中",
+        "market_cap_100m": 3936.5,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "1820",
+        "name": "Nishimatsu Construction",
+        "rsi14": 28.679,
+        "size_label": "中",
+        "market_cap_100m": 2136.0,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8570",
+        "name": "AEON Financial Service",
+        "rsi14": 28.744,
+        "size_label": "中",
+        "market_cap_100m": 3166.7,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "1417",
+        "name": "MIRAIT One",
+        "rsi14": 29.294,
+        "size_label": "中",
+        "market_cap_100m": 3044.8,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8958",
+        "name": "Global One Real Estate Investment",
+        "rsi14": 29.301,
+        "size_label": "小",
+        "market_cap_100m": 1141.6,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "8194",
+        "name": "Life",
+        "rsi14": 29.53,
+        "size_label": "中",
+        "market_cap_100m": 2243.5,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "8273",
+        "name": "Izumi",
+        "rsi14": 30.332,
+        "size_label": "中",
+        "market_cap_100m": 2001.6,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "9001",
+        "name": "Tobu Railway",
+        "rsi14": 30.751,
+        "size_label": "中",
+        "market_cap_100m": 5455.4,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "4547",
+        "name": "Kissei Pharmaceutical",
+        "rsi14": 30.801,
+        "size_label": "小",
+        "market_cap_100m": 1719.7,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "2281",
+        "name": "Prima Meat Packers",
+        "rsi14": 30.874,
+        "size_label": "小",
+        "market_cap_100m": 1146.9,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "1662",
+        "name": "Japan Petroleum Exploration",
+        "rsi14": 31.28,
+        "size_label": "中",
+        "market_cap_100m": 4325.3,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "3659",
+        "name": "NEXON",
+        "rsi14": 31.299,
+        "size_label": "大",
+        "market_cap_100m": 20298.9,
+        "sector_label": "強",
+        "score": 0
+      },
+      {
+        "ticker": "8088",
+        "name": "Iwatani",
+        "rsi14": 31.354,
+        "size_label": "中",
+        "market_cap_100m": 4573.7,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "1414",
+        "name": "SHO-BOND Holdings",
+        "rsi14": 31.667,
+        "size_label": "中",
+        "market_cap_100m": 2637.6,
+        "sector_label": "中",
+        "score": 0
+      },
+      {
+        "ticker": "8968",
+        "name": "Fukuoka REIT",
+        "rsi14": 31.835,
+        "size_label": "小",
+        "market_cap_100m": 1442.2,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "9412",
+        "name": "SKY Perfect JSAT",
+        "rsi14": 32.388,
+        "size_label": "大",
+        "market_cap_100m": 5593.4,
+        "sector_label": "強",
+        "score": 0
+      },
+      {
+        "ticker": "8424",
+        "name": "Fuyo General Lease",
+        "rsi14": 32.67,
+        "size_label": "中",
+        "market_cap_100m": 3793.5,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "2782",
+        "name": "Seria",
+        "rsi14": 32.875,
+        "size_label": "中",
+        "market_cap_100m": 3170.1,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "2730",
+        "name": "EDION",
+        "rsi14": 32.888,
+        "size_label": "中",
+        "market_cap_100m": 2608.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "8892",
+        "name": "ES-CON JAPAN",
+        "rsi14": 33.003,
+        "size_label": "小",
+        "market_cap_100m": 1033.1,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "8174",
+        "name": "Nippon Gas",
+        "rsi14": 33.065,
+        "size_label": "中",
+        "market_cap_100m": 2997.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "3048",
+        "name": "BIC Camera",
+        "rsi14": 33.087,
+        "size_label": "中",
+        "market_cap_100m": 3069.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "9142",
+        "name": "Kyushu Railway",
+        "rsi14": 33.246,
+        "size_label": "中",
+        "market_cap_100m": 5143.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "9832",
+        "name": "Autobacs Seven",
+        "rsi14": 33.298,
+        "size_label": "小",
+        "market_cap_100m": 1231.6,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "9956",
+        "name": "Valor Holdings",
+        "rsi14": 33.358,
+        "size_label": "中",
+        "market_cap_100m": 1832.7,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "4521",
+        "name": "Kaken Pharmaceutical",
+        "rsi14": 33.43,
+        "size_label": "小",
+        "market_cap_100m": 1650.8,
+        "sector_label": "弱",
+        "score": 0
+      },
+      {
+        "ticker": "1950",
+        "name": "Nippon Densetsu Kogyo",
+        "rsi14": 33.937,
+        "size_label": "中",
+        "market_cap_100m": 2256.5,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "2805",
+        "name": "S&B Foods",
+        "rsi14": 34.01,
+        "size_label": "中",
+        "market_cap_100m": 1803.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "7984",
+        "name": "Kokuyo",
+        "rsi14": 34.031,
+        "size_label": "中",
+        "market_cap_100m": 3766.8,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "1963",
+        "name": "JGC Holdings",
+        "rsi14": 34.33,
+        "size_label": "中",
+        "market_cap_100m": 5227.9,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "7309",
+        "name": "Shimano",
+        "rsi14": 34.336,
+        "size_label": "大",
+        "market_cap_100m": 15216.3,
+        "sector_label": "強",
+        "score": 0
+      },
+      {
+        "ticker": "3107",
+        "name": "Daiwabo Holdings",
+        "rsi14": 34.375,
+        "size_label": "中",
+        "market_cap_100m": 3115.3,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "7981",
+        "name": "Takara Standard",
+        "rsi14": 34.714,
+        "size_label": "中",
+        "market_cap_100m": 1876.8,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "94346",
+        "name": "Series 2 Bond-Type Class Shares of SoftBank Prf",
+        "rsi14": 34.771,
+        "size_label": "大",
+        "market_cap_100m": 3590377.6,
+        "sector_label": "強",
+        "score": 0
+      },
+      {
+        "ticker": "8066",
+        "name": "Mitani",
+        "rsi14": 34.934,
+        "size_label": "中",
+        "market_cap_100m": 2916.6,
+        "sector_label": "—",
+        "score": 0
+      },
+      {
+        "ticker": "3309",
+        "name": "Sekisui House Reit",
+        "rsi14": 17.161,
+        "size_label": "中",
+        "market_cap_100m": 2849.2,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8961",
+        "name": "Mori Trust Reit",
+        "rsi14": 17.658,
+        "size_label": "中",
+        "market_cap_100m": 2360.3,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3249",
+        "name": "Industrial & Infrastructure Fund Investment",
+        "rsi14": 18.489,
+        "size_label": "中",
+        "market_cap_100m": 3175.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3282",
+        "name": "Comforia Residential REIT",
+        "rsi14": 18.577,
+        "size_label": "中",
+        "market_cap_100m": 2207.6,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3471",
+        "name": "Mitsui Fudosan Logistics Park",
+        "rsi14": 19.851,
+        "size_label": "中",
+        "market_cap_100m": 3097.4,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3292",
+        "name": "AEON REIT Investment",
+        "rsi14": 20.223,
+        "size_label": "中",
+        "market_cap_100m": 2237.1,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8986",
+        "name": "Daiwa Securities Living Investment",
+        "rsi14": 20.413,
+        "size_label": "中",
+        "market_cap_100m": 2021.0,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8954",
+        "name": "Orix Jreit",
+        "rsi14": 20.444,
+        "size_label": "中",
+        "market_cap_100m": 4918.3,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8955",
+        "name": "Japan Prime Realty Investment",
+        "rsi14": 20.594,
+        "size_label": "中",
+        "market_cap_100m": 3558.4,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3279",
+        "name": "Activia Properties",
+        "rsi14": 21.577,
+        "size_label": "中",
+        "market_cap_100m": 2932.4,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3295",
+        "name": "Hulic Reit",
+        "rsi14": 22.217,
+        "size_label": "中",
+        "market_cap_100m": 2001.6,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "5076",
+        "name": "Infroneer Holdings",
+        "rsi14": 22.874,
+        "size_label": "大",
+        "market_cap_100m": 6211.5,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "3269",
+        "name": "Advance Residence Investment",
+        "rsi14": 23.577,
+        "size_label": "中",
+        "market_cap_100m": 3810.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "1333",
+        "name": "Umios",
+        "rsi14": 24.527,
+        "size_label": "中",
+        "market_cap_100m": 1809.5,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8967",
+        "name": "Japan Logistics Fund",
+        "rsi14": 24.815,
+        "size_label": "中",
+        "market_cap_100m": 2391.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "1332",
+        "name": "Nissui",
+        "rsi14": 24.895,
+        "size_label": "中",
+        "market_cap_100m": 3304.5,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3226",
+        "name": "Mitsui Fudosan Accommodations Fund",
+        "rsi14": 25.446,
+        "size_label": "中",
+        "market_cap_100m": 2759.0,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8964",
+        "name": "Mitsui Fudosan Retail Fund Investment",
+        "rsi14": 25.823,
+        "size_label": "中",
+        "market_cap_100m": 1955.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8976",
+        "name": "Daiwa Office Investment",
+        "rsi14": 25.921,
+        "size_label": "中",
+        "market_cap_100m": 2726.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "3234",
+        "name": "Mori Hills Reit Investment",
+        "rsi14": 26.122,
+        "size_label": "中",
+        "market_cap_100m": 2217.7,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "7532",
+        "name": "Pan Pacific International Holdings",
+        "rsi14": 27.131,
+        "size_label": "大",
+        "market_cap_100m": 21612.0,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8963",
+        "name": "Invincible Investment",
+        "rsi14": 27.51,
+        "size_label": "中",
+        "market_cap_100m": 4381.4,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "1377",
+        "name": "Sakata Seed",
+        "rsi14": 27.636,
+        "size_label": "中",
+        "market_cap_100m": 1889.1,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8984",
+        "name": "Daiwa House REIT Investment",
+        "rsi14": 27.759,
+        "size_label": "中",
+        "market_cap_100m": 4889.4,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8267",
+        "name": "AEON",
+        "rsi14": 28.992,
+        "size_label": "大",
+        "market_cap_100m": 33444.1,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8960",
+        "name": "United Urban Investment",
+        "rsi14": 29.046,
+        "size_label": "中",
+        "market_cap_100m": 4809.6,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "4732",
+        "name": "USS",
+        "rsi14": 29.331,
+        "size_label": "大",
+        "market_cap_100m": 8503.6,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8985",
+        "name": "Japan Hotel REIT Investment",
+        "rsi14": 29.543,
+        "size_label": "中",
+        "market_cap_100m": 4640.5,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "2270",
+        "name": "Megmilk Snow Brand",
+        "rsi14": 29.954,
+        "size_label": "中",
+        "market_cap_100m": 2199.1,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "1803",
+        "name": "Shimizu",
+        "rsi14": 30.801,
+        "size_label": "大",
+        "market_cap_100m": 14609.7,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "7012",
+        "name": "Kawasaki Heavy Industries",
+        "rsi14": 31.032,
+        "size_label": "大",
+        "market_cap_100m": 19907.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "9072",
+        "name": "NIKKON Holdings",
+        "rsi14": 31.127,
+        "size_label": "大",
+        "market_cap_100m": 5673.9,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "1808",
+        "name": "HASEKO",
+        "rsi14": 31.646,
+        "size_label": "大",
+        "market_cap_100m": 7458.2,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8729",
+        "name": "Sony Financial Group",
+        "rsi14": 31.843,
+        "size_label": "大",
+        "market_cap_100m": 9918.6,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "6269",
+        "name": "Modec",
+        "rsi14": 32.351,
+        "size_label": "大",
+        "market_cap_100m": 5782.0,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "8572",
+        "name": "Acom",
+        "rsi14": 32.558,
+        "size_label": "大",
+        "market_cap_100m": 7093.6,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8253",
+        "name": "Credit Saison",
+        "rsi14": 32.676,
+        "size_label": "大",
+        "market_cap_100m": 6867.8,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "8593",
+        "name": "Mitsubishi HC Capital",
+        "rsi14": 32.707,
+        "size_label": "大",
+        "market_cap_100m": 18996.5,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "4755",
+        "name": "Rakuten Group",
+        "rsi14": 33.463,
+        "size_label": "大",
+        "market_cap_100m": 14199.5,
+        "sector_label": "中",
+        "score": -1
+      },
+      {
+        "ticker": "1911",
+        "name": "Sumitomo Forestry",
+        "rsi14": 33.508,
+        "size_label": "大",
+        "market_cap_100m": 7243.6,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "5021",
+        "name": "Cosmo Energy Holdings",
+        "rsi14": 33.545,
+        "size_label": "大",
+        "market_cap_100m": 6628.1,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "1802",
+        "name": "Obayashi",
+        "rsi14": 33.732,
+        "size_label": "大",
+        "market_cap_100m": 19702.8,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "5411",
+        "name": "JFE Holdings",
+        "rsi14": 33.779,
+        "size_label": "大",
+        "market_cap_100m": 10720.2,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "2264",
+        "name": "Morinaga Milk Industry",
+        "rsi14": 33.907,
+        "size_label": "中",
+        "market_cap_100m": 3605.8,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "2201",
+        "name": "Morinaga",
+        "rsi14": 34.372,
+        "size_label": "中",
+        "market_cap_100m": 2039.6,
+        "sector_label": "弱",
+        "score": -1
+      },
+      {
+        "ticker": "8802",
+        "name": "Mitsubishi Estate",
+        "rsi14": 34.68,
+        "size_label": "大",
+        "market_cap_100m": 41686.2,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "8804",
+        "name": "Tokyo Tatemono",
+        "rsi14": 34.849,
+        "size_label": "大",
+        "market_cap_100m": 6565.9,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "9005",
+        "name": "Tokyu",
+        "rsi14": 34.857,
+        "size_label": "大",
+        "market_cap_100m": 9854.2,
+        "sector_label": "—",
+        "score": -1
+      },
+      {
+        "ticker": "8953",
+        "name": "Japan Metropolitan Fund Investment",
+        "rsi14": 17.822,
+        "size_label": "大",
+        "market_cap_100m": 7394.2,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "642A",
+        "name": "Kyuden Holdings",
+        "rsi14": 17.948,
+        "size_label": "大",
+        "market_cap_100m": 9112.6,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3462",
+        "name": "Nomura Real Estate Master Fund",
+        "rsi14": 19.347,
+        "size_label": "大",
+        "market_cap_100m": 6240.1,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "8952",
+        "name": "Japan Real Estate Investment",
+        "rsi14": 22.797,
+        "size_label": "大",
+        "market_cap_100m": 7647.8,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3289",
+        "name": "Tokyu Fudosan Holdings",
+        "rsi14": 25.83,
+        "size_label": "大",
+        "market_cap_100m": 8504.8,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3283",
+        "name": "Nippon Prologis REIT",
+        "rsi14": 26.126,
+        "size_label": "大",
+        "market_cap_100m": 6652.6,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3281",
+        "name": "GLP J-REIT",
+        "rsi14": 26.561,
+        "size_label": "大",
+        "market_cap_100m": 6117.1,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "8972",
+        "name": "KDX Realty Investment",
+        "rsi14": 27.899,
+        "size_label": "大",
+        "market_cap_100m": 5638.7,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3231",
+        "name": "Nomura Real Estate Holdings",
+        "rsi14": 28.846,
+        "size_label": "大",
+        "market_cap_100m": 7730.9,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "3003",
+        "name": "Hulic",
+        "rsi14": 30.256,
+        "size_label": "大",
+        "market_cap_100m": 12662.8,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "7201",
+        "name": "Nissan Motor",
+        "rsi14": 32.807,
+        "size_label": "大",
+        "market_cap_100m": 10510.6,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "4528",
+        "name": "Ono Pharmaceutical",
+        "rsi14": 32.945,
+        "size_label": "大",
+        "market_cap_100m": 11205.6,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "1925",
+        "name": "Daiwa House Industry",
+        "rsi14": 34.496,
+        "size_label": "大",
+        "market_cap_100m": 28583.8,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "8951",
+        "name": "Nippon Building Fund",
+        "rsi14": 34.622,
+        "size_label": "大",
+        "market_cap_100m": 10331.2,
+        "sector_label": "弱",
+        "score": -2
+      },
+      {
+        "ticker": "4151",
+        "name": "Kyowa Kirin",
+        "rsi14": 34.697,
+        "size_label": "大",
+        "market_cap_100m": 11611.3,
+        "sector_label": "弱",
+        "score": -2
+      }
+    ],
+    "candidates_as_of": "2026-10-08T12:00:09.734651+00:00",
     "monthly": [
       {
         "month": "2026-08",
@@ -2453,7 +4958,7 @@
       },
       {
         "month": "2026-10",
-        "nav": 105515620.0,
+        "nav": 102746670.0,
         "principal": 100000000.0,
         "result": "win"
       }

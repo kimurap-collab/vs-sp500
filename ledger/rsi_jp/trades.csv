@@ -59,3 +59,8 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name,realized_pnl,re
 2026-10-07,BUY,9715,800,3360.0,2688000.0,entry,9715-2026-10-07-1,RSI14=28.4 lot_size=100・入れ替え(score=2)・moomoo発注なし・台帳のみの仮想売買,transcosmos,,
 2026-10-07,SELL,2264,2600,1061.0,2758600.0,swap,2264-2026-09-03-1,入れ替え買い4928のため(score=-1)・moomoo発注なし・台帳のみの仮想売買,Morinaga Milk Industry,-140400.0,-4.843
 2026-10-07,BUY,4928,600,4460.0,2676000.0,entry,4928-2026-10-07-1,RSI14=30.5 lot_size=100・入れ替え(score=2)・moomoo発注なし・台帳のみの仮想売買,Noevir Holdings,,
+2026-10-08,SELL,6707,400,6777.0,2710800.0,stop_loss,6707-2026-08-25-1,moomoo発注なし・台帳のみの仮想売買,Sanken Electric,-248400.0,-8.3942
+2026-10-08,BUY,4368,200,3370.0,674000.0,pyramid2,4368-2026-08-28-1,moomoo発注なし・台帳のみの仮想売買,Fuso Chemical,,
+2026-10-08,BUY,4368,200,3370.0,674000.0,pyramid3,4368-2026-08-28-1,moomoo発注なし・台帳のみの仮想売買,Fuso Chemical,,
+2026-10-08,BUY,6101,200,5580.0,1116000.0,pyramid1,6101-2026-09-03-1,moomoo発注なし・台帳のみの仮想売買,Tsugami,,
+2026-10-08,BUY,6506,100,4789.0,478900.0,pyramid2,6506-2026-09-03-1,moomoo発注なし・台帳のみの仮想売買,YASKAWA Electric,,

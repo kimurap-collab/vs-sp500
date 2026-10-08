@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 249669.95483398438,
+  "cash_jpy": 17569.954833984375,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -324,7 +324,7 @@
         false,
         false
       ],
-      "shares": 400,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2959200.0,
       "avg_cost": 7398.0,
@@ -333,9 +333,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-08",
       "name": "Sanken Electric"
     },
     {
@@ -442,13 +442,13 @@
       "initial_entry_price": 2971.0,
       "pyramid_done": [
         true,
-        false,
-        false
+        true,
+        true
       ],
-      "shares": 1400,
+      "shares": 1800,
       "lot_size": 100,
-      "total_invested_usd": 4361000.0,
-      "avg_cost": 3115.0,
+      "total_invested_usd": 5709000.0,
+      "avg_cost": 3171.6666666666665,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -565,13 +565,13 @@
       "initial_entry_price": 4500.0,
       "pyramid_done": [
         false,
-        false,
+        true,
         false
       ],
-      "shares": 600,
+      "shares": 700,
       "lot_size": 100,
-      "total_invested_usd": 2700000.0,
-      "avg_cost": 4500.0,
+      "total_invested_usd": 3178900.0,
+      "avg_cost": 4541.285714285715,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -759,14 +759,14 @@
       "initial_entry_date": "2026-09-03",
       "initial_entry_price": 5030.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 500,
+      "shares": 700,
       "lot_size": 100,
-      "total_invested_usd": 2515000.0,
-      "avg_cost": 5030.0,
+      "total_invested_usd": 3631000.0,
+      "avg_cost": 5187.142857142857,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -849,5 +849,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-10-07"
+  "last_processed_date": "2026-10-08"
 }
