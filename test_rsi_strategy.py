@@ -575,27 +575,71 @@ class TestRankSectorEtfTiers(unittest.TestCase):
 
 
 class TestComputeMarketCapTiers(unittest.TestCase):
-    def test_top_third_plus_one_bottom_third_minus_one(self):
-        caps = {f"T{i}": float(i) for i in range(1, 10)}  # 9銘柄: 1..9（昇順）
-        tiers = rs.compute_market_cap_tiers(caps)
-        self.assertEqual(tiers["T9"], 1)   # 最大
-        self.assertEqual(tiers["T1"], -1)  # 最小
-        self.assertEqual(tiers["T5"], 0)   # 中位
+    """2026-10-08改訂: 相対3分位→固定ライン(small_max/large_min)に変更。境界値は
+    small_max未満→小型、small_max以上large_min未満→中型、large_min以上→大型。"""
+
+    SMALL_MAX = 25_000_000_000.0
+    LARGE_MIN = 70_000_000_000.0
+
+    def test_boundary_values_us_lines(self):
+        caps = {
+            "JUST_BELOW_SMALL": self.SMALL_MAX - 1.0,
+            "AT_SMALL": self.SMALL_MAX,
+            "JUST_BELOW_LARGE": self.LARGE_MIN - 1.0,
+            "AT_LARGE": self.LARGE_MIN,
+        }
+        tiers = rs.compute_market_cap_tiers(caps, self.SMALL_MAX, self.LARGE_MIN)
+        self.assertEqual(tiers["JUST_BELOW_SMALL"], -1)  # small_max未満→小型
+        self.assertEqual(tiers["AT_SMALL"], 0)            # small_max以上→中型
+        self.assertEqual(tiers["JUST_BELOW_LARGE"], 0)    # large_min未満→中型
+        self.assertEqual(tiers["AT_LARGE"], 1)            # large_min以上→大型
+
+    def test_boundary_values_jp_lines(self):
+        small_max, large_min = 180_000_000_000.0, 550_000_000_000.0
+        caps = {
+            "JUST_BELOW_SMALL": small_max - 1.0,
+            "AT_SMALL": small_max,
+            "JUST_BELOW_LARGE": large_min - 1.0,
+            "AT_LARGE": large_min,
+        }
+        tiers = rs.compute_market_cap_tiers(caps, small_max, large_min)
+        self.assertEqual(tiers["JUST_BELOW_SMALL"], -1)
+        self.assertEqual(tiers["AT_SMALL"], 0)
+        self.assertEqual(tiers["JUST_BELOW_LARGE"], 0)
+        self.assertEqual(tiers["AT_LARGE"], 1)
 
     def test_unknown_or_invalid_caps_excluded_from_result(self):
         caps = {"AAA": 100.0, "BBB": None, "CCC": float("nan"), "DDD": 0.0, "EEE": 200.0}
-        tiers = rs.compute_market_cap_tiers(caps)
+        tiers = rs.compute_market_cap_tiers(caps, self.SMALL_MAX, self.LARGE_MIN)
         self.assertNotIn("BBB", tiers)
         self.assertNotIn("CCC", tiers)
         self.assertNotIn("DDD", tiers)
 
     def test_favor_small_cap_reverses_sign(self):
         """2026-10-07改訂3: favor_small_cap=Trueで小型株+1・大型株-1に反転（米国枠・JP枠共用）。"""
-        caps = {f"T{i}": float(i) for i in range(1, 10)}  # 9銘柄: 1..9（昇順）
-        tiers = rs.compute_market_cap_tiers(caps, favor_small_cap=True)
-        self.assertEqual(tiers["T9"], -1)  # 最大（大型株）は不利に
-        self.assertEqual(tiers["T1"], 1)   # 最小（小型株）は有利に
-        self.assertEqual(tiers["T5"], 0)   # 中位は変わらず0
+        caps = {"SMALL": self.SMALL_MAX - 1.0, "MID": (self.SMALL_MAX + self.LARGE_MIN) / 2, "LARGE": self.LARGE_MIN}
+        tiers = rs.compute_market_cap_tiers(caps, self.SMALL_MAX, self.LARGE_MIN, favor_small_cap=True)
+        self.assertEqual(tiers["LARGE"], -1)  # 大型株は不利に
+        self.assertEqual(tiers["SMALL"], 1)   # 小型株は有利に
+        self.assertEqual(tiers["MID"], 0)     # 中型は変わらず0
+
+
+class TestClassifyMarketCapLabel(unittest.TestCase):
+    """2026-10-08追加: ダッシュボード表示用の大/中/小ラベル（favor_small_capによる符号反転なし）。"""
+
+    SMALL_MAX = 25_000_000_000.0
+    LARGE_MIN = 70_000_000_000.0
+
+    def test_boundary_values(self):
+        self.assertEqual(rs.classify_market_cap_label(self.SMALL_MAX - 1.0, self.SMALL_MAX, self.LARGE_MIN), "小")
+        self.assertEqual(rs.classify_market_cap_label(self.SMALL_MAX, self.SMALL_MAX, self.LARGE_MIN), "中")
+        self.assertEqual(rs.classify_market_cap_label(self.LARGE_MIN - 1.0, self.SMALL_MAX, self.LARGE_MIN), "中")
+        self.assertEqual(rs.classify_market_cap_label(self.LARGE_MIN, self.SMALL_MAX, self.LARGE_MIN), "大")
+
+    def test_unknown_returns_none(self):
+        self.assertIsNone(rs.classify_market_cap_label(None, self.SMALL_MAX, self.LARGE_MIN))
+        self.assertIsNone(rs.classify_market_cap_label(0.0, self.SMALL_MAX, self.LARGE_MIN))
+        self.assertIsNone(rs.classify_market_cap_label(float("nan"), self.SMALL_MAX, self.LARGE_MIN))
 
 
 class TestComputeSwapScore(unittest.TestCase):

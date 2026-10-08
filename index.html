@@ -188,7 +188,8 @@
     同じ銘柄は保有中1ロットまで（利確済みなら再エントリー可）。対象は S&amp;P500+NASDAQ100 構成銘柄。
     資金不足で新規候補が買えない夜は、セクター・時価総額スコア（時価総額は小型株が有利。
     2026-10-07改訂）がより低い含み損ロットを売って入れ替えることがある（入れ替え）。
-    開始資金 $500,000
+    開始資金 $500,000<br>
+    ※時価総額の区分（2026-10-08改訂・固定ライン）: 小型&lt;250億ドル／中型250〜700億ドル／大型&gt;=700億ドル
   </div>
 
   <section>
@@ -210,13 +211,27 @@
     <div class="table-scroll">
     <table id="rsiHoldingsTable">
       <thead><tr>
-        <th>銘柄</th><th class="num">株数</th><th class="num">平均取得単価</th>
+        <th>銘柄</th><th>規模</th><th class="num">株数</th><th class="num">平均取得単価</th>
         <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
     </div>
     <div class="empty" id="rsiHoldingsEmpty" style="display:none;">保有なし（全額現金）</div>
+  </section>
+
+  <section>
+    <h2>今夜の候補（frozen_candidates.json）</h2>
+    <div class="updated" id="rsiCandidatesUpdated"></div>
+    <div class="table-scroll">
+    <table id="rsiCandidatesTable">
+      <thead><tr>
+        <th>銘柄</th><th class="num">RSI(14)</th><th>規模</th><th>セクター強弱</th><th class="num">スワップスコア</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="rsiCandidatesEmpty" style="display:none;">候補なし</div>
   </section>
 
   <section>
@@ -262,7 +277,8 @@
     <strong>moomooに日本の仮想口座が存在しないため、この枠だけ実際の発注を伴わない台帳上の仮想売買</strong>
     （約定価格はその日の終値をそのまま使う）。
     資金不足で新規候補が買えない夜は、セクター・時価総額スコア（時価総額は小型株が有利）が
-    より低い含み損ロットを売って入れ替えることがある（入れ替え）。
+    より低い含み損ロットを売って入れ替えることがある（入れ替え）。<br>
+    ※時価総額の区分（2026-10-08改訂・固定ライン）: 小型&lt;1,800億円／中型1,800〜5,500億円／大型&gt;=5,500億円
   </div>
 
   <section>
@@ -284,13 +300,27 @@
     <div class="table-scroll">
     <table id="rsiJpHoldingsTable">
       <thead><tr>
-        <th>銘柄</th><th class="num">株数</th><th class="num">平均取得単価</th>
+        <th>銘柄</th><th>規模</th><th class="num">株数</th><th class="num">平均取得単価</th>
         <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
     </div>
     <div class="empty" id="rsiJpHoldingsEmpty" style="display:none;">保有なし（全額現金）</div>
+  </section>
+
+  <section>
+    <h2>今夜の候補（frozen_candidates.json）</h2>
+    <div class="updated" id="rsiJpCandidatesUpdated"></div>
+    <div class="table-scroll">
+    <table id="rsiJpCandidatesTable">
+      <thead><tr>
+        <th>銘柄</th><th class="num">RSI(14)</th><th>規模</th><th>セクター強弱</th><th class="num">スワップスコア</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+    <div class="empty" id="rsiJpCandidatesEmpty" style="display:none;">候補なし</div>
   </section>
 
   <section>
@@ -312,6 +342,38 @@ function fmtPrice(value, currency) {
   const digits = currency === "USD" ? 2 : 1;
   const symbol = currency === "USD" ? "$" : "¥";
   return symbol + Number(value).toFixed(digits);
+}
+
+function fmtSize(sizeLabel, marketCap100m, unit) {
+  const label = sizeLabel || "—";
+  if (marketCap100m === null || marketCap100m === undefined) return label;
+  return `${label}<span class="sub">${marketCap100m.toLocaleString()}億${unit}</span>`;
+}
+
+function fmtAsOf(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return "候補確定: " + d.toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"}) + " JST時点";
+}
+
+function renderCandidatesTable(bodyId, emptyId, candidates) {
+  const body = document.querySelector(`#${bodyId} tbody`);
+  if (!candidates || candidates.length === 0) {
+    document.getElementById(emptyId).style.display = "block";
+    return;
+  }
+  candidates.forEach(c => {
+    const tr = document.createElement("tr");
+    const rsiStr = (c.rsi14 === null || c.rsi14 === undefined) ? "-" : Number(c.rsi14).toFixed(1);
+    tr.innerHTML =
+      `<td>${c.ticker}${c.name ? `<span class="sub">${c.name}</span>` : ""}</td>` +
+      `<td class="num">${rsiStr}</td>` +
+      `<td>${c.size_label || "—"}</td>` +
+      `<td>${c.sector_label || "—"}</td>` +
+      `<td class="num">${c.score}</td>`;
+    body.appendChild(tr);
+  });
 }
 
 async function load() {
@@ -529,6 +591,7 @@ async function load() {
           `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
           (h.name ? `<span class="sub">${h.name}</span>` : "") +
           `</td>` +
+          `<td>${fmtSize(h.size_label, h.market_cap_100m_usd, "ドル")}</td>` +
           `<td class="num">${h.shares}</td>` +
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
@@ -538,6 +601,9 @@ async function load() {
         rsiHoldingsBody.appendChild(tr);
       });
     }
+
+    document.getElementById("rsiCandidatesUpdated").textContent = fmtAsOf(rsi.candidates_as_of);
+    renderCandidatesTable("rsiCandidatesTable", "rsiCandidatesEmpty", rsi.candidates);
 
     const rsiTradesBody = document.querySelector("#rsiTradesTable tbody");
     const rsiTrades = rsi.trades || [];
@@ -641,6 +707,7 @@ async function load() {
           `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
           (h.name ? `<span class="sub">${h.name}</span>` : "") +
           `</td>` +
+          `<td>${fmtSize(h.size_label, h.market_cap_100m_jpy, "円")}</td>` +
           `<td class="num">${h.shares}</td>` +
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
@@ -650,6 +717,9 @@ async function load() {
         jpHoldingsBody.appendChild(tr);
       });
     }
+
+    document.getElementById("rsiJpCandidatesUpdated").textContent = fmtAsOf(rsiJp.candidates_as_of);
+    renderCandidatesTable("rsiJpCandidatesTable", "rsiJpCandidatesEmpty", rsiJp.candidates);
 
     const jpTradesBody = document.querySelector("#rsiJpTradesTable tbody");
     const jpTrades = rsiJp.trades || [];

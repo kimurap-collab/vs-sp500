@@ -154,6 +154,11 @@ RSI_SWAP_MOOMOO_BATCH_SIZE = 200  # get_owner_plate/get_market_snapshot 1回あ�
 # 時価総額Tierの方向（2026-10-07改訂。旧値False=大型株+1/小型株-1。JP枠と同じ「小型株有利」に変更。
 # 5年バックテストで小型株有利側が10/10勝ち越し、大将「いけ」で承認。SPEC_RSI30.md「2026-10-07改訂3」参照）
 RSI_SWAP_MARKET_CAP_FAVOR_SMALL = True
+# 時価総額Tierの固定ライン（2026-10-08改訂。相対3分位→固定の金額ラインに変更。
+# 大将「もっと明確な線引きをしようよ」。5年バックテストで候補A（小型<250億ドル・大型>=700億ドル）が
+# 両市場とも10/10勝ち越しを確認し大将「1)a」で承認。SPEC_RSI30.md「2026-10-08改訂」参照）
+RSI_SWAP_MARKET_CAP_SMALL_MAX_USD = 25_000_000_000.0   # 250億ドル未満→小型
+RSI_SWAP_MARKET_CAP_LARGE_MIN_USD = 70_000_000_000.0   # 700億ドル以上→大型
 
 # --- 日本株RSI枠（2026-08-24 SPEC_RSI30.md追補。3本目の戦略枠。円建て・ベンチマーク無し） ---
 RSI_JP_LEDGER_DIR = LEDGER_DIR / "rsi_jp"
@@ -194,3 +199,7 @@ RSI_JP_SWAP_SECTOR_TIERS_PATH = RSI_JP_LEDGER_DIR / "sector_tiers.json"
 RSI_JP_SWAP_SECTOR_MAP_PATH = RSI_JP_LEDGER_DIR / "sector_map.json"
 # 時価総額Tierの方向: 小型株有利（元から米国枠と逆に設定。2026-10-07改訂で米国枠もこちらに揃えた）
 RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL = True
+# 時価総額Tierの固定ライン（2026-10-08改訂。米国枠と同じ経緯。候補A（小型<1,800億円・大型>=5,500億円）
+# で5年バックテスト10/10勝ち越しを確認し大将「1)a」で承認。SPEC_RSI30.md「2026-10-08改訂」参照）
+RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY = 180_000_000_000.0  # 1,800億円未満→小型
+RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY = 550_000_000_000.0  # 5,500億円以上→大型

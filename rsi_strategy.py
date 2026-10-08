@@ -610,33 +610,46 @@ def rank_sector_etf_tiers(etf_returns: dict[str, float]) -> dict[str, int]:
 
 
 def compute_market_cap_tiers(
-    market_caps: dict[str, float], favor_small_cap: bool = False,
+    market_caps: dict[str, float], small_max: float, large_min: float, favor_small_cap: bool = False,
 ) -> dict[str, int]:
-    """時価総額から3分位Tier(+1/0/-1)を返す（2026-10-07追加。大将「5)1」＝小型株は不利に。
-    2026-10-07改訂で米国枠・日本株RSI枠の両方がfavor_small_cap=Trueの小型株有利に変更。
-    フレーム間でこの方向を変えるのはfavor_small_capのみとし、Tier計算ロジック自体は共用する）。
+    """時価総額を固定の金額ラインで3段階Tier(+1/0/-1)に分類する（2026-10-08改訂。
+    大将「もっと明確な線引きをしようよ」。相対3分位（その夜の母集団次第でラインが動き、
+    バックテストと一致しないずれがあった）から固定ラインに変更。
 
-    参照実装のpandas rank(pct=True)（上位1/3超→+1・下位1/3以下→-1・それ以外→0）と同じ閾値を、
-    昇順に並べた順位の百分位で近似する（タイの扱いが厳密に同一ではないが閾値は同じ）。
-    favor_small_cap=Trueのときはこの符号を反転する（小型株+1・大型株-1）。
+    small_max未満→小型、small_max以上large_min未満→中型、large_min以上→大型。
+    素のTierは大型+1・中型0・小型-1。favor_small_cap=Trueのときはこの符号を反転する
+    （小型+1・大型-1）。呼び出し側がUS/JPそれぞれの固定ライン（config.py）を渡す。
     market_capsに無い・0以下・NaNの銘柄は戻り値に含めない（呼び出し側がdict.get(t, 0)で0扱い）。
     """
     valid = {t: v for t, v in market_caps.items() if v is not None and v == v and v > 0}
     if not valid:
         return {}
-    ordered = sorted(valid.items(), key=lambda kv: kv[1])  # 時価総額の昇順
-    n = len(ordered)
     tiers: dict[str, int] = {}
-    for rank, (ticker, _cap) in enumerate(ordered):
-        pct = (rank + 1) / n
-        if pct > 2 / 3:
-            tier = 1
-        elif pct <= 1 / 3:
+    for ticker, cap in valid.items():
+        if cap < small_max:
             tier = -1
+        elif cap >= large_min:
+            tier = 1
         else:
             tier = 0
         tiers[ticker] = -tier if favor_small_cap else tier
     return tiers
+
+
+def classify_market_cap_label(cap: float | None, small_max: float, large_min: float) -> str | None:
+    """時価総額をダッシュボード表示用のラベル（大/中/小）に分類する（2026-10-08追加）。
+
+    compute_market_cap_tiersのTier値はスワップ判定のfavor_small_capで符号反転されるため、
+    実際の規模を表す表示にはそのまま使えない。この関数は反転せず固定ラインのみ適用する。
+    capがNone・0以下・NaNなら不明としてNoneを返す（呼び出し側が"—"等で表示する）。
+    """
+    if cap is None or cap != cap or cap <= 0:
+        return None
+    if cap < small_max:
+        return "小"
+    if cap >= large_min:
+        return "大"
+    return "中"
 
 
 def compute_swap_score(

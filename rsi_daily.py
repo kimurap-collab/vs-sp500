@@ -684,7 +684,8 @@ def get_sector_tiers(trade_date: str, dry_run: bool, log_lines: list[str]) -> di
 
 
 def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> dict[str, int]:
-    """米国ユニバース全体の時価総額を取得し3分位Tier(-1/0/+1)を返す（2026-10-07追加・毎晩。
+    """渡されたティッカーの時価総額を取得し固定ラインTier(-1/0/+1)を返す（2026-10-07追加・毎晩。
+    2026-10-08改訂で相対3分位→固定ライン(config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD/LARGE_MIN_USD)に変更。
     キャッシュしない＝呼ばれるたびmoomooから取り直す。get_market_snapshotはkline枠を消費しない。
     方向は2026-10-07改訂でJP枠と同じ小型株有利に変更＝config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL）。
     """
@@ -698,8 +699,60 @@ def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> d
     if missing:
         logger.warning("RSI-SWAP: 時価総額が取得できなかった銘柄 %d件", missing)
     return rsi_strategy.compute_market_cap_tiers(
-        caps, favor_small_cap=config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL,
+        caps, config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD, config.RSI_SWAP_MARKET_CAP_LARGE_MIN_USD,
+        favor_small_cap=config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL,
     )
+
+
+def build_dashboard_candidates(
+    held_tickers: list[str], trade_date: str, log_lines: list[str],
+) -> dict[str, Any]:
+    """ダッシュボード「今夜の候補」セクション（米国RSI枠）用データを組み立てる（2026-10-08追加）。
+
+    frozen_candidates.jsonを直接読む（run()内のraw_candidatesは当日処理済みだと空になるため、
+    表示専用のこちらは常に最新の確定候補を参照する）。発注・台帳は一切変更しない。
+    frozen_candidates.jsonが無い・古い場合でも、保有一覧の規模表示は候補一覧と無関係なので
+    held_tickers分の時価総額は引き続き取得する（候補一覧(candidates)だけ空にする）。
+    セクターマップ・セクターTierの月次キャッシュ(sector_map.json/sector_tiers.json)は
+    dry_run=True固定で呼ぶ（候補∪保有銘柄という一部ティッカーだけの取得結果で、
+    その月の本来のスワップ判定用キャッシュ(全ユニバース分)を上書きする事故を防ぐため）。
+    時価総額はget_market_cap_tiersと同じくキャッシュしない設計のため、この区別は不要。
+    """
+    frozen = _load_frozen_candidates()
+    if frozen is None:
+        log_lines.append("[RSI-DASH] frozen_candidates.jsonが無いか古いため、候補セクションは空で表示する")
+    candidates = frozen["candidates"] if frozen else []
+    tickers = sorted({c["ticker"] for c in candidates} | set(held_tickers))
+    caps = broker.get_market_caps(tickers) if tickers else {}
+    if caps is None:
+        log_lines.append("[RSI-DASH] 時価総額の取得に失敗。候補セクションのサイズ・スコアは不明(—)で表示する")
+        caps = {}
+
+    sector_of = get_sector_map(tickers, trade_date, dry_run=True, log_lines=log_lines) if tickers else {}
+    sector_tiers = get_sector_tiers(trade_date, dry_run=True, log_lines=log_lines)
+    mcap_tiers = rsi_strategy.compute_market_cap_tiers(
+        caps, config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD, config.RSI_SWAP_MARKET_CAP_LARGE_MIN_USD,
+        favor_small_cap=config.RSI_SWAP_MARKET_CAP_FAVOR_SMALL,
+    )
+
+    rows = []
+    for c in candidates:
+        t = c["ticker"]
+        cap = caps.get(t)
+        etf = sector_of.get(t)
+        rows.append({
+            "ticker": t,
+            "name": c.get("name"),
+            "rsi14": c.get("rsi14"),
+            "market_cap": cap,
+            "size_label": rsi_strategy.classify_market_cap_label(
+                cap, config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD, config.RSI_SWAP_MARKET_CAP_LARGE_MIN_USD,
+            ),
+            "sector_tier": sector_tiers.get(etf) if etf else None,
+            "score": rsi_strategy.compute_swap_score(t, sector_of, sector_tiers, mcap_tiers),
+        })
+    rows.sort(key=lambda r: (-r["score"], r["rsi14"]))
+    return {"as_of": frozen["generated_at"] if frozen else None, "candidates": rows, "market_caps": caps}
 
 
 def _compute_swap_scores(

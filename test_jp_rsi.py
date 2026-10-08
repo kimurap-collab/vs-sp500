@@ -361,6 +361,22 @@ class TestGetMarketCapTiersJp(unittest.TestCase):
             tiers = jp_rsi_daily.get_market_cap_tiers_jp([], held_tickers=["X"], log_lines=[])
         self.assertEqual(tiers, {})
 
+    def test_boundary_values_fixed_jp_lines(self):
+        """2026-10-08改訂: 固定ライン(1,800億円/5,500億円)の境界値で検証する。"""
+        small_max = config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY
+        large_min = config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY
+        raw_candidates = [
+            {"ticker": "JUST_BELOW_SMALL", "rsi14": 20.0, "price": 1000.0, "market_cap": small_max - 1.0},
+            {"ticker": "AT_SMALL", "rsi14": 20.0, "price": 1000.0, "market_cap": small_max},
+            {"ticker": "JUST_BELOW_LARGE", "rsi14": 20.0, "price": 1000.0, "market_cap": large_min - 1.0},
+            {"ticker": "AT_LARGE", "rsi14": 20.0, "price": 1000.0, "market_cap": large_min},
+        ]
+        tiers = jp_rsi_daily.get_market_cap_tiers_jp(raw_candidates, held_tickers=[], log_lines=[])
+        self.assertEqual(tiers["JUST_BELOW_SMALL"], 1)   # 小型は有利に
+        self.assertEqual(tiers["AT_SMALL"], 0)
+        self.assertEqual(tiers["JUST_BELOW_LARGE"], 0)
+        self.assertEqual(tiers["AT_LARGE"], -1)          # 大型は不利に
+
 
 class TestSectorMapJpMonthlyCaching(unittest.TestCase):
     def test_cache_reused_within_same_month(self):
@@ -557,6 +573,63 @@ class TestSwapSellTriggersJpReentryRule(unittest.TestCase):
         allowed, blocked = rs.filter_stop_loss_reentries(candidates, history, "2026-10-08")
         self.assertEqual(allowed, [])
         self.assertEqual([b["ticker"] for b in blocked], ["SELLER"])
+
+
+class TestBuildDashboardCandidatesJp(unittest.TestCase):
+    """2026-10-08追加: ダッシュボード「今夜の候補」セクション(日本株RSI枠)用データの組み立て。"""
+
+    def _write_frozen(self, path, candidates):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "candidates": candidates,
+        }
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    def test_no_frozen_file_returns_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path):
+                result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[])
+        self.assertEqual(result, {"as_of": None, "candidates": [], "market_caps": {}})
+
+    def test_no_frozen_file_still_fetches_held_ticker_market_caps(self):
+        """候補一覧は空になっても、保有一覧の規模表示は候補一覧と無関係に取得されること。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("jp_rsi_daily.jp_market.get_market_caps", return_value={"7203": 9.0e11}), \
+                 patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}):
+                result = jp_rsi_daily.build_dashboard_candidates_jp(["7203"], "2026-10-08", log_lines=[])
+        self.assertEqual(result["candidates"], [])
+        self.assertIsNone(result["as_of"])
+        self.assertEqual(result["market_caps"], {"7203": 9.0e11})
+
+    def test_candidates_sorted_by_score_desc_then_rsi_asc_with_size_label(self):
+        small_max = config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY
+        large_min = config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "SMALL_HI_RSI", "rsi14": 30.0, "price": 1000.0, "market_cap": small_max - 1.0, "name": "Small Hi"},
+                {"ticker": "LARGE", "rsi14": 15.0, "price": 30000.0, "market_cap": large_min, "name": "Large Co"},
+                {"ticker": "SMALL_LO_RSI", "rsi14": 20.0, "price": 5000.0, "market_cap": small_max - 1.0, "name": "Small Lo"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}):
+                result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[])
+
+        rows = result["candidates"]
+        self.assertEqual([r["ticker"] for r in rows], ["SMALL_LO_RSI", "SMALL_HI_RSI", "LARGE"])
+        self.assertEqual(rows[0]["score"], 1)       # 小型株は有利（favor_small_cap=True）
+        self.assertEqual(rows[0]["size_label"], "小")
+        self.assertIsNone(rows[0]["sector_tier"])   # セクター不明は不明(None)のまま
+        self.assertEqual(rows[2]["score"], -1)      # 大型株は不利
+        self.assertEqual(rows[2]["size_label"], "大")
+        self.assertIsNotNone(result["as_of"])
 
 
 if __name__ == "__main__":

@@ -460,11 +460,13 @@ def get_sector_tiers_jp(trading_date: str, dry_run: bool, log_lines: list[str]) 
 def get_market_cap_tiers_jp(
     raw_candidates: list[dict[str, Any]], held_tickers: list[str], log_lines: list[str],
 ) -> dict[str, int]:
-    """JP候補ユニバース(raw_candidates)∪保有銘柄(held_tickers)の時価総額から3分位Tierを求める
+    """JP候補ユニバース(raw_candidates)∪保有銘柄(held_tickers)の時価総額から固定ラインTierを求める
     （2026-10-07追加・大将「5)1」の日本株版＝小型株は時価総額Tierで不利、のFableによる代替案＝
     小型株を有利にする。5年分のバックテストで10/10勝ち越しを確認し「いけ」で承認済み。
     2026-10-07改訂で米国枠もこの方向に揃えたため、向きはconfig.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL
-    で指定するだけで済み、米国枠との差は無くなった）。毎晩実行しキャッシュしない（米国枠と同じ方針）。
+    で指定するだけで済み、米国枠との差は無くなった。2026-10-08改訂で相対3分位→固定ライン
+    (config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY/LARGE_MIN_JPY)に変更）。
+    毎晩実行しキャッシュしない（米国枠と同じ方針）。
 
     時価総額データは2系統を使う:
       - raw_candidatesの"market_cap"（moomooスクリーナーが1回の呼び出しで既に返している値。
@@ -486,8 +488,60 @@ def get_market_cap_tiers_jp(
         return {}
 
     return rsi_strategy.compute_market_cap_tiers(
-        caps, favor_small_cap=config.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL,
+        caps, config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY, config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY,
+        favor_small_cap=config.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL,
     )
+
+
+def build_dashboard_candidates_jp(
+    held_tickers: list[str], trading_date: str, log_lines: list[str],
+) -> dict[str, Any]:
+    """ダッシュボード「今夜の候補」セクション（日本株RSI枠）用データを組み立てる（2026-10-08追加）。
+
+    frozen_candidates.jsonを直接読む（run_jp()内のraw_candidatesは当日処理済みだと空になるため、
+    表示専用のこちらは常に最新の確定候補を参照する）。台帳は一切変更しない。
+    frozen_candidates.jsonが無い・古い場合でも、保有一覧の規模表示は候補一覧と無関係なので
+    held_tickers分の時価総額（yfinance）は引き続き取得する（候補一覧(candidates)だけ空にする）。
+    セクターマップ・セクターTierの月次キャッシュはdry_run=True固定で呼ぶ（米国枠と同じ理由。
+    get_market_cap_tiers_jpのTier計算ロジックを参照）。
+    """
+    frozen = _load_frozen_candidates_jp()
+    if frozen is None:
+        log_lines.append("[JP-DASH] frozen_candidates.jsonが無いか古いため、候補セクションは空で表示する")
+    candidates = frozen["candidates"] if frozen else []
+    caps: dict[str, float] = {
+        c["ticker"]: c["market_cap"] for c in candidates if c.get("market_cap")
+    }
+    missing = [t for t in held_tickers if t not in caps]
+    if missing:
+        caps.update(jp_market.get_market_caps(missing))
+
+    tickers = sorted({c["ticker"] for c in candidates} | set(held_tickers))
+    sector_of = get_sector_map_jp(tickers, trading_date, dry_run=True, log_lines=log_lines) if tickers else {}
+    sector_tiers = get_sector_tiers_jp(trading_date, dry_run=True, log_lines=log_lines)
+    mcap_tiers = rsi_strategy.compute_market_cap_tiers(
+        caps, config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY, config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY,
+        favor_small_cap=config.RSI_JP_SWAP_MARKET_CAP_FAVOR_SMALL,
+    )
+
+    rows = []
+    for c in candidates:
+        t = c["ticker"]
+        cap = caps.get(t)
+        etf = sector_of.get(t)
+        rows.append({
+            "ticker": t,
+            "name": c.get("name"),
+            "rsi14": c.get("rsi14"),
+            "market_cap": cap,
+            "size_label": rsi_strategy.classify_market_cap_label(
+                cap, config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY, config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY,
+            ),
+            "sector_tier": sector_tiers.get(etf) if etf else None,
+            "score": rsi_strategy.compute_swap_score(t, sector_of, sector_tiers, mcap_tiers),
+        })
+    rows.sort(key=lambda r: (-r["score"], r["rsi14"]))
+    return {"as_of": frozen["generated_at"] if frozen else None, "candidates": rows, "market_caps": caps}
 
 
 def _compute_swap_scores_jp(

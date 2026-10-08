@@ -36,19 +36,55 @@ def _ticker_link(ticker: str, currency: str) -> str:
     return f"https://finance.yahoo.com/quote/{ticker}"
 
 
+def _sector_tier_label(sector_tier: int | None) -> str:
+    """セクターTier(+1/0/-1/不明)をダッシュボード表示用の強/中/弱に変換する（2026-10-08追加）。"""
+    if sector_tier is None:
+        return "—"
+    return {1: "強", 0: "中", -1: "弱"}.get(sector_tier, "—")
+
+
+def _build_candidate_rows(candidates: list[dict[str, Any]], cap_divisor: float = 1e8) -> list[dict[str, Any]]:
+    """rsi_daily/jp_rsi_daily のbuild_dashboard_candidates*()が返す候補行を、
+    data.json向けの表示用フィールド（億単位の時価総額・セクター強弱ラベル）に整形する
+    （2026-10-08追加。並び順は呼び出し元が既にスワップスコア降順・RSI昇順でソート済み）。
+    """
+    rows = []
+    for c in candidates:
+        cap = c.get("market_cap")
+        rows.append({
+            "ticker": c["ticker"],
+            "name": c.get("name"),
+            "rsi14": c.get("rsi14"),
+            "size_label": c.get("size_label"),
+            "market_cap_100m": round(cap / cap_divisor, 1) if cap else None,
+            "sector_label": _sector_tier_label(c.get("sector_tier")),
+            "score": c.get("score"),
+        })
+    return rows
+
+
 def build_rsi_block(
     rsi_state: dict[str, Any],
     rsi_market: dict[str, TickerSnapshot],
     rsi_nav_usd: float,
     rsi_bench_usd: float,
     rsi_accepted_trades: list[dict[str, Any]],
+    dashboard: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """RSI-30枠のdata.json用ブロックを組み立てる（本体のbuild_data_jsonと対になる関数）。
 
     ロットは同一銘柄で複数存在しうるため、管理画面向けにはロット単位ではなく
     銘柄ごとに合算して表示する（保有株数・評価額の合計、平均取得単価は総投入額÷総株数）。
+
+    dashboard: rsi_daily.build_dashboard_candidates()の戻り値（2026-10-08追加）。保有一覧の
+    規模(大/中/小)ラベルと「今夜の候補」セクションの元データを渡す。Noneなら両方とも空にする
+    （--report-only・異常停止時などdaily_run.py側で未取得の場合を想定）。
     """
     import rsi_ledger
+    import rsi_strategy
+
+    dashboard = dashboard or {}
+    market_caps: dict[str, float] = dashboard.get("market_caps") or {}
 
     diff_usd = rsi_nav_usd - rsi_bench_usd
     diff_pct = (diff_usd / rsi_bench_usd * 100.0) if rsi_bench_usd else 0.0
@@ -70,6 +106,7 @@ def build_rsi_block(
             continue
         value_usd = agg["shares"] * snap.close
         weight_pct = (value_usd / rsi_nav_usd * 100.0) if rsi_nav_usd else 0.0
+        cap = market_caps.get(ticker)
         holdings.append({
             "ticker": ticker,
             "name": agg.get("name"),
@@ -79,6 +116,10 @@ def build_rsi_block(
             "price": round(snap.close, 4),
             "avg_cost": round(agg["invested"] / agg["shares"], 4),
             "link": _ticker_link(ticker, "USD"),
+            "size_label": rsi_strategy.classify_market_cap_label(
+                cap, config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD, config.RSI_SWAP_MARKET_CAP_LARGE_MIN_USD,
+            ),
+            "market_cap_100m_usd": round(cap / 1e8, 1) if cap else None,
         })
     holdings.sort(key=lambda h: -h["value_usd"])
 
@@ -108,6 +149,8 @@ def build_rsi_block(
         "history": history,
         "trades": trades_recent,
         "monthly": monthly,
+        "candidates": _build_candidate_rows(dashboard.get("candidates") or []),
+        "candidates_as_of": dashboard.get("as_of"),
     }
 
 
@@ -116,13 +159,21 @@ def build_rsi_jp_block(
     jp_market_snap: dict[str, Any],
     jp_nav_jpy: float,
     jp_accepted_trades: list[dict[str, Any]],
+    dashboard: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """日本株RSI枠のdata.json用ブロックを組み立てる（build_rsi_blockの日本株版）。
 
     ベンチマーク無し（大将「戦わなくていい。元本からどれだけ増えたかだけでしい」）のため、
     diff系の指標は全て元本(config.RSI_JP_INITIAL_CAPITAL_JPY)比で計算する。円建て・ドル換算はしない。
+
+    dashboard: jp_rsi_daily.build_dashboard_candidates_jp()の戻り値（2026-10-08追加）。
+    build_rsi_blockのdashboard引数と同じ役割。
     """
     import jp_rsi_ledger
+    import rsi_strategy
+
+    dashboard = dashboard or {}
+    market_caps: dict[str, float] = dashboard.get("market_caps") or {}
 
     principal_jpy = config.RSI_JP_INITIAL_CAPITAL_JPY
     diff_jpy = jp_nav_jpy - principal_jpy
@@ -142,6 +193,7 @@ def build_rsi_jp_block(
             continue
         value_jpy = agg["shares"] * snap.close
         weight_pct = (value_jpy / jp_nav_jpy * 100.0) if jp_nav_jpy else 0.0
+        cap = market_caps.get(ticker)
         holdings.append({
             "ticker": ticker,
             "name": agg.get("name"),
@@ -151,6 +203,10 @@ def build_rsi_jp_block(
             "price": round(snap.close, 2),
             "avg_cost": round(agg["invested"] / agg["shares"], 2),
             "link": _ticker_link(ticker, "JPY"),
+            "size_label": rsi_strategy.classify_market_cap_label(
+                cap, config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY, config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY,
+            ),
+            "market_cap_100m_jpy": round(cap / 1e8, 1) if cap else None,
         })
     holdings.sort(key=lambda h: -h["value_jpy"])
 
@@ -190,6 +246,8 @@ def build_rsi_jp_block(
         "holdings": holdings,
         "history": history,
         "trades": trades_recent,
+        "candidates": _build_candidate_rows(dashboard.get("candidates") or []),
+        "candidates_as_of": dashboard.get("as_of"),
         "monthly": monthly,
     }
 
