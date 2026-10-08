@@ -617,9 +617,13 @@ class TestBuildDashboardCandidatesJp(unittest.TestCase):
                 {"ticker": "SMALL_LO_RSI", "rsi14": 20.0, "price": 5000.0, "market_cap": small_max - 1.0, "name": "Small Lo"},
             ]
             self._write_frozen(fake_path, candidates)
+            tickers = {c["ticker"] for c in candidates}
             with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
                  patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
-                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}):
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}), \
+                 patch("jp_rsi_daily.jp_rsi_ledger.read_trade_rows", return_value=[]), \
+                 patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value=tickers), \
+                 patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={t: 100 for t in tickers}):
                 result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[])
 
         rows = result["candidates"]
@@ -630,6 +634,71 @@ class TestBuildDashboardCandidatesJp(unittest.TestCase):
         self.assertEqual(rows[2]["score"], -1)      # 大型株は不利
         self.assertEqual(rows[2]["size_label"], "大")
         self.assertIsNotNone(result["as_of"])
+
+    def test_held_ticker_with_open_unprofited_lot_excluded(self):
+        """2026-10-09追加・Change1: 保有中・利確前の銘柄は候補一覧から除外する
+        （run_jp()のfilter_blocked_entriesと同じ判定）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "1111", "rsi14": 20.0, "price": 500.0, "name": "Held Co"},
+                {"ticker": "2222", "rsi14": 25.0, "price": 600.0, "name": "Free Co"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            lots = [{"ticker": "1111", "closed": False, "profit1_taken": False}]
+            tickers = {c["ticker"] for c in candidates}
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}), \
+                 patch("jp_rsi_daily.jp_rsi_ledger.read_trade_rows", return_value=[]), \
+                 patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value=tickers), \
+                 patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={t: 100 for t in tickers}):
+                result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[], lots=lots)
+
+        self.assertEqual([r["ticker"] for r in result["candidates"]], ["2222"])
+
+    def test_stop_loss_reentry_blocked_ticker_excluded(self):
+        """2026-10-09追加・Change1: 損切り後の再エントリー制限に抵触する銘柄は候補一覧から除外する
+        （run_jp()のfilter_stop_loss_reentriesと同じ判定）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "3333", "rsi14": 20.0, "price": 900.0, "name": "Stop Loss Co"},  # 閾値850を上回る
+                {"ticker": "4444", "rsi14": 25.0, "price": 100.0, "name": "Ok Co"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            trade_rows = [{"ticker": "3333", "date": "2026-10-08", "price": "1000.0", "rule": "stop_loss"}]
+            tickers = {c["ticker"] for c in candidates}
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}), \
+                 patch("jp_rsi_daily.jp_rsi_ledger.read_trade_rows", return_value=trade_rows), \
+                 patch("jp_rsi_daily.jp_market.get_splits", return_value=[]), \
+                 patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value=tickers), \
+                 patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={t: 100 for t in tickers}):
+                result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[])
+
+        self.assertEqual([r["ticker"] for r in result["candidates"]], ["4444"])
+
+    def test_non_company_ticker_excluded(self):
+        """2026-10-09追加・Change1: 会社の株でない銘柄（REIT等）は候補一覧から除外する
+        （run_jp()のfilter_non_company_entriesと同じ判定）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "5555", "rsi14": 20.0, "price": 500.0, "name": "REIT"},
+                {"ticker": "6666", "rsi14": 25.0, "price": 600.0, "name": "Company"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            with patch.object(config, "RSI_JP_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("jp_rsi_daily.get_sector_map_jp", return_value={}), \
+                 patch("jp_rsi_daily.get_sector_tiers_jp", return_value={}), \
+                 patch("jp_rsi_daily.jp_rsi_ledger.read_trade_rows", return_value=[]), \
+                 patch("jp_rsi_daily.jp_lotsize.get_company_tickers", return_value={"6666"}), \
+                 patch("jp_rsi_daily.jp_lotsize.get_lot_sizes", return_value={"6666": 100}):
+                result = jp_rsi_daily.build_dashboard_candidates_jp([], "2026-10-08", log_lines=[])
+
+        self.assertEqual([r["ticker"] for r in result["candidates"]], ["6666"])
 
 
 if __name__ == "__main__":

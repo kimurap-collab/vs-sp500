@@ -706,6 +706,7 @@ def get_market_cap_tiers(universe_tickers: list[str], log_lines: list[str]) -> d
 
 def build_dashboard_candidates(
     held_tickers: list[str], trade_date: str, log_lines: list[str],
+    lots: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """ダッシュボード「今夜の候補」セクション（米国RSI枠）用データを組み立てる（2026-10-08追加）。
 
@@ -717,11 +718,38 @@ def build_dashboard_candidates(
     dry_run=True固定で呼ぶ（候補∪保有銘柄という一部ティッカーだけの取得結果で、
     その月の本来のスワップ判定用キャッシュ(全ユニバース分)を上書きする事故を防ぐため）。
     時価総額はget_market_cap_tiersと同じくキャッシュしない設計のため、この区別は不要。
+
+    lots: state["lots"]（保有ロット一覧）。今夜買えない候補（保有中・利確前で再エントリー不可、
+    または損切り後の再エントリー制限に抵触）をrun()と同じ判定関数(filter_blocked_entries・
+    filter_stop_loss_reentries)で除外する（2026-10-09追加・Change1。大将「買えない銘柄は
+    書かなくていいよ」。判定ロジックの二重実装を避けるため既存の純粋関数をそのまま再利用する）。
+    省略時（Noneまたは--report-only等でまだ未取得の場合）は保有中チェックを一切行わない。
     """
     frozen = _load_frozen_candidates()
     if frozen is None:
         log_lines.append("[RSI-DASH] frozen_candidates.jsonが無いか古いため、候補セクションは空で表示する")
-    candidates = frozen["candidates"] if frozen else []
+    raw_candidates = frozen["candidates"] if frozen else []
+
+    # 損切り後の再エントリー制限（run()と同じ判定。candidateの価格はfrozen候補の価格=prior close）。
+    stop_loss_history_all = rsi_strategy.latest_rule_closures(rsi_ledger.read_trade_rows())
+    candidate_tickers_today = {c["ticker"] for c in raw_candidates}
+    stop_loss_history = {t: sl for t, sl in stop_loss_history_all.items() if t in candidate_tickers_today}
+    stop_loss_history = _split_adjusted_stop_loss_history(stop_loss_history, trade_date, log_lines)
+    sl_check_candidates = [
+        {"ticker": c["ticker"], "price": c["price"]} for c in raw_candidates if c["ticker"] in stop_loss_history
+    ]
+    _, sl_blocked = rsi_strategy.filter_stop_loss_reentries(sl_check_candidates, stop_loss_history, trade_date)
+    sl_blocked_tickers = {b["ticker"] for b in sl_blocked}
+
+    # 保有中・利確前の銘柄を抑止する（run()と同じ判定）。
+    not_sl_blocked = [c for c in raw_candidates if c["ticker"] not in sl_blocked_tickers]
+    candidates, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(not_sl_blocked, lots or [])
+    if sl_blocked_tickers or blocked_entry_tickers:
+        log_lines.append(
+            f"[RSI-DASH] 買えない候補を除外: 損切り後再エントリー制限={sorted(sl_blocked_tickers)} "
+            f"保有中={blocked_entry_tickers}"
+        )
+
     tickers = sorted({c["ticker"] for c in candidates} | set(held_tickers))
     caps = broker.get_market_caps(tickers) if tickers else {}
     if caps is None:

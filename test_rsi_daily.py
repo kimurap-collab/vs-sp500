@@ -652,6 +652,47 @@ class TestBuildDashboardCandidates(unittest.TestCase):
         self.assertEqual(result["market_caps"], caps)
         self.assertIsNotNone(result["as_of"])
 
+    def test_held_ticker_with_open_unprofited_lot_excluded(self):
+        """2026-10-09追加・Change1: 保有中・利確前の銘柄は候補一覧から除外する
+        （run()のfilter_blocked_entriesと同じ判定）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "HELD", "rsi14": 20.0, "price": 50.0, "name": "Held Co"},
+                {"ticker": "FREE", "rsi14": 25.0, "price": 60.0, "name": "Free Co"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            lots = [{"ticker": "HELD", "closed": False, "profit1_taken": False}]
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_market_caps", return_value={}), \
+                 patch("rsi_daily.get_sector_map", return_value={}), \
+                 patch("rsi_daily.get_sector_tiers", return_value={}), \
+                 patch("rsi_daily.rsi_ledger.read_trade_rows", return_value=[]):
+                result = rsi_daily.build_dashboard_candidates([], "2026-10-08", log_lines=[], lots=lots)
+
+        self.assertEqual([r["ticker"] for r in result["candidates"]], ["FREE"])
+
+    def test_stop_loss_reentry_blocked_ticker_excluded(self):
+        """2026-10-09追加・Change1: 損切り後の再エントリー制限に抵触する銘柄は候補一覧から除外する
+        （run()のfilter_stop_loss_reentriesと同じ判定）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_path = Path(tmp) / "frozen_candidates.json"
+            candidates = [
+                {"ticker": "SL", "rsi14": 20.0, "price": 90.0, "name": "Stop Loss Co"},  # 閾値85を上回る
+                {"ticker": "OK", "rsi14": 25.0, "price": 10.0, "name": "Ok Co"},
+            ]
+            self._write_frozen(fake_path, candidates)
+            trade_rows = [{"ticker": "SL", "date": "2026-10-08", "price": "100.0", "rule": "stop_loss"}]
+            with patch.object(config, "RSI_FROZEN_CANDIDATES_PATH", fake_path), \
+                 patch("rsi_daily.broker.get_market_caps", return_value={}), \
+                 patch("rsi_daily.get_sector_map", return_value={}), \
+                 patch("rsi_daily.get_sector_tiers", return_value={}), \
+                 patch("rsi_daily.rsi_ledger.read_trade_rows", return_value=trade_rows), \
+                 patch("rsi_daily.broker.get_splits", return_value={"SL": []}):
+                result = rsi_daily.build_dashboard_candidates([], "2026-10-08", log_lines=[])
+
+        self.assertEqual([r["ticker"] for r in result["candidates"]], ["OK"])
+
 
 if __name__ == "__main__":
     unittest.main()

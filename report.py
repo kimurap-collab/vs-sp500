@@ -43,6 +43,16 @@ def _sector_tier_label(sector_tier: int | None) -> str:
     return {1: "強", 0: "中", -1: "弱"}.get(sector_tier, "—")
 
 
+def _unrealized_pnl(avg_cost: float, price: float, shares: float) -> tuple[float, float | None]:
+    """保有一覧の含み損益（金額・%）を計算する（2026-10-09追加・Change2。
+    大将「購入してるリストの含み損益も書いておいてほしいな」）。
+    avg_costが0以下（取得単価不明）の場合はゼロ割を避けるため%をNoneにする。
+    """
+    amount = (price - avg_cost) * shares
+    pct = (price / avg_cost - 1) * 100 if avg_cost > 0 else None
+    return amount, pct
+
+
 def _build_candidate_rows(candidates: list[dict[str, Any]], cap_divisor: float = 1e8) -> list[dict[str, Any]]:
     """rsi_daily/jp_rsi_daily のbuild_dashboard_candidates*()が返す候補行を、
     data.json向けの表示用フィールド（億単位の時価総額・セクター強弱ラベル）に整形する
@@ -107,6 +117,8 @@ def build_rsi_block(
         value_usd = agg["shares"] * snap.close
         weight_pct = (value_usd / rsi_nav_usd * 100.0) if rsi_nav_usd else 0.0
         cap = market_caps.get(ticker)
+        avg_cost = agg["invested"] / agg["shares"]
+        pnl_usd, pnl_pct = _unrealized_pnl(avg_cost, snap.close, agg["shares"])
         holdings.append({
             "ticker": ticker,
             "name": agg.get("name"),
@@ -114,7 +126,9 @@ def build_rsi_block(
             "value_usd": round(value_usd, 2),
             "weight_pct": round(weight_pct, 2),
             "price": round(snap.close, 4),
-            "avg_cost": round(agg["invested"] / agg["shares"], 4),
+            "avg_cost": round(avg_cost, 4),
+            "unrealized_pnl_usd": round(pnl_usd, 2),
+            "unrealized_pnl_pct": round(pnl_pct, 2) if pnl_pct is not None else None,
             "link": _ticker_link(ticker, "USD"),
             "size_label": rsi_strategy.classify_market_cap_label(
                 cap, config.RSI_SWAP_MARKET_CAP_SMALL_MAX_USD, config.RSI_SWAP_MARKET_CAP_LARGE_MIN_USD,
@@ -194,6 +208,8 @@ def build_rsi_jp_block(
         value_jpy = agg["shares"] * snap.close
         weight_pct = (value_jpy / jp_nav_jpy * 100.0) if jp_nav_jpy else 0.0
         cap = market_caps.get(ticker)
+        avg_cost = agg["invested"] / agg["shares"]
+        pnl_jpy, pnl_pct = _unrealized_pnl(avg_cost, snap.close, agg["shares"])
         holdings.append({
             "ticker": ticker,
             "name": agg.get("name"),
@@ -201,7 +217,9 @@ def build_rsi_jp_block(
             "value_jpy": round(value_jpy, 0),
             "weight_pct": round(weight_pct, 2),
             "price": round(snap.close, 2),
-            "avg_cost": round(agg["invested"] / agg["shares"], 2),
+            "avg_cost": round(avg_cost, 2),
+            "unrealized_pnl_jpy": round(pnl_jpy, 0),
+            "unrealized_pnl_pct": round(pnl_pct, 2) if pnl_pct is not None else None,
             "link": _ticker_link(ticker, "JPY"),
             "size_label": rsi_strategy.classify_market_cap_label(
                 cap, config.RSI_JP_SWAP_MARKET_CAP_SMALL_MAX_JPY, config.RSI_JP_SWAP_MARKET_CAP_LARGE_MIN_JPY,
@@ -282,6 +300,8 @@ def build_data_json(
         value_usd = shares * snap.close
         weight_pct = (value_usd / nav_usd * 100.0) if nav_usd else 0.0
         thesis = theses.get(ticker, {})
+        avg_cost = avg_costs.get(ticker, snap.close)
+        pnl_usd, pnl_pct = _unrealized_pnl(avg_cost, snap.close, shares)
         holdings.append({
             "ticker": ticker,
             "name": config.WHITELIST[ticker]["name"],
@@ -289,7 +309,9 @@ def build_data_json(
             "value_usd": round(value_usd, 2),
             "weight_pct": round(weight_pct, 2),
             "price": round(snap.close, 4),
-            "avg_cost": round(avg_costs.get(ticker, snap.close), 4),
+            "avg_cost": round(avg_cost, 4),
+            "unrealized_pnl_usd": round(pnl_usd, 2),
+            "unrealized_pnl_pct": round(pnl_pct, 2) if pnl_pct is not None else None,
             "currency": currency,
             "link": _ticker_link(ticker, currency),
             "reason": thesis.get("reason", ""),

@@ -136,7 +136,7 @@
     <table id="holdingsTable">
       <thead><tr>
         <th>銘柄</th><th class="num">株数</th><th class="num">取得単価</th>
-        <th class="num">現在値(前日終値)</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
+        <th class="num">現在値(前日終値)</th><th class="num">損益率</th><th class="num">含み損益</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -212,7 +212,7 @@
     <table id="rsiHoldingsTable">
       <thead><tr>
         <th>銘柄</th><th>規模</th><th class="num">株数</th><th class="num">平均取得単価</th>
-        <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
+        <th class="num">現在値</th><th class="num">損益率</th><th class="num">含み損益</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -223,6 +223,7 @@
   <section>
     <h2>今夜の候補（frozen_candidates.json）</h2>
     <div class="updated" id="rsiCandidatesUpdated"></div>
+    <div class="note">※今夜買えない銘柄（保有中・利確前、損切り後の再エントリー制限中等）は除外済み。購入有力順（スワップスコア降順・同点はRSI昇順）に並んでいます。</div>
     <div class="table-scroll">
     <table id="rsiCandidatesTable">
       <thead><tr>
@@ -301,7 +302,7 @@
     <table id="rsiJpHoldingsTable">
       <thead><tr>
         <th>銘柄</th><th>規模</th><th class="num">株数</th><th class="num">平均取得単価</th>
-        <th class="num">現在値</th><th class="num">損益率</th><th class="num">評価額</th><th class="num">ウェイト</th>
+        <th class="num">現在値</th><th class="num">損益率</th><th class="num">含み損益</th><th class="num">評価額</th><th class="num">ウェイト</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -312,6 +313,7 @@
   <section>
     <h2>今夜の候補（frozen_candidates.json）</h2>
     <div class="updated" id="rsiJpCandidatesUpdated"></div>
+    <div class="note">※今夜買えない銘柄（保有中・利確前、損切り後の再エントリー制限中、REIT等の非会社株、単元株数不明）は除外済み。購入有力順（スワップスコア降順・同点はRSI昇順）に並んでいます。</div>
     <div class="table-scroll">
     <table id="rsiJpCandidatesTable">
       <thead><tr>
@@ -348,6 +350,15 @@ function fmtSize(sizeLabel, marketCap100m, unit) {
   const label = sizeLabel || "—";
   if (marketCap100m === null || marketCap100m === undefined) return label;
   return `${label}<span class="sub">${marketCap100m.toLocaleString()}億${unit}</span>`;
+}
+
+function fmtPnl(amount, currency) {
+  if (amount === null || amount === undefined) return {str: "-", cls: ""};
+  const digits = currency === "JPY" ? 0 : 2;
+  const symbol = currency === "JPY" ? "¥" : "$";
+  const sign = amount >= 0 ? "+" : "";
+  const str = sign + symbol + amount.toLocaleString(undefined, {minimumFractionDigits: digits, maximumFractionDigits: digits});
+  return {str, cls: amount >= 0 ? "win" : "lose"};
 }
 
 function fmtAsOf(iso) {
@@ -472,6 +483,7 @@ async function load() {
         pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
         pnlCls = pnl >= 0 ? "win" : "lose";
       }
+      const pnlAmount = fmtPnl(h.unrealized_pnl_usd, "USD");
       tr.innerHTML =
         `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
         `<span class="sub">${h.name}</span>` +
@@ -480,6 +492,7 @@ async function load() {
         `<td class="num">${avgCostStr}</td>` +
         `<td class="num">${priceStr}</td>` +
         `<td class="num ${pnlCls}">${pnlStr}</td>` +
+        `<td class="num ${pnlAmount.cls}">${pnlAmount.str}</td>` +
         `<td class="num">$${h.value_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
         `<td class="num">${h.weight_pct}%</td>`;
       holdingsBody.appendChild(tr);
@@ -586,6 +599,7 @@ async function load() {
           pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
           pnlCls = pnl >= 0 ? "win" : "lose";
         }
+        const pnlAmount = fmtPnl(h.unrealized_pnl_usd, "USD");
         const tr = document.createElement("tr");
         tr.innerHTML =
           `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
@@ -596,6 +610,7 @@ async function load() {
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
           `<td class="num ${pnlCls}">${pnlStr}</td>` +
+          `<td class="num ${pnlAmount.cls}">${pnlAmount.str}</td>` +
           `<td class="num">$${h.value_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` +
           `<td class="num">${h.weight_pct}%</td>`;
         rsiHoldingsBody.appendChild(tr);
@@ -702,6 +717,7 @@ async function load() {
           pnlStr = (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%";
           pnlCls = pnl >= 0 ? "win" : "lose";
         }
+        const pnlAmount = fmtPnl(h.unrealized_pnl_jpy, "JPY");
         const tr = document.createElement("tr");
         tr.innerHTML =
           `<td><a class="ticker-link" href="${h.link}" target="_blank" rel="noopener">${h.ticker}</a>` +
@@ -712,6 +728,7 @@ async function load() {
           `<td class="num">${avgCostStr}</td>` +
           `<td class="num">${priceStr}</td>` +
           `<td class="num ${pnlCls}">${pnlStr}</td>` +
+          `<td class="num ${pnlAmount.cls}">${pnlAmount.str}</td>` +
           `<td class="num">¥${h.value_jpy.toLocaleString()}</td>` +
           `<td class="num">${h.weight_pct}%</td>`;
         jpHoldingsBody.appendChild(tr);

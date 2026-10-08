@@ -8,6 +8,7 @@ history.csv/trades.csv/dividends.csvは実ファイルを読ませず、一時�
 """
 from __future__ import annotations
 
+import datetime as dt
 import tempfile
 import unittest
 from pathlib import Path
@@ -54,6 +55,10 @@ class TestBuildRsiBlockDashboard(unittest.TestCase):
         self.assertEqual(cand["size_label"], "小")
         self.assertEqual(cand["sector_label"], "強")
         self.assertEqual(cand["score"], 2)
+
+        # 含み損益（2026-10-09追加・Change2）: shares=10, avg_cost=150.0, price=160.0
+        self.assertAlmostEqual(holding["unrealized_pnl_usd"], 100.0, places=2)
+        self.assertAlmostEqual(holding["unrealized_pnl_pct"], (160.0 / 150.0 - 1) * 100, places=2)
 
     def test_none_dashboard_leaves_holdings_and_candidates_empty_defaults(self):
         rsi_state = {"start_date": "2026-01-01", "cash_usd": 0.0, "lots": []}
@@ -102,6 +107,10 @@ class TestBuildRsiJpBlockDashboard(unittest.TestCase):
         self.assertEqual(cand["sector_label"], "弱")
         self.assertEqual(cand["score"], 0)
 
+        # 含み損益（2026-10-09追加・Change2）: shares=100, avg_cost=2000.0, price=2100.0
+        self.assertAlmostEqual(holding["unrealized_pnl_jpy"], 10000.0, places=0)
+        self.assertAlmostEqual(holding["unrealized_pnl_pct"], 5.0, places=2)
+
     def test_none_dashboard_leaves_holdings_and_candidates_empty_defaults(self):
         jp_state = {"start_date": "2026-01-01", "cash_jpy": 0.0, "lots": []}
         with tempfile.TemporaryDirectory() as tmp:
@@ -111,6 +120,33 @@ class TestBuildRsiJpBlockDashboard(unittest.TestCase):
                 block = report.build_rsi_jp_block(jp_state, {}, 0.0, [])
         self.assertEqual(block["candidates"], [])
         self.assertIsNone(block["candidates_as_of"])
+
+
+class TestBuildDataJsonUnrealizedPnl(unittest.TestCase):
+    """2026-10-09追加・Change2: 本体枠(build_data_json)の保有一覧に含み損益の金額・%が付くこと。"""
+
+    def test_holdings_carry_unrealized_pnl_usd_and_pct(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            trades_path = Path(tmp) / "trades.csv"
+            history_path = Path(tmp) / "history.csv"
+            trades_path.write_text(
+                "date,action,ticker,shares,price,currency,amount_usd,fee_usd,rule,note,"
+                "realized_pnl,realized_pnl_pct\r\n"
+                "2026-09-01,BUY,GLD,10,100.0,USD,1000.0,1.0,entry,,,\r\n",
+                encoding="utf-8",
+            )
+            history_path.write_text("date,nav_usd,bench_usd,diff_usd,diff_pct,cash_ratio\r\n", encoding="utf-8")
+            state = {"holdings": {"GLD": 10.0}, "cash_usd": 0.0, "start_date": "2026-08-05", "mode": "normal"}
+            market = {"GLD": TickerSnapshot(ticker="GLD", close=120.0, date="2026-10-09")}
+            with patch.object(config, "TRADES_CSV_PATH", trades_path), \
+                 patch.object(config, "HISTORY_CSV_PATH", history_path):
+                data = report.build_data_json(
+                    state, market, nav_usd=1200.0, bench_usd=1100.0, accepted_trades=[],
+                    now_jst=dt.datetime(2026, 10, 9),
+                )
+        holding = data["holdings"][0]
+        self.assertAlmostEqual(holding["unrealized_pnl_usd"], 200.0, places=2)
+        self.assertAlmostEqual(holding["unrealized_pnl_pct"], 20.0, places=2)
 
 
 if __name__ == "__main__":

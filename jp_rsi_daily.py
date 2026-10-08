@@ -495,6 +495,7 @@ def get_market_cap_tiers_jp(
 
 def build_dashboard_candidates_jp(
     held_tickers: list[str], trading_date: str, log_lines: list[str],
+    lots: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """ダッシュボード「今夜の候補」セクション（日本株RSI枠）用データを組み立てる（2026-10-08追加）。
 
@@ -504,11 +505,42 @@ def build_dashboard_candidates_jp(
     held_tickers分の時価総額（yfinance）は引き続き取得する（候補一覧(candidates)だけ空にする）。
     セクターマップ・セクターTierの月次キャッシュはdry_run=True固定で呼ぶ（米国枠と同じ理由。
     get_market_cap_tiers_jpのTier計算ロジックを参照）。
+
+    lots: state["lots"]（保有ロット一覧）。今夜買えない候補（保有中・利確前で再エントリー不可、
+    損切り後の再エントリー制限に抵触、会社の株でない(REIT等)、単元株数不明）をrun_jp()と同じ
+    判定関数で除外する（2026-10-09追加・Change1。filter_blocked_entries・
+    filter_stop_loss_reentries・filter_non_company_entries・build_entry_candidatesを
+    そのまま再利用し、判定ロジックの二重実装を避ける）。省略時は保有中チェックを行わない。
     """
     frozen = _load_frozen_candidates_jp()
     if frozen is None:
         log_lines.append("[JP-DASH] frozen_candidates.jsonが無いか古いため、候補セクションは空で表示する")
-    candidates = frozen["candidates"] if frozen else []
+    raw_candidates = frozen["candidates"] if frozen else []
+
+    # 損切り後の再エントリー制限（run_jp()と同じ判定。candidateの価格はfrozen候補の価格=prior close）。
+    stop_loss_history_all = rsi_strategy.latest_rule_closures(jp_rsi_ledger.read_trade_rows())
+    candidate_tickers_today = {c["ticker"] for c in raw_candidates}
+    stop_loss_history = {t: sl for t, sl in stop_loss_history_all.items() if t in candidate_tickers_today}
+    stop_loss_history = _split_adjusted_stop_loss_history_jp(stop_loss_history, trading_date, log_lines)
+    sl_check_candidates = [
+        {"ticker": c["ticker"], "price": c["price"]} for c in raw_candidates if c["ticker"] in stop_loss_history
+    ]
+    _, sl_blocked = rsi_strategy.filter_stop_loss_reentries(sl_check_candidates, stop_loss_history, trading_date)
+    sl_blocked_tickers = {b["ticker"] for b in sl_blocked}
+
+    # 保有中・利確前の銘柄を抑止し、会社の株でない銘柄・単元株数不明の銘柄も除外する（run_jp()と同じ判定）。
+    not_sl_blocked = [c for c in raw_candidates if c["ticker"] not in sl_blocked_tickers]
+    entry_candidates0, blocked_entry_tickers = rsi_strategy.filter_blocked_entries(not_sl_blocked, lots or [])
+    company_candidates, non_company_tickers = filter_non_company_entries(
+        entry_candidates0, jp_lotsize.get_company_tickers(),
+    )
+    candidates, no_lotsize = build_entry_candidates(company_candidates, jp_lotsize.get_lot_sizes())
+    if sl_blocked_tickers or blocked_entry_tickers or non_company_tickers or no_lotsize:
+        log_lines.append(
+            f"[JP-DASH] 買えない候補を除外: 損切り後再エントリー制限={sorted(sl_blocked_tickers)} "
+            f"保有中={blocked_entry_tickers} 非会社株={non_company_tickers} 単元株数不明={no_lotsize}"
+        )
+
     caps: dict[str, float] = {
         c["ticker"]: c["market_cap"] for c in candidates if c.get("market_cap")
     }

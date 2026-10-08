@@ -215,7 +215,7 @@ def _build_rsi_dashboards(
     rsi_held = sorted({lot["ticker"] for lot in rsi_ledger.open_lots(rsi_state)})
     rsi_log: list[str] = []
     try:
-        rsi_dashboard = rsi_daily.build_dashboard_candidates(rsi_held, trade_date_us, rsi_log)
+        rsi_dashboard = rsi_daily.build_dashboard_candidates(rsi_held, trade_date_us, rsi_log, lots=rsi_state["lots"])
     except Exception:
         logger.exception("RSI-30枠: ダッシュボード候補データの組み立てに失敗した")
         rsi_dashboard = {}
@@ -227,7 +227,7 @@ def _build_rsi_dashboards(
     jp_log: list[str] = []
     try:
         jp_trading_date = jp_market.get_jp_trading_date()
-        jp_dashboard = jp_rsi_daily.build_dashboard_candidates_jp(jp_held, jp_trading_date, jp_log)
+        jp_dashboard = jp_rsi_daily.build_dashboard_candidates_jp(jp_held, jp_trading_date, jp_log, lots=jp_state["lots"])
     except Exception:
         logger.exception("日本株RSI枠: ダッシュボード候補データの組み立てに失敗した")
         jp_dashboard = {}
