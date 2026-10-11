@@ -9,7 +9,7 @@
     2. ledger/adoptions.json を見て今月まだ採用しておらず、前回採用から28日以上経過している
     3. 候補の配分表がパース可能（charter.mdと同じ表形式）
     4. 銘柄がホワイトリストのみ／通常・防衛それぞれ合計100±0.5%
-    5. 可動域: 株式合計（VOO+QQQ+XLV+1306.T）通常≤90%・防衛≤50%／
+    5. 可動域: 株式合計（GLD・TLT・IEF・現金以外の全資産）通常≤90%・防衛≤50%／
        1銘柄≤30%（VOOのみ≤65%）／現金>実行器の下限2%（両モード。同値は実行不能になるため不可）
 
 検証に全て合格した場合のみ、charter.mdの「## ターゲット配分」セクションの表だけを
@@ -32,7 +32,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
 import portfolio  # noqa: E402
 
-STOCK_TICKERS = ("VOO", "QQQ", "XLV", "EWJ")
+# 株式合計は「株式でない資産」を除いた残り全部で数える。株式側を列挙すると、
+# 列挙漏れ（XLE）や将来の個別株が上限の外を素通りする（2026-10-12発見）。
+NON_STOCK_ASSETS = ("GLD", "TLT", "IEF", "現金")
 ROW_ORDER = ["VOO", "QQQ", "GLD", "TLT", "IEF", "XLV", "XLE", "EWJ", "現金"]
 
 SUM_TOLERANCE = 0.005  # ±0.5ポイント
@@ -170,7 +172,7 @@ def _check_whitelist_and_sums(targets: dict[str, dict[str, float]]) -> None:
 
 def _check_ranges(targets: dict[str, dict[str, float]]) -> None:
     for mode, stock_max in (("normal", NORMAL_STOCK_MAX), ("defense", DEFENSE_STOCK_MAX)):
-        stock_total = sum(targets.get(t, {}).get(mode, 0.0) for t in STOCK_TICKERS)
+        stock_total = sum(v[mode] for a, v in targets.items() if a not in NON_STOCK_ASSETS)
         if stock_total > stock_max + 1e-9:
             raise ValidationError(
                 f"{mode}モードの株式合計が可動域超過: {stock_total * 100:.1f}% > {stock_max * 100:.0f}%"
