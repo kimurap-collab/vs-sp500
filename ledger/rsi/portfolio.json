@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 458.0389999999679,
+  "cash_usd": 1032.048999999968,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -472,6 +472,6 @@
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-10-12",
+  "last_processed_date": "2026-10-13",
   "pending_orders": []
 }

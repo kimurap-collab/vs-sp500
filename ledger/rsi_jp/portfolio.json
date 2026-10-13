@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 2449319.9548339844,
+  "cash_jpy": 1319.954833984375,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -566,12 +566,12 @@
       "pyramid_done": [
         false,
         true,
-        false
+        true
       ],
-      "shares": 700,
+      "shares": 800,
       "lot_size": 100,
-      "total_invested_usd": 3178900.0,
-      "avg_cost": 4541.285714285715,
+      "total_invested_usd": 3662900.0,
+      "avg_cost": 4578.625,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -760,13 +760,13 @@
       "initial_entry_price": 5030.0,
       "pyramid_done": [
         true,
-        false,
+        true,
         false
       ],
-      "shares": 700,
+      "shares": 800,
       "lot_size": 100,
-      "total_invested_usd": 3631000.0,
-      "avg_cost": 5187.142857142857,
+      "total_invested_usd": 4203000.0,
+      "avg_cost": 5253.75,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -831,14 +831,14 @@
       "initial_entry_date": "2026-10-07",
       "initial_entry_price": 4460.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 600,
+      "shares": 900,
       "lot_size": 100,
-      "total_invested_usd": 2676000.0,
-      "avg_cost": 4460.0,
+      "total_invested_usd": 4068000.0,
+      "avg_cost": 4520.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -897,5 +897,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-10-09"
+  "last_processed_date": "2026-10-13"
 }

@@ -11,3 +11,5 @@ date,action,ticker,shares,price,currency,amount_usd,fee_usd,rule,note,realized_p
 2026-09-15,SELL,EWJ,32,96.81,USD,3097.92,1.0,rebalance,,9.24,0.3316
 2026-09-16,BUY,VOO,16,698.545,USD,11176.72,0.99,rebalance,,,
 2026-10-01,SELL,IEF,33,89.25,USD,2945.25,1.0,rebalance,,-134.98,-4.351
+2026-10-13,SELL,EWJ,33,97.215,USD,3208.1,1.0,rebalance,,22.93,0.7514
+2026-10-13,BUY,VOO,6,714.153,USD,4284.92,0.99,rebalance,,,

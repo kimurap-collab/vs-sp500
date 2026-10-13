@@ -69,3 +69,6 @@ date,action,ticker,shares,price,amount_jpy,rule,lot_id,note,name,realized_pnl,re
 2026-10-09,SELL,1979,700,3760.0,2632000.0,swap,1979-2026-08-25-1,入れ替え買い7458のため(score=0)・moomoo発注なし・台帳のみの仮想売買,Taikisha,-98000.0,-3.5897
 2026-10-09,SELL,6013,900,2958.0,2662200.0,swap,6013-2026-08-24-1,入れ替え買い7458のため(score=1)・moomoo発注なし・台帳のみの仮想売買,Takuma,-96300.0,-3.491
 2026-10-09,BUY,7458,1700,1713.5,2912950.0,entry,7458-2026-10-09-1,RSI14=29.5 lot_size=100・入れ替え(score=2)・moomoo発注なし・台帳のみの仮想売買,Daiichikosho,,
+2026-10-13,BUY,4928,300,4640.0,1392000.0,pyramid1,4928-2026-10-07-1,moomoo発注なし・台帳のみの仮想売買,Noevir Holdings,,
+2026-10-13,BUY,6101,100,5720.0,572000.0,pyramid2,6101-2026-09-03-1,moomoo発注なし・台帳のみの仮想売買,Tsugami,,
+2026-10-13,BUY,6506,100,4840.0,484000.0,pyramid3,6506-2026-09-03-1,moomoo発注なし・台帳のみの仮想売買,YASKAWA Electric,,
