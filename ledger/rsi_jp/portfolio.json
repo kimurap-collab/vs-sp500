@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 1319.954833984375,
+  "cash_jpy": 56519.954833984375,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -80,14 +80,14 @@
       "initial_entry_date": "2026-08-24",
       "initial_entry_price": 3344.0,
       "pyramid_done": [
-        false,
+        true,
         true,
         false
       ],
-      "shares": 1000,
+      "shares": 1400,
       "lot_size": 100,
-      "total_invested_usd": 3388600.0,
-      "avg_cost": 3388.6,
+      "total_invested_usd": 4802200.0,
+      "avg_cost": 3430.1428571428573,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -132,7 +132,7 @@
         true,
         true
       ],
-      "shares": 3200,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 5604400.0,
       "avg_cost": 1751.375,
@@ -141,9 +141,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-14",
       "name": "Datasection"
     },
     {
@@ -153,13 +153,13 @@
       "initial_entry_price": 5440.0,
       "pyramid_done": [
         true,
-        false,
+        true,
         false
       ],
-      "shares": 700,
+      "shares": 800,
       "lot_size": 100,
-      "total_invested_usd": 3836000.0,
-      "avg_cost": 5480.0,
+      "total_invested_usd": 4414000.0,
+      "avg_cost": 5517.5,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -180,7 +180,7 @@
         true,
         true
       ],
-      "shares": 3300,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 5722300.0,
       "avg_cost": 1734.030303030303,
@@ -189,9 +189,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-14",
       "name": "Rigaku Holdings"
     },
     {
@@ -564,14 +564,14 @@
       "initial_entry_date": "2026-09-03",
       "initial_entry_price": 4500.0,
       "pyramid_done": [
-        false,
+        true,
         true,
         true
       ],
-      "shares": 800,
+      "shares": 1100,
       "lot_size": 100,
-      "total_invested_usd": 3662900.0,
-      "avg_cost": 4578.625,
+      "total_invested_usd": 5076500.0,
+      "avg_cost": 4615.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -761,12 +761,12 @@
       "pyramid_done": [
         true,
         true,
-        false
+        true
       ],
-      "shares": 800,
+      "shares": 900,
       "lot_size": 100,
-      "total_invested_usd": 4203000.0,
-      "avg_cost": 5253.75,
+      "total_invested_usd": 4764000.0,
+      "avg_cost": 5293.333333333333,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -895,7 +895,55 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "6740-2026-10-14-1",
+      "ticker": "6740",
+      "name": "Japan Display",
+      "initial_entry_date": "2026-10-14",
+      "initial_entry_price": 37.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 81000,
+      "lot_size": 100,
+      "total_invested_usd": 2997000.0,
+      "avg_cost": 37.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "3865-2026-10-14-1",
+      "ticker": "3865",
+      "name": "Hokuetsu",
+      "initial_entry_date": "2026-10-14",
+      "initial_entry_price": 846.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 3500,
+      "lot_size": 100,
+      "total_invested_usd": 2961000.0,
+      "avg_cost": 846.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
-  "last_processed_date": "2026-10-13"
+  "last_processed_date": "2026-10-14"
 }
