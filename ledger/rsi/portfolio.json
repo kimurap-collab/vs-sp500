@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-14",
-  "cash_usd": 1032.048999999968,
+  "cash_usd": 29303.353999999963,
   "lots": [
     {
       "lot_id": "DVA-2026-08-18-1",
@@ -265,7 +265,7 @@
         true,
         true
       ],
-      "shares": 181,
+      "shares": 0,
       "total_invested_usd": 59359.835,
       "avg_cost": 327.9548895027624,
       "profit1_taken": false,
@@ -273,9 +273,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-15",
       "name": "Cadence Design Systems"
     },
     {
@@ -469,9 +469,33 @@
       "closed": false,
       "closed_reason": null,
       "closed_date": null
+    },
+    {
+      "lot_id": "AKAM-2026-10-15-1",
+      "ticker": "AKAM",
+      "name": "Akamai",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 91.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 329,
+      "lot_size": 1,
+      "total_invested_usd": 29939.0,
+      "avg_cost": 91.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
     }
   ],
   "bench_units_rsi": 700.6628414170427,
-  "last_processed_date": "2026-10-14",
+  "last_processed_date": "2026-10-15",
   "pending_orders": []
 }

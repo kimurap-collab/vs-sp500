@@ -1,6 +1,6 @@
 {
   "start_date": "2026-08-24",
-  "cash_jpy": 56519.954833984375,
+  "cash_jpy": 353919.9548339844,
   "lots": [
     {
       "lot_id": "6367-2026-08-24-1",
@@ -60,7 +60,7 @@
         false,
         false
       ],
-      "shares": 1600,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 4284000.0,
       "avg_cost": 2677.5,
@@ -69,9 +69,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-15",
       "name": "Optorun"
     },
     {
@@ -84,7 +84,7 @@
         true,
         false
       ],
-      "shares": 1400,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 4802200.0,
       "avg_cost": 3430.1428571428573,
@@ -93,9 +93,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-15",
       "name": "Minebea Mitsumi"
     },
     {
@@ -252,7 +252,7 @@
         true,
         true
       ],
-      "shares": 2200,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 5229000.0,
       "avg_cost": 2376.818181818182,
@@ -261,9 +261,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-15",
       "name": "Kanto Denka Kogyo"
     },
     {
@@ -397,7 +397,7 @@
         false,
         false
       ],
-      "shares": 600,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2812800.0,
       "avg_cost": 4688.0,
@@ -406,9 +406,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-15"
     },
     {
       "lot_id": "7944-2026-08-28-1",
@@ -520,7 +520,7 @@
         false,
         false
       ],
-      "shares": 600,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2803200.0,
       "avg_cost": 4672.0,
@@ -529,9 +529,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-15"
     },
     {
       "lot_id": "4099-2026-09-03-1",
@@ -568,7 +568,7 @@
         true,
         true
       ],
-      "shares": 1100,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 5076500.0,
       "avg_cost": 4615.0,
@@ -577,9 +577,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-15"
     },
     {
       "lot_id": "9065-2026-09-03-1",
@@ -619,7 +619,7 @@
         false,
         false
       ],
-      "shares": 500,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2954500.0,
       "avg_cost": 5909.0,
@@ -628,9 +628,9 @@
       "base_shares": null,
       "exception_active": false,
       "exception_deadline_date": null,
-      "closed": false,
-      "closed_reason": null,
-      "closed_date": null
+      "closed": true,
+      "closed_reason": "swap",
+      "closed_date": "2026-10-15"
     },
     {
       "lot_id": "2264-2026-09-03-1",
@@ -807,14 +807,14 @@
       "initial_entry_date": "2026-10-07",
       "initial_entry_price": 3360.0,
       "pyramid_done": [
-        false,
+        true,
         false,
         false
       ],
-      "shares": 800,
+      "shares": 1200,
       "lot_size": 100,
-      "total_invested_usd": 2688000.0,
-      "avg_cost": 3360.0,
+      "total_invested_usd": 4080000.0,
+      "avg_cost": 3400.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -907,10 +907,34 @@
         false,
         false
       ],
-      "shares": 81000,
+      "shares": 0,
       "lot_size": 100,
       "total_invested_usd": 2997000.0,
       "avg_cost": 37.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": true,
+      "closed_reason": "stop_loss",
+      "closed_date": "2026-10-15"
+    },
+    {
+      "lot_id": "3865-2026-10-14-1",
+      "ticker": "3865",
+      "name": "Hokuetsu",
+      "initial_entry_date": "2026-10-14",
+      "initial_entry_price": 846.0,
+      "pyramid_done": [
+        true,
+        false,
+        false
+      ],
+      "shares": 5200,
+      "lot_size": 100,
+      "total_invested_usd": 4450200.0,
+      "avg_cost": 855.8076923076923,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -921,20 +945,212 @@
       "closed_date": null
     },
     {
-      "lot_id": "3865-2026-10-14-1",
-      "ticker": "3865",
-      "name": "Hokuetsu",
-      "initial_entry_date": "2026-10-14",
-      "initial_entry_price": 846.0,
+      "lot_id": "9436-2026-10-15-1",
+      "ticker": "9436",
+      "name": "Okinawa Cellular Telephone",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 3445.0,
       "pyramid_done": [
         false,
         false,
         false
       ],
-      "shares": 3500,
+      "shares": 800,
       "lot_size": 100,
-      "total_invested_usd": 2961000.0,
-      "avg_cost": 846.0,
+      "total_invested_usd": 2756000.0,
+      "avg_cost": 3445.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "641A-2026-10-15-1",
+      "ticker": "641A",
+      "name": "Nok Group",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 2781.5,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1000,
+      "lot_size": 100,
+      "total_invested_usd": 2781500.0,
+      "avg_cost": 2781.5,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "2874-2026-10-15-1",
+      "ticker": "2874",
+      "name": "Yokorei",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 1761.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1700,
+      "lot_size": 100,
+      "total_invested_usd": 2993700.0,
+      "avg_cost": 1761.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6960-2026-10-15-1",
+      "ticker": "6960",
+      "name": "Fukuda Denshi",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 10580.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 200,
+      "lot_size": 100,
+      "total_invested_usd": 2116000.0,
+      "avg_cost": 10580.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6707-2026-10-15-2",
+      "ticker": "6707",
+      "name": "Sanken Electric",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 5743.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 500,
+      "lot_size": 100,
+      "total_invested_usd": 2871500.0,
+      "avg_cost": 5743.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6804-2026-10-15-1",
+      "ticker": "6804",
+      "name": "Hosiden",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 2339.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1200,
+      "lot_size": 100,
+      "total_invested_usd": 2806800.0,
+      "avg_cost": 2339.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "6366-2026-10-15-1",
+      "ticker": "6366",
+      "name": "Chiyoda",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 591.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 5000,
+      "lot_size": 100,
+      "total_invested_usd": 2955000.0,
+      "avg_cost": 591.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "2379-2026-10-15-1",
+      "ticker": "2379",
+      "name": "DIP",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 1666.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1800,
+      "lot_size": 100,
+      "total_invested_usd": 2998800.0,
+      "avg_cost": 1666.0,
+      "profit1_taken": false,
+      "profit2_taken": false,
+      "base_shares": null,
+      "exception_active": false,
+      "exception_deadline_date": null,
+      "closed": false,
+      "closed_reason": null,
+      "closed_date": null
+    },
+    {
+      "lot_id": "8511-2026-10-15-1",
+      "ticker": "8511",
+      "name": "Japan Securities Finance",
+      "initial_entry_date": "2026-10-15",
+      "initial_entry_price": 2137.0,
+      "pyramid_done": [
+        false,
+        false,
+        false
+      ],
+      "shares": 1400,
+      "lot_size": 100,
+      "total_invested_usd": 2991800.0,
+      "avg_cost": 2137.0,
       "profit1_taken": false,
       "profit2_taken": false,
       "base_shares": null,
@@ -945,5 +1161,5 @@
       "closed_date": null
     }
   ],
-  "last_processed_date": "2026-10-14"
+  "last_processed_date": "2026-10-15"
 }
