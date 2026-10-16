@@ -43,3 +43,5 @@ date,action,ticker,shares,price,amount_usd,rule,lot_id,note,name,realized_pnl,re
 2026-10-07,BUY,FIS,880,34.155,30056.4,entry,FIS-2026-10-07-1,RSI14=32.8 basis=prev_close 入れ替え(score=2),Fidelity National Information Services,,
 2026-10-15,SELL,CDNS,181,321.615,58212.32,swap,CDNS-2026-08-21-1,入れ替え買いAKAMのため(score=-1),Cadence Design Systems,-1147.52,-1.9332
 2026-10-15,BUY,AKAM,329,91.0,29939.0,entry,AKAM-2026-10-15-1,RSI14=32.9 basis=prev_close 入れ替え(score=2),Akamai,,
+2026-10-16,BUY,CNP,370,40.485,14979.45,pyramid1,CNP-2026-08-24-1,,CenterPoint Energy,,
+2026-10-16,BUY,DVA,39,187.66,7318.74,pyramid2,DVA-2026-08-18-1,,DaVita,,
