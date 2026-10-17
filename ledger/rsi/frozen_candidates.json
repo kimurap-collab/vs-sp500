@@ -1,201 +1,334 @@
 {
-  "generated_at": "2026-10-16T12:00:11.076362+00:00",
+  "generated_at": "2026-10-17T12:00:22.055636+00:00",
   "rsi_basis": "prev_close",
   "candidates": [
     {
       "ticker": "MGM",
-      "rsi14": 19.977,
+      "rsi14": 17.608,
       "name": "MGM Resorts International",
-      "price": 29.48,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "FER",
-      "rsi14": 21.645,
-      "name": "Ferrovial SE",
-      "price": 48.86,
+      "price": 28.6,
       "date": "2026-10-16"
     },
     {
       "ticker": "BAC",
-      "rsi14": 25.442,
+      "rsi14": 24.063,
       "name": "Bank of America",
-      "price": 51.7,
+      "price": 51.23,
       "date": "2026-10-16"
     },
     {
       "ticker": "STT",
-      "rsi14": 26.714,
+      "rsi14": 24.555,
       "name": "State Street",
-      "price": 167.6,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "MS",
-      "rsi14": 26.829,
-      "name": "Morgan Stanley",
-      "price": 182.1,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "MOS",
-      "rsi14": 27.077,
-      "name": "The Mosaic",
-      "price": 18.95,
+      "price": 165.72,
       "date": "2026-10-16"
     },
     {
       "ticker": "RKLB",
-      "rsi14": 29.168,
+      "rsi14": 25.417,
       "name": "Rocket Lab",
-      "price": 55.25,
+      "price": 50.84,
       "date": "2026-10-16"
     },
     {
-      "ticker": "ARE",
-      "rsi14": 29.283,
-      "name": "Alexandria Real Estate Equities Inc",
-      "price": 42.34,
+      "ticker": "MS",
+      "rsi14": 25.418,
+      "name": "Morgan Stanley",
+      "price": 180.57,
       "date": "2026-10-16"
     },
     {
       "ticker": "ALB",
-      "rsi14": 29.299,
+      "rsi14": 26.433,
       "name": "Albemarle",
-      "price": 98.18,
+      "price": 95.48,
       "date": "2026-10-16"
     },
     {
-      "ticker": "PNC",
-      "rsi14": 29.401,
-      "name": "PNC Financial Services",
-      "price": 214.94,
+      "ticker": "MOS",
+      "rsi14": 26.463,
+      "name": "The Mosaic",
+      "price": 18.82,
       "date": "2026-10-16"
     },
     {
-      "ticker": "VRT",
-      "rsi14": 30.228,
-      "name": "Vertiv Holdings",
-      "price": 214.75,
+      "ticker": "FER",
+      "rsi14": 26.515,
+      "name": "Ferrovial SE",
+      "price": 49.41,
       "date": "2026-10-16"
     },
     {
       "ticker": "WDC",
-      "rsi14": 30.809,
+      "rsi14": 26.976,
       "name": "Western Digital",
-      "price": 356.45,
+      "price": 332.0,
       "date": "2026-10-16"
     },
     {
-      "ticker": "APO",
-      "rsi14": 31.443,
-      "name": "Apollo Global Management",
-      "price": 111.87,
+      "ticker": "VRT",
+      "rsi14": 27.323,
+      "name": "Vertiv Holdings",
+      "price": 206.42,
       "date": "2026-10-16"
     },
     {
-      "ticker": "CAT",
-      "rsi14": 31.47,
-      "name": "Caterpillar",
-      "price": 735.64,
+      "ticker": "ARE",
+      "rsi14": 27.568,
+      "name": "Alexandria Real Estate Equities Inc",
+      "price": 41.62,
       "date": "2026-10-16"
     },
     {
       "ticker": "STX",
-      "rsi14": 31.621,
+      "rsi14": 27.575,
       "name": "Seagate Technology",
-      "price": 690.81,
+      "price": 639.01,
       "date": "2026-10-16"
     },
     {
       "ticker": "SCHW",
-      "rsi14": 31.825,
+      "rsi14": 27.842,
       "name": "Charles Schwab",
-      "price": 94.16,
+      "price": 91.96,
       "date": "2026-10-16"
     },
     {
       "ticker": "AMAT",
-      "rsi14": 32.936,
+      "rsi14": 29.207,
       "name": "Applied Materials",
-      "price": 430.01,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "FRT",
-      "rsi14": 33.355,
-      "name": "Federal Realty Investment Trust",
-      "price": 105.68,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "AKAM",
-      "rsi14": 33.869,
-      "name": "Akamai",
-      "price": 92.32,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "BX",
-      "rsi14": 33.883,
-      "name": "Blackstone",
-      "price": 109.2,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "SNDK",
-      "rsi14": 33.941,
-      "name": "SanDisk",
-      "price": 1394.83,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "KKR",
-      "rsi14": 34.124,
-      "name": "KKR & Co",
-      "price": 87.63,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "LRCX",
-      "rsi14": 34.202,
-      "name": "Lam Research",
-      "price": 277.46,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "FIX",
-      "rsi14": 34.323,
-      "name": "Comfort Systems USA",
-      "price": 1481.27,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "NTRS",
-      "rsi14": 34.45,
-      "name": "Northern Trust",
-      "price": 165.44,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "ARES",
-      "rsi14": 34.796,
-      "name": "Ares Management",
-      "price": 114.03,
-      "date": "2026-10-16"
-    },
-    {
-      "ticker": "FLEX",
-      "rsi14": 34.839,
-      "name": "Flex Ltd",
-      "price": 98.5,
+      "price": 409.29,
       "date": "2026-10-16"
     },
     {
       "ticker": "CRWV",
-      "rsi14": 34.917,
+      "rsi14": 29.459,
       "name": "CoreWeave",
-      "price": 69.69,
+      "price": 61.39,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "FLEX",
+      "rsi14": 29.665,
+      "name": "Flex Ltd",
+      "price": 90.46,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "SNDK",
+      "rsi14": 29.691,
+      "name": "SanDisk",
+      "price": 1299.3,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "APO",
+      "rsi14": 29.957,
+      "name": "Apollo Global Management",
+      "price": 110.78,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "SMCI",
+      "rsi14": 30.191,
+      "name": "Super Micro Computer",
+      "price": 31.63,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "LRCX",
+      "rsi14": 30.279,
+      "name": "Lam Research",
+      "price": 263.94,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "UAL",
+      "rsi14": 30.393,
+      "name": "United Airlines",
+      "price": 96.1,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "AKAM",
+      "rsi14": 30.508,
+      "name": "Akamai",
+      "price": 87.81,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "NBIS",
+      "rsi14": 30.627,
+      "name": "NEBIUS",
+      "price": 165.47,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "CAT",
+      "rsi14": 30.669,
+      "name": "Caterpillar",
+      "price": 730.76,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "BX",
+      "rsi14": 30.883,
+      "name": "Blackstone",
+      "price": 106.61,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "KLAC",
+      "rsi14": 31.055,
+      "name": "KLA Corp",
+      "price": 165.74,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "INTC",
+      "rsi14": 31.415,
+      "name": "Intel",
+      "price": 89.85,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "ANET",
+      "rsi14": 31.595,
+      "name": "Arista Networks",
+      "price": 176.98,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "FIX",
+      "rsi14": 31.798,
+      "name": "Comfort Systems USA",
+      "price": 1439.07,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "KKR",
+      "rsi14": 31.846,
+      "name": "KKR & Co",
+      "price": 86.21,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "AXON",
+      "rsi14": 32.12,
+      "name": "Axon Enterprise",
+      "price": 390.29,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "ARES",
+      "rsi14": 32.308,
+      "name": "Ares Management",
+      "price": 112.27,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "TER",
+      "rsi14": 33.109,
+      "name": "Teradyne",
+      "price": 325.0,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "IVZ",
+      "rsi14": 33.201,
+      "name": "Invesco",
+      "price": 28.2,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "DELL",
+      "rsi14": 33.244,
+      "name": "Dell Technologies",
+      "price": 451.71,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "COHR",
+      "rsi14": 33.375,
+      "name": "Coherent",
+      "price": 232.9,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "DAL",
+      "rsi14": 33.719,
+      "name": "Delta Air Lines",
+      "price": 75.37,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "Q",
+      "rsi14": 34.039,
+      "name": "Qnity Electronics",
+      "price": 115.37,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "MU",
+      "rsi14": 34.039,
+      "name": "Micron Technology",
+      "price": 878.84,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "CMG",
+      "rsi14": 34.286,
+      "name": "Chipotle Mexican Grill",
+      "price": 29.89,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "GS",
+      "rsi14": 34.334,
+      "name": "Goldman Sachs",
+      "price": 881.26,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "PLD",
+      "rsi14": 34.345,
+      "name": "Prologis",
+      "price": 125.75,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "ARM",
+      "rsi14": 34.494,
+      "name": "Arm Holdings",
+      "price": 227.8,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "NTRS",
+      "rsi14": 34.73,
+      "name": "Northern Trust",
+      "price": 165.54,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "ETN",
+      "rsi14": 34.862,
+      "name": "Eaton",
+      "price": 391.25,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "AVGO",
+      "rsi14": 34.892,
+      "name": "Broadcom",
+      "price": 328.75,
+      "date": "2026-10-16"
+    },
+    {
+      "ticker": "MTB",
+      "rsi14": 34.961,
+      "name": "M&T Bank",
+      "price": 215.28,
       "date": "2026-10-16"
     }
   ]
